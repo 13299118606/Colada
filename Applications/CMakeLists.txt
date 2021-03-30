@@ -16,4 +16,5 @@
 #
 #============================================================================
 
+add_subdirectory(ColadaCore)
 add_subdirectory(ColadaApp)

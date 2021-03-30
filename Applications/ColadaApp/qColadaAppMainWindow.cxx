@@ -18,6 +18,7 @@
 // Colada includes
 #include "qColadaAppMainWindow.h"
 #include "qColadaAppMainWindow_p.h"
+#include "Widgets/qColadaNewProject.h"
 
 // Qt includes
 #include <QDesktopWidget>
@@ -103,6 +104,31 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   this->DataProbeCollapsibleWidget->setCollapsed(true);
   this->DataProbeCollapsibleWidget->setVisible(false);
   this->StatusBar->setVisible(false);
+
+  // Setup Colada menubar
+  setupMenuBar(mainWindow);
+}
+
+void qColadaAppMainWindowPrivate::setupMenuBar(QMainWindow* mainWindow) {
+  this->menubarC = new QMenuBar(mainWindow);
+
+  // Fill in all menus 
+  setupFileMenu(mainWindow);
+
+  mainWindow->setMenuBar(this->menubarC);
+}
+
+void qColadaAppMainWindowPrivate::setupFileMenu(QMainWindow* mainWindow) {
+  Q_Q(qColadaAppMainWindow);
+
+  this->FileMenuC = new QMenu("File", mainWindow);
+  
+  QAction* newProjectAction = new QAction("New project", mainWindow);
+  newProjectAction->setObjectName("NewProjectAction");
+  QObject::connect(newProjectAction, &QAction::triggered, q, &qColadaAppMainWindow::on_NewProjectAction_triggered);
+
+  this->FileMenuC->addAction(newProjectAction);
+  this->menubarC->addMenu(FileMenuC);
 }
 
 //-----------------------------------------------------------------------------
@@ -135,4 +161,10 @@ void qColadaAppMainWindow::on_HelpAboutColadaAppAction_triggered()
   qSlicerAboutDialog about(this);
   about.setLogo(QPixmap(":/Logo.png"));
   about.exec();
+}
+
+void qColadaAppMainWindow::on_NewProjectAction_triggered()
+{
+  qColadaNewProject* newproject = new qColadaNewProject();
+  newproject->exec();
 }

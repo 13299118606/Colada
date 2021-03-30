@@ -37,6 +37,14 @@ public:
   virtual void init();
   /// Reimplemented for custom behavior
   virtual void setupUi(QMainWindow * mainWindow);
+
+protected:
+  virtual void setupMenuBar(QMainWindow* mainWindow);
+  virtual void setupFileMenu(QMainWindow* mainWindow);
+
+public:
+  QMenuBar* menubarC;
+  QMenu* FileMenuC;
 };
 
 #endif

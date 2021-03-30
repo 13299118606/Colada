@@ -28,6 +28,7 @@ class qColadaAppMainWindowPrivate;
 class Q_COLADA_APP_EXPORT qColadaAppMainWindow : public qSlicerMainWindow
 {
   Q_OBJECT
+
 public:
   typedef qSlicerMainWindow Superclass;
 
@@ -36,6 +37,7 @@ public:
 
 public slots:
   void on_HelpAboutColadaAppAction_triggered();
+  virtual void on_NewProjectAction_triggered();
 
 protected:
   qColadaAppMainWindow(qColadaAppMainWindowPrivate* pimpl, QWidget* parent);

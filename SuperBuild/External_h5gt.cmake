@@ -1,8 +1,8 @@
 
-set(proj h5geo)
+set(proj h5gt)
 
 # Set dependency list
-set(${proj}_DEPENDENCIES tbb Eigen3 zlib HDF5 h5gt magic_enum)
+set(${proj}_DEPENDENCIES Eigen3 zlib HDF5)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
@@ -12,11 +12,11 @@ if(Slicer_USE_SYSTEM_${proj})
 endif()
 
 # Sanity checks
-if(DEFINED h5geo_DIR AND NOT EXISTS ${h5geo_DIR})
-  message(FATAL_ERROR "h5geo_DIR variable is defined but corresponds to nonexistent directory")
+if(DEFINED h5gt_DIR AND NOT EXISTS ${h5gt_DIR})
+  message(FATAL_ERROR "h5gt_DIR variable is defined but corresponds to nonexistent directory")
 endif()
 
-if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
+if(NOT DEFINED h5gt_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
   set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
@@ -24,7 +24,7 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_REPOSITORY
-    "${EP_GIT_PROTOCOL}://github.com/TierraColada/h5geo.git"
+    "${EP_GIT_PROTOCOL}://github.com/TierraColada/h5gt.git"
     QUIET
     )
 
@@ -54,41 +54,41 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DADDITIONAL_CXX_FLAGS:STRING=${ADDITIONAL_CXX_FLAGS}
       -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
       # Lib settings
-      -DH5GEO_SUPERBUILD:BOOL=OFF
-      -DH5GEO_USE_THREADS:BOOL=OFF
-      -DH5GEO_BUILD_SHARED_LIBS:BOOL=ON
-      -DH5GEO_BUILD_TESTS:BOOL=OFF
-      -DH5GEO_USE_THREADS:BOOL=OFF
+      -DH5GT_USE_EIGEN:BOOL=ON
+      -DH5GT_USE_XTENSOR:BOOL=OFF
+      -DH5GT_USE_OPENCV:BOOL=OFF
+      -DH5GT_BUILD_TESTS:BOOL=OFF
+      -DH5GT_EXAMPLES:BOOL=OFF
+      -DH5GT_PARALLEL_HDF5:BOOL=OFF
+      -DH5GT_BUILD_h5gtpy:BOOL=OFF
+      -DHDF5_USE_STATIC_LIBRARIES:BOOL=OFF
       # find package dirs
-      -DTBB_DIR:PATH="${TBB_LIB_DIR}/../../../cmake"
       -DEigen3_ROOT:PATH=${Eigen3_ROOT}
       -DZLIB_ROOT:PATH=${ZLIB_ROOT}
       -DHDF5_ROOT:PATH=${HDF5_ROOT}
-      -Dh5gt_ROOT:PATH=${h5gt_ROOT}
-      -Dmagic_enum_DIR:PATH=${magic_enum_DIR}
-    DEPENDS
+    DEPENDS 
       ${${proj}_DEPENDENCIES}
     )
 
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
-  set(h5geo_ROOT ${EP_INSTALL_DIR})
-  set(h5geo_DIR "${EP_INSTALL_DIR}/lib/cmake/h5geo")
-  set(h5geo_INCLUDE_DIR "${EP_INSTALL_DIR}/include")
+  set(h5gt_ROOT ${EP_INSTALL_DIR})
+  set(h5gt_DIR "${EP_INSTALL_DIR}/lib/cmake/h5gt")
+  set(h5gt_INCLUDE_DIR "${EP_INSTALL_DIR}/include")
 else()
-  # The project is provided using h5geo_DIR, nevertheless since other project may depend on h5geo,
+  # The project is provided using h5gt_DIR, nevertheless since other project may depend on h5gt,
   # let's add an 'empty' one
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
 
 mark_as_superbuild(
   VARS
-    h5geo_INCLUDE_DIR:PATH
-    h5geo_ROOT:PATH
-    h5geo_DIR:PATH
+    h5gt_INCLUDE_DIR:PATH
+    h5gt_ROOT:PATH
+    h5gt_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
 
-ExternalProject_Message(${proj} "h5geo_INCLUDE_DIR:${h5geo_INCLUDE_DIR}")
-ExternalProject_Message(${proj} "h5geo_ROOT:${h5geo_ROOT}")
-ExternalProject_Message(${proj} "h5geo_DIR:${h5geo_DIR}")
+ExternalProject_Message(${proj} "h5gt_INCLUDE_DIR:${h5gt_INCLUDE_DIR}")
+ExternalProject_Message(${proj} "h5gt_ROOT:${h5gt_ROOT}")
+ExternalProject_Message(${proj} "h5gt_DIR:${h5gt_DIR}")

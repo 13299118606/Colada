@@ -14,7 +14,7 @@ set(VERSION_PATCH
   )
 
 set(DESCRIPTION_SUMMARY
-  "Colada is an open source application aimed at processing and interpreting geophysical and geological data."
+  "Desktop application aimed at processing and interpreting geophysical and geological data."
   )
 set(DESCRIPTION_FILE
   ${Slicer_SOURCE_DIR}/README.txt

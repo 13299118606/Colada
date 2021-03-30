@@ -1,4 +1,7 @@
-Colada
+Colada by Kitware, Inc.
 ================================
 
-Colada is an open source application aimed at processing and interpreting geophysical and geological data.
+Desktop application aimed at processing and interpreting geophysical and geological data.
+
+![Colada by Kitware, Inc.](Applications/ColadaApp/Resources/Images/LogoFull.png?raw=true)
+

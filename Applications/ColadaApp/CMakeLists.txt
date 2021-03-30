@@ -30,6 +30,14 @@ SlicerReadApplicationProperties()
 # --------------------------------------------------------------------------
 set(${PROJECT_NAME}_FOLDER "App-${PROJECT_NAME}")
 
+# find_package(Eigen3 3.3 REQUIRED CONFIG)
+# find_package(ZLIB REQUIRED)
+# find_package(HDF5 REQUIRED CONFIG)
+# find_package(magic_enum REQUIRED CONFIG)
+# find_package(h5gt REQUIRED CONFIG)
+# find_package(h5geo REQUIRED CONFIG)
+# find_package(GDAL REQUIRED)
+
 # --------------------------------------------------------------------------
 # Application library
 # --------------------------------------------------------------------------
@@ -40,11 +48,17 @@ set(APPLIB_SRCS
   qColadaAppMainWindow.h
   Widgets/qAppStyle.cxx
   Widgets/qAppStyle.h
+  Widgets/qColadaNewProject.cxx
+  Widgets/qColadaNewProject.h
+  Widgets/qCRSWidget.cxx
+  Widgets/qCRSWidget.h
   )
 
 set(APPLIB_MOC_SRCS
   qColadaAppMainWindow.h
   Widgets/qAppStyle.h
+  Widgets/qColadaNewProject.h
+  Widgets/qCRSWidget.h
   )
 
 set(APPLIB_UI_SRCS
@@ -52,6 +66,16 @@ set(APPLIB_UI_SRCS
 
 set(APPLIB_RESOURCES
   Resources/App.qrc
+  )
+
+set(APPLIB_TARGET_LIBRARIES 
+  ColadaCore
+  # Eigen3::Eigen
+  # magic_enum::magic_enum
+  # h5geo::hdf5-shared
+  # h5gt
+  # h5geo
+  # GDAL::GDAL
   )
 
 slicerMacroBuildAppLibrary(
@@ -65,6 +89,7 @@ slicerMacroBuildAppLibrary(
   MOC_SRCS ${APPLIB_MOC_SRCS}
   UI_SRCS ${APPLIB_UI_SRCS}
   RESOURCES ${APPLIB_RESOURCES}
+  TARGET_LIBRARIES ${APPLIB_TARGET_LIBRARIES}
   )
 
 # --------------------------------------------------------------------------
@@ -97,8 +122,3 @@ slicerMacroBuildApplication(
   DEFAULT_SETTINGS_FILE Resources/Settings/DefaultSettings.ini
   ${extra_args}
   )
-
-# --------------------------------------------------------------------------
-# Linking core packages
-# --------------------------------------------------------------------------
-find_package(HDF5 REQUIRED)

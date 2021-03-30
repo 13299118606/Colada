@@ -12,8 +12,8 @@ include(FetchContent)
 if(NOT DEFINED slicersources_SOURCE_DIR)
   # Download Slicer sources and set variables slicersources_SOURCE_DIR and slicersources_BINARY_DIR
   FetchContent_Populate(slicersources
-    GIT_REPOSITORY git://github.com/Slicer/Slicer
-    GIT_TAG        29de76e4b1ccc84c8fc2984dafe4c44b0e0176ed
+    GIT_REPOSITORY git://github.com/kerim371/Slicer	# git://github.com/Slicer/Slicer
+    GIT_TAG        ""		# 2c4c940e73f0dad133c15986872c685da9f50a18
     GIT_PROGRESS   1
     )
 else()
@@ -45,8 +45,12 @@ include(ExternalProjectDependency)
 
 # Additional Slicer dependencies looked up in EXTERNAL_PROJECT_ADDITIONAL_DIR
 set(Slicer_ADDITIONAL_DEPENDENCIES
-  python-GDAL
+  GDAL
+  Eigen3
   h5geo
+  h5gt
+  HDF5
+  magic_enum
   )
 
 #  Enable listed remote modules from ITK 
@@ -85,13 +89,13 @@ if(WIN32)
 endif()
 
 # Slicer options
-option(BUILD_TESTING                            "Build application test suite"                        ON)
+option(BUILD_TESTING                            "Build application test suite"                        OFF)
 option(Slicer_BUILD_DOCUMENTATION               "Build documentation (Doxygen, sphinx, ...)"          OFF)
 if(WIN32)
   option(Slicer_BUILD_WIN32_CONSOLE             "Build application executable as a console app"       OFF)
 endif()
 
-option(Slicer_BUILD_DICOM_SUPPORT               "Build application with DICOM support"                ON)
+option(Slicer_BUILD_DICOM_SUPPORT               "Build application with DICOM support"                OFF)
 option(Slicer_BUILD_DIFFUSION_SUPPORT           "Build application with Diffusion support"            OFF)
 option(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT    "Build application with ExtensionManager support"     OFF)
 option(Slicer_BUILD_MULTIVOLUME_SUPPORT         "Build application with MultiVolume support"          OFF)
@@ -105,10 +109,6 @@ option(Slicer_BUILD_DataStore                   "Build application with DataStor
 option(Slicer_BUILD_CompareVolumes              "Build application with ChangeTrackerPy module"       OFF)
 option(Slicer_BUILD_LandmarkRegistration        "Build application with LandmarkRegistration module"  OFF)
 option(Slicer_BUILD_SurfaceToolbox              "Build application with SurfaceToolbox module"        OFF)
-
-# Force VTK9
-set(Slicer_VTK_VERSION_MAJOR 9 CACHE STRING "VTK major version (8 or 9)")
-mark_as_superbuild(Slicer_VTK_VERSION_MAJOR)
 
 # Enable Slicer built-in modules
 set(Slicer_CLIMODULES_ENABLED
