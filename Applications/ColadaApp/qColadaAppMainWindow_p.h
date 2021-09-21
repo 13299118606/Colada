@@ -24,27 +24,44 @@
 // Slicer includes
 #include "qSlicerMainWindow_p.h"
 
+class QProgressBar;
+class QLabel;
+class QDockWidget;
+class qColadaH5SurfTreeView;
+class qColadaH5SeisTreeView;
+class qColadaH5WellTreeView;
+
 //-----------------------------------------------------------------------------
 class Q_COLADA_APP_EXPORT qColadaAppMainWindowPrivate
   : public qSlicerMainWindowPrivate
 {
   Q_DECLARE_PUBLIC(qColadaAppMainWindow);
+
 public:
   typedef qSlicerMainWindowPrivate Superclass;
   qColadaAppMainWindowPrivate(qColadaAppMainWindow& object);
   virtual ~qColadaAppMainWindowPrivate();
 
   virtual void init();
+  virtual void setupPythonModules();
   /// Reimplemented for custom behavior
   virtual void setupUi(QMainWindow * mainWindow);
 
 protected:
+  virtual void setupDockWidgets(QMainWindow* mainWindow);
+  virtual void setupTreeViews(QMainWindow *mainWindow);
+  virtual void setupStatusBar(QMainWindow* mainWindow);
   virtual void setupMenuBar(QMainWindow* mainWindow);
   virtual void setupFileMenu(QMainWindow* mainWindow);
+  virtual void setupViewMenu(QMainWindow* mainWindow);
 
 public:
-  QMenuBar* menubarC;
-  QMenu* FileMenuC;
+  QLabel *currentProjectLabel, *currentCRSLabel;
+  QProgressBar* progressBar;
+  QDockWidget* seisDockWidget, *surfDockWidget, *wellDockWidget;
+  qColadaH5SurfTreeView *surfTreeView;
+  qColadaH5SeisTreeView *seisTreeView;
+  qColadaH5WellTreeView *wellTreeView;
 };
 
 #endif

@@ -1,0 +1,132 @@
+/*==============================================================================
+
+  Program: 3D Slicer
+
+  Portions (c) Copyright Brigham and Women's Hospital (BWH) All Rights Reserved.
+
+  See COPYRIGHT.txt
+  or http://www.slicer.org/copyright/copyright.txt for details.
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+==============================================================================*/
+
+// Axes Logic includes
+#include <vtkSlicerAxesLogic.h>
+
+// Axes includes
+#include "qSlicerAxesModule.h"
+#include "qSlicerAxesModuleWidget.h"
+
+// VTK includes
+#include <vtkSmartPointer.h>
+
+// MRML includes
+#include "vtkMRMLSliceViewDisplayableManagerFactory.h"
+#include "vtkMRMLThreeDViewDisplayableManagerFactory.h"
+#include "vtkMRMLAxesDisplayableManager2D.h"
+#include "vtkMRMLAxesDisplayableManager3D.h"
+#include <vtkMRMLViewNode.h>
+#include <vtkMRMLSliceNode.h>
+#include <vtkMRMLScene.h>
+
+// DisplayableManager initialization
+#include <vtkAutoInit.h>
+VTK_MODULE_INIT(vtkSlicerAxesModuleMRMLDisplayableManager)
+
+//-----------------------------------------------------------------------------
+/// \ingroup Slicer_QtModules_ExtensionTemplate
+class qSlicerAxesModulePrivate
+{
+public:
+  qSlicerAxesModulePrivate();
+};
+
+//-----------------------------------------------------------------------------
+// qSlicerAxesModulePrivate methods
+
+//-----------------------------------------------------------------------------
+qSlicerAxesModulePrivate::qSlicerAxesModulePrivate()
+{
+}
+
+//-----------------------------------------------------------------------------
+// qSlicerAxesModule methods
+
+//-----------------------------------------------------------------------------
+qSlicerAxesModule::qSlicerAxesModule(QObject* _parent)
+  : Superclass(_parent)
+  , d_ptr(new qSlicerAxesModulePrivate)
+{
+}
+
+//-----------------------------------------------------------------------------
+qSlicerAxesModule::~qSlicerAxesModule()
+{
+}
+
+//-----------------------------------------------------------------------------
+QString qSlicerAxesModule::helpText() const
+{
+  return "This is a loadable module that can be bundled in an extension";
+}
+
+//-----------------------------------------------------------------------------
+QString qSlicerAxesModule::acknowledgementText() const
+{
+  return "This work was partially funded by NIH grant NXNNXXNNNNNN-NNXN";
+}
+
+//-----------------------------------------------------------------------------
+QStringList qSlicerAxesModule::contributors() const
+{
+  QStringList moduleContributors;
+  moduleContributors << QString("John Doe (AnyWare Corp.)");
+  return moduleContributors;
+}
+
+//-----------------------------------------------------------------------------
+QIcon qSlicerAxesModule::icon() const
+{
+  return QIcon(":/Icons/Axes.png");
+}
+
+//-----------------------------------------------------------------------------
+QStringList qSlicerAxesModule::categories() const
+{
+  return QStringList() << "Seismic";
+}
+
+//-----------------------------------------------------------------------------
+QStringList qSlicerAxesModule::dependencies() const
+{
+  return QStringList();
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerAxesModule::setup()
+{
+  this->Superclass::setup();
+
+  bool val2 = vtkMRMLSliceViewDisplayableManagerFactory::GetInstance()->
+      RegisterDisplayableManager("vtkMRMLAxesDisplayableManager2D");
+  bool val3 = vtkMRMLThreeDViewDisplayableManagerFactory::GetInstance()->
+      RegisterDisplayableManager("vtkMRMLAxesDisplayableManager3D");
+}
+
+//-----------------------------------------------------------------------------
+qSlicerAbstractModuleRepresentation* qSlicerAxesModule
+::createWidgetRepresentation()
+{
+  return new qSlicerAxesModuleWidget;
+}
+
+//-----------------------------------------------------------------------------
+vtkMRMLAbstractLogic* qSlicerAxesModule::createLogic()
+{
+  return vtkSlicerAxesLogic::New();
+}

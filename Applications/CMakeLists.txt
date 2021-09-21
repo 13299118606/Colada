@@ -16,5 +16,11 @@
 #
 #============================================================================
 
-add_subdirectory(ColadaCore)
+# add_subdirectory(ColadaCore)
+# add_subdirectory(ColadaQT)
 add_subdirectory(ColadaApp)
+
+add_subdirectory(Python)
+
+# Since "Python" depends on "ColadaApp", the folder is included in the top-level CMakeLists.txt
+# after "ColadaApp" folder.

@@ -17,7 +17,7 @@
 
 // Colada includes
 #include "qColadaAppMainWindow.h"
-#include "Widgets/qAppStyle.h"
+#include "qAppStyle.h"
 
 // Slicer includes
 #include "qSlicerApplication.h"

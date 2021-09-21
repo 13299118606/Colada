@@ -114,7 +114,7 @@ class HomeWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.settingsUI.CustomStyleCheckBox.toggled.connect(self.toggleStyle)
 
     self.settingsAction.triggered.connect(self.raiseSettings)
-    self.hideSlicerUI() 
+    # self.hideSlicerUI() 
 
 
   def toggleStyle(self,visible):

@@ -1,0 +1,8 @@
+julia
+# wxPython  # matplotlib depends on it (crashes on Linux as wxPython does not natively support wheels building for Linux)
+matplotlib  # devito and welly depends on it
+devito
+wellpathpy  # welly depends on it
+welly
+# pint  # units conversion
+cppguts

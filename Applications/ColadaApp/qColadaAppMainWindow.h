@@ -20,10 +20,15 @@
 
 // Colada includes
 #include "qColadaAppExport.h"
-class qColadaAppMainWindowPrivate;
 
 // Slicer includes
 #include "qSlicerMainWindow.h"
+
+class qColadaAppMainWindowPrivate;
+class QDockWidget;
+class qColadaH5SurfTreeView;
+class qColadaH5SeisTreeView;
+class qColadaH5WellTreeView;
 
 class Q_COLADA_APP_EXPORT qColadaAppMainWindow : public qSlicerMainWindow
 {
@@ -33,11 +38,20 @@ public:
   typedef qSlicerMainWindow Superclass;
 
   qColadaAppMainWindow(QWidget *parent=0);
-  virtual ~qColadaAppMainWindow();
+  virtual ~qColadaAppMainWindow() override;
 
 public slots:
   void on_HelpAboutColadaAppAction_triggered();
   virtual void on_NewProjectAction_triggered();
+  virtual void on_OpenProjectAction_triggered();
+
+  QDockWidget *getSurfDockWidget();
+  QDockWidget *getSeisDockWidget();
+  QDockWidget *getWellDockWidget();
+
+  qColadaH5SurfTreeView *getSurfTreeView();
+  qColadaH5SeisTreeView *getSeisTreeView();
+  qColadaH5WellTreeView *getWellTreeView();
 
 protected:
   qColadaAppMainWindow(qColadaAppMainWindowPrivate* pimpl, QWidget* parent);

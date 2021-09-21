@@ -36,11 +36,14 @@
    </item>
    <item row="0" column="0">
     <widget class="QCheckBox" name="CustomUICheckBox">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="text">
       <string>Hide Slicer Interface</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
     </widget>
    </item>

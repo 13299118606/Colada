@@ -2,7 +2,7 @@
 set(proj h5geo)
 
 # Set dependency list
-set(${proj}_DEPENDENCIES tbb Eigen3 zlib HDF5 h5gt magic_enum)
+set(${proj}_DEPENDENCIES tbb Eigen3 zlib HDF5 h5gt magic_enum python units)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
@@ -59,13 +59,20 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DH5GEO_BUILD_SHARED_LIBS:BOOL=ON
       -DH5GEO_BUILD_TESTS:BOOL=OFF
       -DH5GEO_USE_THREADS:BOOL=OFF
+      -DH5GEO_BUILD_SHARED_LIBS:BOOL=ON
+      -DH5GEO_BUILD_h5geopy:BOOL=ON
+      -DHDF5_RUNTIME_DIR:PATH=${HDF5_RUNTIME_DIR}
+      -DCOPY_H5GEOPY_RUNTIME_DEPS:BOOL=OFF
+      -DHDF5_USE_STATIC_LIBRARIES:BOOL=OFF  
       # find package dirs
       -DTBB_DIR:PATH="${TBB_LIB_DIR}/../../../cmake"
-      -DEigen3_ROOT:PATH=${Eigen3_ROOT}
+      -DEIGEN3_INCLUDE_DIRS:PATH=${Eigen3_INCLUDE_DIR}
       -DZLIB_ROOT:PATH=${ZLIB_ROOT}
       -DHDF5_ROOT:PATH=${HDF5_ROOT}
       -Dh5gt_ROOT:PATH=${h5gt_ROOT}
-      -Dmagic_enum_DIR:PATH=${magic_enum_DIR}
+      -DMAGIC_ENUM_INCLUDE_DIR:PATH=${magic_enum_INCLUDE_DIR}
+      -Dunits_DIR:PATH=${units_DIR}
+      -DPYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
     DEPENDS
       ${${proj}_DEPENDENCIES}
     )
@@ -74,7 +81,6 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   set(h5geo_ROOT ${EP_INSTALL_DIR})
   set(h5geo_DIR "${EP_INSTALL_DIR}/lib/cmake/h5geo")
-  set(h5geo_INCLUDE_DIR "${EP_INSTALL_DIR}/include")
 else()
   # The project is provided using h5geo_DIR, nevertheless since other project may depend on h5geo,
   # let's add an 'empty' one
@@ -83,12 +89,32 @@ endif()
 
 mark_as_superbuild(
   VARS
-    h5geo_INCLUDE_DIR:PATH
     h5geo_ROOT:PATH
     h5geo_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
 
-ExternalProject_Message(${proj} "h5geo_INCLUDE_DIR:${h5geo_INCLUDE_DIR}")
-ExternalProject_Message(${proj} "h5geo_ROOT:${h5geo_ROOT}")
-ExternalProject_Message(${proj} "h5geo_DIR:${h5geo_DIR}")
+ExternalProject_Message(${proj} "h5geo_ROOT: ${h5geo_ROOT}")
+ExternalProject_Message(${proj} "h5geo_DIR: ${h5geo_DIR}")
+
+#-----------------------------------------------------------------------------
+# Launcher setting specific to build tree
+
+# library paths
+# if(UNIX)
+#   set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
+#     "${EP_BINARY_DIR}/lib/<CMAKE_CFG_INTDIR>"
+#   )
+# else()
+#   set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
+#     "${EP_BINARY_DIR}/<CMAKE_CFG_INTDIR>"
+#   )
+# endif()
+
+set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
+  "${EP_INSTALL_DIR}/lib"
+  )
+mark_as_superbuild(
+  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+  LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
+  )

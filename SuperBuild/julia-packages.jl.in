@@ -1,0 +1,7 @@
+using Pkg;
+
+ENV["PYTHON"] = "@PYTHON_EXECUTABLE@"
+#Pkg.build("PyCall")
+#Pkg.Registry.add(RegistrySpec(url="https://github.com/slimgroup/SLIMregistryJL.git"))
+#Pkg.develop("JUDI")
+#Pkg.add("SegyIO")

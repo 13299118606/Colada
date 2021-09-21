@@ -1,0 +1,8 @@
+Slicer deps:
+sudo apt install git subversion build-essential cmake cmake-curses-gui cmake-qt-gui qt5-default qt5multimedia-dev qttools5-dev libqt5xmlpatterns5-dev libqt5svg5-dev qtwebengine5-dev qtscript5-dev  lqtbase5-private-dev libqt5x11extras5-dev libxt-dev libssl-dev
+
+Colada deps:
+sudo apt-get install libproj-dev proj-data proj-bin
+
+ALSO for my remote ubuntu 20.04 I need to install (Failed to find "GL/gl.h" in "/usr/include/libdrm".):
+sudo apt install mesa-common-dev libglu1-mesa-dev

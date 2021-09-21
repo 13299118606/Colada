@@ -58,13 +58,14 @@ if(NOT DEFINED HDF5_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DHDF5_BUILD_TOOLS:BOOL=ON
       -DHDF5_BUILD_EXAMPLES:BOOL=OFF
       -DHDF5_BUILD_HL_LIB:BOOL=ON
-      -DHDF5_BUILD_CPP_LIB:BOOL=OFF
+      -DHDF5_BUILD_CPP_LIB:BOOL=ON
       -DBUILD_SHARED_LIBS:BOOL=ON
       -DBUILD_STATIC_LIBS:BOOL=OFF
       -DHDF5_EXTERNALLY_CONFIGURED:BOOL=OFF
       -DHDF5_GENERATE_HEADERS:BOOL=ON
       -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON
-      -DHDF_PACKAGE_NAMESPACE:STRING=h5geo::
+      -DHDF_PACKAGE_NAMESPACE:STRING=hdf5::
+      -DCMAKE_POLICY_DEFAULT_CMP0074:STRING=NEW 
       # find package dirs
       -DZLIB_ROOT:PATH=${ZLIB_ROOT}
     DEPENDS 
@@ -75,7 +76,13 @@ if(NOT DEFINED HDF5_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   set(HDF5_ROOT ${EP_INSTALL_DIR})
   set(HDF5_DIR "${EP_INSTALL_DIR}/cmake/hdf5")
-  set(HDF5_INCLUDE_DIR "${EP_INSTALL_DIR}/include")
+  # set(HDF5_DIR ${EP_INSTALL_DIR})
+  if(WIN32)
+    set(HDF5_RUNTIME_DIR ${EP_INSTALL_DIR}/bin)
+  else()
+    set(HDF5_RUNTIME_DIR ${EP_INSTALL_DIR}/lib)
+  endif()
+
 else()
   # The project is provided using HDF5_DIR, nevertheless since other project may depend on HDF5,
   # let's add an 'empty' one
@@ -84,12 +91,54 @@ endif()
 
 mark_as_superbuild(
   VARS
-    HDF5_INCLUDE_DIR:PATH
     HDF5_ROOT:PATH
     HDF5_DIR:PATH
+    HDF5_RUNTIME_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
 
-ExternalProject_Message(${proj} "HDF5_INCLUDE_DIR:${HDF5_INCLUDE_DIR}")
-ExternalProject_Message(${proj} "HDF5_ROOT:${HDF5_ROOT}")
-ExternalProject_Message(${proj} "HDF5_DIR:${HDF5_DIR}")
+ExternalProject_Message(${proj} "HDF5_ROOT: ${HDF5_ROOT}")
+ExternalProject_Message(${proj} "HDF5_DIR: ${HDF5_DIR}")
+
+#-----------------------------------------------------------------------------
+# Launcher setting specific to build tree
+
+# library paths
+set(_library_output_subdir bin)
+if(UNIX)
+  set(_library_output_subdir lib)
+endif()
+set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
+  ${EP_BINARY_DIR}/${_library_output_subdir}/<CMAKE_CFG_INTDIR>
+  )
+mark_as_superbuild(
+  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+  LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
+  )
+
+# #-----------------------------------------------------------------------------
+# # Launcher setting specific to install tree
+
+# library paths
+set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED 
+  ${EP_BINARY_DIR}/${_library_output_subdir}
+  )
+mark_as_superbuild(
+  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
+  LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
+  )
+
+
+
+
+# message("HDF5_DIR: ${HDF5_DIR}")
+# message("Slicer_INSTALL_ROOT: ${Slicer_INSTALL_ROOT}")
+# message("Slicer_INSTALL_BIN_DIR: ${Slicer_INSTALL_BIN_DIR}")
+
+# install(CODE "message(\"CPack: - Install directory: ${HDF5_DIR}\")")
+# install(
+#   DIRECTORY "${HDF5_ROOT}"
+#   DESTINATION "/home/kerim/Documents/Colada_prj"
+#   )
+
+# include(CPack)
