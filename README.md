@@ -1,7 +1,8 @@
-Colada by Kitware, Inc.
+Colada
 ================================
 
-Desktop application aimed at processing and interpreting geophysical and geological data.
+Desktop application aimed at geophysical data visualization, processing and interpreting.
 
-![Colada by Kitware, Inc.](Applications/ColadaApp/Resources/Images/LogoFull.png?raw=true)
+![Colada](Applications/ColadaApp/Resources/Images/LogoFull.png?raw=true)
 
+The project is under an active development
