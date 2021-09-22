@@ -222,7 +222,7 @@ set(Slicer_QTLOADABLEMODULES_ENABLED
   )
 set(Slicer_QTSCRIPTEDMODULES_ENABLED
   CropVolumeSequence  
-  DataProbe           
+  # DataProbe           
   DICOM               
   DICOMLib            
   DICOMPatcher        
@@ -302,14 +302,20 @@ FetchContent_Populate(${extension_name}
   )
 list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
 
+# Seismic
+set(extension_name "Seismic")
+set(${extension_name}_SOURCE_DIR "${CMAKE_BINARY_DIR}/${extension_name}")
+FetchContent_Populate(${extension_name}
+  SOURCE_DIR     ${${extension_name}_SOURCE_DIR}
+  GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/tierra-colada/Seismic.git
+  GIT_TAG        main
+  GIT_PROGRESS   1
+  QUIET
+  )
+list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
+
 # Add default extensions
 # add_subdirectory(Extensions)
 
 # Add Slicer sources
 add_subdirectory(${slicersources_SOURCE_DIR} ${slicersources_BINARY_DIR})
-
-find_package(Slicer REQUIRED)
-
-message("Slicer_DEPENDENCIES: ${Slicer_DEPENDENCIES}")
-
-message("Slicer_Libs_INCLUDE_DIRS: ${Slicer_Libs_INCLUDE_DIRS}")
