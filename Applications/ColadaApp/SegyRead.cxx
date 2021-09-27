@@ -8,7 +8,7 @@
 #include <gdal/gdal_priv.h>
 
 // units include
-#include <units.hpp>
+#include <units/units.hpp>
 
 // stl includes
 #include <bitset>

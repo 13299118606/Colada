@@ -24,13 +24,13 @@ if(NOT DEFINED units_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_REPOSITORY
-    "${EP_GIT_PROTOCOL}://github.com/tierra-colada/units.git"
+    "${EP_GIT_PROTOCOL}://github.com/LLNL/units"
     QUIET
     )
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "master"
+    "v0.5.0"
     QUIET
     )
 
@@ -54,6 +54,7 @@ if(NOT DEFINED units_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DADDITIONAL_CXX_FLAGS:STRING=${ADDITIONAL_CXX_FLAGS}
       -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
       # Lib settings
+      -DUNITS_BUILD_CONVERTER_APP:BOOL=OFF
       -DUNITS_BUILD_FUZZ_TARGETS:BOOL=OFF
       -DUNITS_BUILD_SHARED_LIBRARY:BOOL=ON
       -DUNITS_BUILD_STATIC_LIBRARY:BOOL=OFF
@@ -87,9 +88,16 @@ ExternalProject_Message(${proj} "units_DIR: ${units_DIR}")
 # Launcher setting specific to build tree
 
 # library paths
-set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
-  "${EP_INSTALL_DIR}/bin"
-  )
+if(WIN32)
+  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+    ${units_ROOT}/bin
+    )
+else()
+  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+    ${units_ROOT}/lib
+    )
+endif()
+
 mark_as_superbuild(
   VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
   LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"

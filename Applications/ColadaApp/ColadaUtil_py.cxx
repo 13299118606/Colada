@@ -3,7 +3,7 @@
 #include "ColadaUtil.h"
 
 // units includes
-#include <units.hpp>
+#include <units/units.hpp>
 
 ColadaUtil_py::ColadaUtil_py(QObject *parent) : QObject(parent) {}
 

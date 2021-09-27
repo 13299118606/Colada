@@ -23,7 +23,7 @@
 #include <gdal/gdal_priv.h>
 
 // units includes
-#include <units.hpp>
+#include <units/units.hpp>
 
 qCRSWidgetPrivate::qCRSWidgetPrivate(qCRSWidget& q)
 	: q_ptr(&q)

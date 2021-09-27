@@ -186,9 +186,9 @@ set(APPLIB_TARGET_LIBRARIES
   # ColadaCore  # this may be useful when splitting qColadaApp by few subprojects
   OpenMP::OpenMP_CXX
   hdf5::hdf5-shared
-  units-shared
   h5geo
   GDAL::GDAL
+  units::units
   ${julia_LIB}
   )
 

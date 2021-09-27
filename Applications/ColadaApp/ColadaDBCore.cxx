@@ -17,7 +17,7 @@
 #include <gdal/gdal_priv.h>
 
 // units include
-#include <units.hpp>
+#include <units/units.hpp>
 
 // PythonQt includes
 #include <PythonQt.h>

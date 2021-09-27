@@ -70,7 +70,7 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DZLIB_ROOT:PATH=${ZLIB_ROOT}
       -DHDF5_ROOT:PATH=${HDF5_ROOT}
       -Dh5gt_ROOT:PATH=${h5gt_ROOT}
-      -DMAGIC_ENUM_INCLUDE_DIR:PATH=${magic_enum_INCLUDE_DIR}
+      -Dmagic_enum_ROOT:PATH=${magic_enum_ROOT}
       -Dunits_DIR:PATH=${units_DIR}
       -DPYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
     DEPENDS
