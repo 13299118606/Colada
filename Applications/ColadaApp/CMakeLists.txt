@@ -196,21 +196,6 @@ if(WIN32)
   list(APPEND APPLIB_TARGET_LIBRARIES ${julia_openlibm_LIB})
 endif()
 
-# Sanity checks
-set(include_dirs
-  ${Eigen3_INCLUDE_DIR}
-  ${h5gt_INCLUDE_DIR}
-  ${magic_enum_INCLUDE_DIR}
-  ${julia_INCLUDE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  )
-
-foreach(var ${include_dirs})
-  if(NOT EXISTS "${var}")
-    message(FATAL_ERROR "Path to include dir: ${var} doesn't exist!")
-  endif()
-endforeach()
-
 set(APPLIB_DIRS 
   ${Eigen3_INCLUDE_DIR}
   ${h5gt_INCLUDE_DIR}
@@ -218,6 +203,12 @@ set(APPLIB_DIRS
   ${julia_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
+
+foreach(var ${APPLIB_DIRS})
+  if(NOT EXISTS "${var}")
+    message(FATAL_ERROR "Path to include dir: ${var} doesn't exist!")
+  endif()
+endforeach()
 
 slicerMacroBuildAppLibrary(
   NAME ${APPLIB_NAME}

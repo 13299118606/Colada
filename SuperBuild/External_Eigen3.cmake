@@ -28,7 +28,7 @@ if(NOT DEFINED Eigen3_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "3.4-rc1"
+    "3.4.0"
     QUIET
     )
 

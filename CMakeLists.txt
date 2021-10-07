@@ -176,7 +176,6 @@ message("Slicer_BUILD_SurfaceToolbox: ${Slicer_BUILD_SurfaceToolbox}")
 
 # Force Slicer to use VTK 9 (this must be CACHE var with FORCE parameter)
 set(Slicer_VTK_VERSION_MAJOR 9 CACHE STRING "VTK major version (8 or 9)" FORCE)
-mark_as_superbuild(Slicer_VTK_VERSION_MAJOR)
 
 # Enable Slicer built-in modules
 set(Slicer_CLIMODULES_ENABLED
@@ -222,7 +221,7 @@ set(Slicer_QTLOADABLEMODULES_ENABLED
   )
 set(Slicer_QTSCRIPTEDMODULES_ENABLED
   CropVolumeSequence  
-  # DataProbe           
+  DataProbe           
   DICOM               
   DICOMLib            
   DICOMPatcher        
@@ -303,19 +302,32 @@ FetchContent_Populate(${extension_name}
 list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
 
 # Seismic
-set(extension_name "Seismic")
-set(${extension_name}_SOURCE_DIR "${CMAKE_BINARY_DIR}/${extension_name}")
-FetchContent_Populate(${extension_name}
-  SOURCE_DIR     ${${extension_name}_SOURCE_DIR}
-  GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/tierra-colada/Seismic.git
-  GIT_TAG        main
-  GIT_PROGRESS   1
-  QUIET
-  )
-list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
+# set(extension_name "Seismic")
+# set(${extension_name}_SOURCE_DIR "${CMAKE_BINARY_DIR}/${extension_name}")
+# FetchContent_Populate(${extension_name}
+#   SOURCE_DIR     ${${extension_name}_SOURCE_DIR}
+#   GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/tierra-colada/Seismic.git
+#   GIT_TAG        main
+#   GIT_PROGRESS   1
+#   QUIET
+#   )
+# list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
 
 # Add default extensions
 # add_subdirectory(Extensions)
 
+
+include(${CMAKE_SOURCE_DIR}/CMake/ColadaMacroEditSourceCode.cmake)
+coladaMacroEditcpp(
+  TARGET MRMLLogic
+  TARGET_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Logic/CMakeLists.txt
+  SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/MRMLLogic/vtkMRMLSliceLogic.cxx
+  DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Logic/vtkMRMLSliceLogic.cxx
+  CXX_STANDARD ${CMAKE_CXX_STANDARD}
+  OVERWRITE
+)
+
 # Add Slicer sources
 add_subdirectory(${slicersources_SOURCE_DIR} ${slicersources_BINARY_DIR})
+
+

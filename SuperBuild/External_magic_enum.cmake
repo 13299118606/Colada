@@ -28,7 +28,7 @@ if(NOT DEFINED magic_enum_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "v0.7.2"
+    "v0.7.3"
     QUIET
     )
 

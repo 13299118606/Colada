@@ -30,7 +30,7 @@ if(NOT DEFINED HDF5_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "1.12/master"
+    "hdf5-1_12_1"
     QUIET
     )
 
