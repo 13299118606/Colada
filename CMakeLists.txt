@@ -327,6 +327,15 @@ coladaMacroEditcpp(
   OVERWRITE
 )
 
+coladaMacroEditcpp(
+  TARGET MRMLCore
+  TARGET_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Core/CMakeLists.txt
+  SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/MRMLCore/vtkMRMLAbstractViewNode.cxx
+  DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Core/vtkMRMLAbstractViewNode.cxx
+  CXX_STANDARD ${CMAKE_CXX_STANDARD}
+  OVERWRITE
+)
+
 # Add Slicer sources
 add_subdirectory(${slicersources_SOURCE_DIR} ${slicersources_BINARY_DIR})
 

@@ -30,6 +30,9 @@ class QDockWidget;
 class qColadaH5SurfTreeView;
 class qColadaH5SeisTreeView;
 class qColadaH5WellTreeView;
+template<class T>
+class vtkSmartPointer;
+class vtkMatrix3x3;
 
 //-----------------------------------------------------------------------------
 class Q_COLADA_APP_EXPORT qColadaAppMainWindowPrivate
@@ -54,6 +57,10 @@ protected:
   virtual void setupMenuBar(QMainWindow* mainWindow);
   virtual void setupFileMenu(QMainWindow* mainWindow);
   virtual void setupViewMenu(QMainWindow* mainWindow);
+  vtkSmartPointer<vtkMatrix3x3> GenerateOrientationMatrix(const std::string& name);
+  vtkSmartPointer<vtkMatrix3x3> GenerateXYOrientationMatrix();
+  vtkSmartPointer<vtkMatrix3x3> GenerateXZOrientationMatrix();
+  vtkSmartPointer<vtkMatrix3x3> GenerateYZOrientationMatrix();
 
 public:
   QLabel *currentProjectLabel, *currentCRSLabel;
