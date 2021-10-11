@@ -54,6 +54,7 @@
 #include "vtkMRMLViewNode.h"
 #include "vtkMRMLSliceNode.h"
 #include "vtkMRMLScene.h"
+#include "vtkMRMLLayoutNode.h"
 #include "qMRMLThreeDViewControllerWidget.h"
 #include "qMRMLThreeDView.h"
 
@@ -189,7 +190,6 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
   std::vector<std::string> defaultOrientation({"XY", "YZ", "XZ"});
 
 
-
   vtkSmartPointer<vtkMRMLNode> defaultViewNode_tmp =
       this->LayoutManager->mrmlScene()->GetDefaultNodeByClass("vtkMRMLViewNode");
   if (!defaultViewNode_tmp)
@@ -234,6 +234,7 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
             GenerateOrientationMatrix(orientationPresetNew[i]));
       defaultSliceNode->SetDefaultOrientation(defaultOrientation[i].c_str());
     }
+    defaultSliceNode->SetDescription(orientationPresetNew[0].c_str());
   }
 
   for (int j = 0; j < this->LayoutManager->threeDViewCount(); j++)
@@ -244,6 +245,7 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
   for (const QString& sliceViewName : this->LayoutManager->sliceViewNames()){
     vtkMRMLSliceNode *sliceNode = this->LayoutManager->sliceWidget(sliceViewName)
           ->mrmlSliceNode();
+
     for (int i = 0; i < axesNames.size(); i++)
       sliceNode->SetAxisLabel(i, axesNames[i].c_str());
 
@@ -261,6 +263,37 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
       }
     }
   }
+
+  vtkMRMLLayoutNode* layoutNode =  vtkMRMLLayoutNode::SafeDownCast(
+    this->LayoutManager->mrmlScene()->GetSingletonNode("vtkMRMLLayoutNode","vtkMRMLLayoutNode"));
+  if(!layoutNode)
+    {
+    qCritical() << "qSlicerAstroVolumeModule::setup() : layoutNode not found!";
+    return;
+    }
+
+  for(int i = 1 ; i < 36; i++)
+    {
+    if (i == 5 || i == 11 || i == 13 || i == 18 || i == 20)
+      {
+      continue;
+      }
+
+    std::string layoutDescription = layoutNode->GetLayoutDescription(i);
+    std::vector<std::string>::const_iterator it;
+    std::vector<std::string>::const_iterator jt;
+    for(it = orientationPresetOld.begin(), jt = orientationPresetNew.begin();
+        it != orientationPresetOld.end() && jt != orientationPresetNew.end(); ++it, ++jt)
+      {
+      size_t found = layoutDescription.find(*it);
+      while (found!=std::string::npos)
+        {
+        layoutDescription.replace(found, it->size(), *jt);
+        found = layoutDescription.find(*it);
+        }
+      }
+    layoutNode->SetLayoutDescription(i, layoutDescription.c_str());
+    }
 
   LayoutManager->threeDWidget(0)->threeDController()->setWindowTitle("MyTitle");
   LayoutManager->threeDWidget(0)->threeDController()->setToolTip("MyToolTip");
