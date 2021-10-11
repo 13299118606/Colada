@@ -66,6 +66,14 @@ macro(coladaMacroEditcpp)
     ABSOLUTE
     )
 
+  get_filename_component( 
+    src_name
+    ${COLADAEDITCPP_SRC_FILE}
+    NAME_WE
+    )
+
+  set(KIT _${src_name}_editcpp)
+
   # `\n` is needed to handle increase of empty lines when overwriting
   set(modify_start "\n# EDITED BY Colada - START: ${src_filename} ${dest_filename}")
   set(modify_end "# EDITED BY Colada - END: ${src_filename} ${dest_filename}")
@@ -107,13 +115,14 @@ macro(coladaMacroEditcpp)
     set(custom_cmd
 "${modify_start}
 get_target_property(target_deps ${COLADAEDITCPP_TARGET} LINK_LIBRARIES)
-add_custom_command(
-  TARGET ${COLADAEDITCPP_TARGET} PRE_BUILD
+add_custom_target(
+  ${KIT}
   COMMAND ${editcpp_cmd}
   COMMAND_EXPAND_LISTS 
   DEPENDS \"\${target_deps}\"
   WORKING_DIRECTORY ${target_dir}
   VERBATIM)
+add_dependencies(${COLADAEDITCPP_TARGET} ${KIT})
 ${modify_end}")
   
     if(is_file_edited GREATER -1 AND COLADAEDITCPP_OVERWRITE)
@@ -197,6 +206,14 @@ macro(coladaMacroEditpy)
     ABSOLUTE
     )
 
+  get_filename_component( 
+    src_name
+    ${COLADAEDITPY_SRC_FILE}
+    NAME_WE
+    )
+
+  set(KIT _${src_name}_editpy)
+
   # `\n` is needed to handle increase of empty lines when overwriting
   set(modify_start "\n# EDITED BY Colada - START: ${src_filename} ${dest_filename}")
   set(modify_end "# EDITED BY Colada - END: ${src_filename} ${dest_filename}")
@@ -235,13 +252,14 @@ macro(coladaMacroEditpy)
     set(custom_cmd
 "${modify_start}
 get_target_property(target_deps ${COLADAEDITPY_TARGET} LINK_LIBRARIES)
-add_custom_command(
-  TARGET ${COLADAEDITPY_TARGET} PRE_BUILD
+add_custom_target(
+  ${KIT}
   COMMAND ${editpy_cmd}
   COMMAND_EXPAND_LISTS 
   DEPENDS \"\${target_deps}\"
   WORKING_DIRECTORY ${target_dir}
   VERBATIM)
+add_dependencies(${COLADAEDITCPP_TARGET} ${KIT})
 ${modify_end}")
   
     if(is_file_edited GREATER -1 AND COLADAEDITPY_OVERWRITE)

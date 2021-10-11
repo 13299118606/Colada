@@ -325,6 +325,7 @@ coladaMacroEditcpp(
   DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Logic/vtkMRMLSliceLogic.cxx
   CXX_STANDARD ${CMAKE_CXX_STANDARD}
   OVERWRITE
+  OLDFILE_DELETE
 )
 
 coladaMacroEditcpp(
@@ -334,6 +335,17 @@ coladaMacroEditcpp(
   DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Core/vtkMRMLAbstractViewNode.cxx
   CXX_STANDARD ${CMAKE_CXX_STANDARD}
   OVERWRITE
+  OLDFILE_DELETE
+)
+
+coladaMacroEditcpp(
+  TARGET qSlicerViewControllersModule
+  TARGET_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Modules/Loadable/ViewControllers/CMakeLists.txt
+  SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/ViewControllers/qSlicerViewControllersModule.cxx
+  DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Modules/Loadable/ViewControllers/qSlicerViewControllersModule.cxx
+  CXX_STANDARD ${CMAKE_CXX_STANDARD}
+  OVERWRITE
+  OLDFILE_DELETE
 )
 
 # Add Slicer sources

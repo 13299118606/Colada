@@ -55,6 +55,7 @@
 #include "vtkMRMLSliceNode.h"
 #include "vtkMRMLScene.h"
 #include "vtkMRMLLayoutNode.h"
+#include "vtkStringArray.h"
 #include "qMRMLThreeDViewControllerWidget.h"
 #include "qMRMLThreeDView.h"
 
@@ -222,6 +223,7 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
     defaultSliceNode->SetAxisLabel(
           i, axesNames[i].c_str());
 
+  defaultSliceNode->SetDefaultOrientation(defaultOrientation[0].c_str());
   for (size_t i = 0; i < orientationPresetOld.size(); i++){
     if (defaultSliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
       defaultSliceNode->RemoveSliceOrientationPreset(
@@ -232,9 +234,15 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
       defaultSliceNode->AddSliceOrientationPreset(
             orientationPresetNew[i],
             GenerateOrientationMatrix(orientationPresetNew[i]));
-      defaultSliceNode->SetDefaultOrientation(defaultOrientation[i].c_str());
     }
-    defaultSliceNode->SetDescription(orientationPresetNew[0].c_str());
+  }
+  defaultSliceNode->DisableModifiedEventOff();
+
+  vtkNew<vtkStringArray> presets;
+  defaultSliceNode->GetSliceOrientationPresetNames(presets);
+  for(int i = 0; i < presets->GetSize(); i++){
+    std::string str = presets->GetValue(i).c_str();
+    std::cout << "Presets:\t" << str << std::endl;
   }
 
   for (int j = 0; j < this->LayoutManager->threeDViewCount(); j++)
