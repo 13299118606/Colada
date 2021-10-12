@@ -541,7 +541,6 @@ void qColadaSegyReader::onButtonBoxClicked(QAbstractButton *button) {
         continue;
       }
     }
-    QMessageBox::information(this, "Info", "SEG-Y files are read!");
   } else if (button == d->buttonBox->button(QDialogButtonBox::Cancel)) {
     this->close(); // close this widget
   }

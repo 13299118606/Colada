@@ -10,6 +10,9 @@
 // units include
 #include <units/units.hpp>
 
+// Qt includes
+#include <QProgressDialog>
+
 // stl includes
 #include <bitset>
 #include <omp.h>
@@ -279,7 +282,10 @@ void SegyRead::readOnlyTraces(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
   qFile.unmap(util::bit_cast<uchar *>(memFile_float));
 }
 
-H5Seis *SegyRead::readTracesInHeap(ReadWriteParam &p, QString &errMsg) {
+H5Seis *SegyRead::readTracesInHeap(
+    ReadWriteParam &p,
+    QString &errMsg)
+{
   Eigen::MatrixXd HDR;
   Eigen::MatrixXf TRACE;
   Eigen::VectorXd minHDRVec(78), maxHDRVec(78);
@@ -340,8 +346,13 @@ H5Seis *SegyRead::readTracesInHeap(ReadWriteParam &p, QString &errMsg) {
     return nullptr;
   }
 
+  QProgressDialog progressDialog("Reading file:\t" + p.seisName, "Abort", 0, N);
+  progressDialog.setWindowModality(Qt::WindowModal);
+  progressDialog.setAutoClose(false);
+
+  qint64 progress = 0;
   if (p.endian == h5geo::SegyEndian::Little) {
-    /* OMP on Windows claims that iterator to be of SIGNED INTEGER type */
+    /* OMP on Windows claims that iterator to be SIGNED INTEGER type */
 #pragma omp parallel for num_threads(p.nThread2use) private(HDR, TRACE, J)
     for (qint64 n = 0; n <= N; n++) {
       if (n < N) {
@@ -370,8 +381,14 @@ H5Seis *SegyRead::readTracesInHeap(ReadWriteParam &p, QString &errMsg) {
       if (doCoordTransform)
         crsHeaderCoordTranslate(coordTrans, HDR);
 
+      if (progressDialog.wasCanceled())
+        continue;
+
 #pragma omp critical
       {
+        progressDialog.setValue(progress);
+        progress++;
+
         seis->writeTraceHeader(HDR, fromTrc);
         seis->writeTrace(TRACE, fromTrc);
         fromTrc = fromTrc + J;
@@ -416,8 +433,14 @@ H5Seis *SegyRead::readTracesInHeap(ReadWriteParam &p, QString &errMsg) {
       if (doCoordTransform)
         crsHeaderCoordTranslate(coordTrans, HDR);
 
+      if (progressDialog.wasCanceled())
+        continue;
+
 #pragma omp critical
       {
+        progressDialog.setValue(progress);
+        progress++;
+
         seis->writeTraceHeader(HDR, fromTrc);
         seis->writeTrace(TRACE, fromTrc);
         fromTrc = fromTrc + J;
@@ -433,6 +456,11 @@ H5Seis *SegyRead::readTracesInHeap(ReadWriteParam &p, QString &errMsg) {
       qFile.unmap(util::bit_cast<uchar *>(memFile_qint16));
       qFile.unmap(util::bit_cast<uchar *>(memFile_float));
     }
+  }
+
+  if (progressDialog.wasCanceled()){
+    errMsg = p.readFile + ": Aborted";
+    return nullptr;
   }
 
   // write tzt and bin headers
@@ -460,13 +488,28 @@ H5Seis *SegyRead::readTracesInHeap(ReadWriteParam &p, QString &errMsg) {
     hdr2sortList = QStringList({"CDP_X", "CDP_Y", "INLINE", "XLINE"});
   }
 
+  progressDialog.setRange(0, hdr2sortList.count());
+  progress = 0;
   for (int i = 0; i < hdr2sortList.count(); i++) {
+    if (progressDialog.wasCanceled()){
+      errMsg = p.readFile + ": Aborted";
+      return nullptr;
+    }
+
+    progressDialog.setLabelText(p.seisName + " sorting:\t" + hdr2sortList[i]);
+    progressDialog.setValue(progress);
+    progress++;
+
     seis->addPKeySort(hdr2sortList[i].toStdString());
   }
+  progressDialog.setValue(progressDialog.maximum());
+  progressDialog.setLabelText("Calculating boundary...");
   // calculate border of area
   seis->calcAndWriteBoundary();
 
   seis->getH5File().flush();
+
+  progressDialog.close();
 
   return seis;
 }

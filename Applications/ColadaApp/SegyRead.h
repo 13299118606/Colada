@@ -53,7 +53,9 @@ public:
 
   static void readOnlyTraces(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
                              ReadOnlyParam &p, QString &errMsg);
-  static H5Seis *readTracesInHeap(ReadWriteParam &p, QString &errMsg);
+  static H5Seis *readTracesInHeap(
+      ReadWriteParam &p,
+      QString &errMsg);
 
 private:
   void init(QString &errMsg);
