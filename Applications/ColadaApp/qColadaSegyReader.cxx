@@ -10,6 +10,8 @@
 #include "ColadaDBCore.h"
 #include "ColadaUtil.h"
 #include "SegyRead.h"
+#include "qCRSWidget.h"
+#include "qCRSDropTableView.h"
 
 // Qt includes
 #include <QLayout>
@@ -17,10 +19,13 @@
 #include <QRadioButton>
 #include <QTextBrowser>
 #include <QDialogButtonBox>
+#include <QStandardItemModel>
 #include <QPushButton>
+#include <QSplitter>
 
 // CTK includes
 #include <ctkFileDialog.h>
+#include <ctkCheckableHeaderView.h>
 
 // h5geo includes
 #include <h5geo/h5core.h>
@@ -39,6 +44,7 @@ void qColadaSegyReaderPrivate::init() {
   initVars();
   initTable();
   initTxtHdrBrowser();
+  initTrcHdrBytesTable();
 }
 
 void qColadaSegyReaderPrivate::initVars() {
@@ -150,6 +156,67 @@ void qColadaSegyReaderPrivate::initTxtHdrBrowser() {
   hSplitter->addWidget(txtHdrBrowser);
 
   vSplitter->addWidget(hSplitter);
+}
+
+void qColadaSegyReaderPrivate::initTrcHdrBytesTable(){
+  trcHdrBytesTableView = new qCopyPasteTableView();
+  trcHdrBytesTableView->setObjectName("TrcHdrBytesTableView");
+  trcHdrBytesTableView->setSelectionMode(QTableView::ExtendedSelection);
+  trcHdrBytesTableView->setAlternatingRowColors(true);
+  trcHdrBytesTableView->setAcceptDrops(true);
+  trcHdrBytesTableView->setSortingEnabled(true);
+  ctkCheckableHeaderView *hrzHeader = new ctkCheckableHeaderView(Qt::Horizontal, tableView);
+  hrzHeader->setObjectName("HrzHeader");
+  hrzHeader->setSectionsClickable(true);
+  hrzHeader->setSectionsMovable(false);
+  hrzHeader->setHighlightSections(true);
+  //    hrzHeader->setSectionResizeMode(QHeaderView::Stretch); // equally
+  //    resizes column width
+  trcHdrBytesTableView->setHorizontalHeader(hrzHeader);
+  ctkCheckableHeaderView *vertHeader = new ctkCheckableHeaderView(Qt::Vertical, tableView);
+  vertHeader->setObjectName("VertHeader");
+  vertHeader->setSectionsClickable(true);
+  vertHeader->setSectionsMovable(false);
+  vertHeader->setHighlightSections(true);
+  trcHdrBytesTableView->setVerticalHeader(vertHeader);
+
+  vSplitter->insertWidget(1, trcHdrBytesTableView);
+
+  trcHdrBytesProxy = new QSortFilterProxyModel();
+  trcHdrBytesModel = new QStandardItemModel();
+  trcHdrBytesProxy->setSourceModel(trcHdrBytesModel);
+  trcHdrBytesTableView->setModel(trcHdrBytesProxy);
+
+  std::vector<int> trcHdrBytes, trcHdrNBytes;
+  h5geo::getTraceHeaderBytes(trcHdrBytes, trcHdrNBytes);
+
+  std::vector<std::string> trcHdrNames, trcHdrShortNames;
+  h5geo::getTraceHeaderNames(trcHdrNames, trcHdrShortNames);
+
+  QStringList trcHdrTableNames, trcHdrShortComboNames;
+  trcHdrTableNames.push_back("read file");
+  for(size_t i = 0; i < trcHdrBytes.size(); i++){
+    trcHdrTableNames.push_back(
+          QString::number(trcHdrBytes[i]) + ": " +
+          QString::number(trcHdrNBytes[i]));
+    trcHdrShortComboNames.push_back(QString::fromStdString(trcHdrShortNames[i]));
+  }
+
+  trcHdrBytesModel->setColumnCount(trcHdrBytes.size());
+  trcHdrBytesModel->setHorizontalHeaderLabels(trcHdrTableNames);
+
+  for (int col = 0; col < trcHdrBytesModel->columnCount(); col++) {
+    if (col == 0)
+      trcHdrBytesModel->horizontalHeaderItem(col)->setToolTip("Read file");
+    else
+      trcHdrBytesModel->horizontalHeaderItem(col)->setToolTip("Trace header bytes start and length");
+  }
+
+  for (int col = 1; col < trcHdrBytesModel->columnCount(); col++){
+    qComboBoxDelegate* comboDelegate =
+        new qComboBoxDelegate(trcHdrShortComboNames, trcHdrBytesTableView);
+    trcHdrBytesTableView->setItemDelegateForColumn(col, comboDelegate);
+  }
 }
 
 qColadaSegyReader::qColadaSegyReader(QWidget *parent)
@@ -463,6 +530,69 @@ qColadaSegyReader::getReadWriteParamFromTable(int proxy_row, QString &errMsg) {
   return p;
 }
 
+void qColadaSegyReader::addBytesTableRow(const QString& readFile){
+  Q_D(qColadaSegyReader);
+  QSortFilterProxyModel* proxy = dynamic_cast<QSortFilterProxyModel*>(
+        d->trcHdrBytesTableView->model());
+  QStandardItemModel* model = dynamic_cast<QStandardItemModel*>(
+        proxy->sourceModel());
+
+  if (!model->findItems(
+        readFile, Qt::MatchFixedString, 0).isEmpty()){
+    return;
+  }
+
+  model->insertRow(model->rowCount());
+  int row = model->rowCount() - 1;
+  int proxy_row = proxy->mapFromSource(
+        model->index(row, 0)).row();
+
+  QStandardItem *readFileItem = new QStandardItem(readFile);
+  readFileItem->setFlags(readFileItem->flags() & ~Qt::ItemIsEditable);
+  model->setItem(row, 0, readFileItem);
+
+  std::vector<std::string> trcHdrNames, trcHdrShortNames;
+  h5geo::getTraceHeaderNames(trcHdrNames, trcHdrShortNames);
+
+  for (int col = 1; col < proxy->columnCount(); col++){
+    proxy->setData(
+        proxy->index(proxy_row, col),
+          QString::fromStdString(trcHdrShortNames[col-1]));
+  }
+
+  model->verticalHeaderItem(row)->setText(
+      QString::number(model->rowCount()));
+}
+
+void qColadaSegyReader::removeBytesTableRow(const QString& readFile){
+  Q_D(qColadaSegyReader);
+  QSortFilterProxyModel* proxy = dynamic_cast<QSortFilterProxyModel*>(
+        d->trcHdrBytesTableView->model());
+  QStandardItemModel* model = dynamic_cast<QStandardItemModel*>(
+        proxy->sourceModel());
+
+  QList<QStandardItem*> itemList = model->findItems(
+          readFile, Qt::MatchFixedString, 0);
+
+  if (itemList.isEmpty()){
+    return;
+  }
+
+  QList<int> rowList;
+  for (QStandardItem* item : itemList)
+    rowList.push_back(item->row());
+
+  /* to remove rows correctly we should remove them in descending order */
+  std::sort(rowList.rbegin(), rowList.rend()); // descending order sort
+
+  // as item are taken from `model` then item rows are referred to `model` (not `proxy`)
+  for (int &row : rowList)
+    model->removeRow(row);
+
+  for (int row = 0; row < model->rowCount(); row++)
+    model->verticalHeaderItem(row)->setText(QString::number(row + 1));
+}
+
 void qColadaSegyReader::onAddBtnClicked() {
   Q_D(qColadaSegyReader);
   QStringList fileNames = ctkFileDialog::getOpenFileNames(
@@ -493,6 +623,7 @@ void qColadaSegyReader::onAddBtnClicked() {
 
     resetRow(proxy_row);
     updateRow(proxy_row);
+    addBytesTableRow(name);
 
     d->model->verticalHeaderItem(row)->setText(
         QString::number(d->model->rowCount()));
@@ -510,10 +641,15 @@ void qColadaSegyReader::onRemoveToolBtnClicked() {
   /* to remove rows correctly we should remove them in descending order */
   std::sort(rowList.rbegin(), rowList.rend()); // descending order sort
 
-  for (int &row : rowList)
-    d->model->removeRow(row);
+  for (int &row : rowList){
+    QString readFile = d->proxy->data(
+          d->proxy->index(row, 1))
+        .toString();
+    d->proxy->removeRow(row);
+    removeBytesTableRow(readFile);
+  }
 
-  for (int row = 0; row < d->tableView->model()->rowCount(); row++)
+  for (int row = 0; row < d->model->rowCount(); row++)
     d->model->verticalHeaderItem(row)->setText(QString::number(row + 1));
 }
 

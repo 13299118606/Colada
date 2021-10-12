@@ -3,18 +3,15 @@
 
 // Colada includes
 #include "qColadaReader.h"
-#include "qCRSDropTableView.h"
-#include "qCRSWidget.h"
 
-// CTK includes
-#include <ctkCheckableHeaderView.h>
-
-// Qt includes
-#include <QSortFilterProxyModel>
-#include <QStandardItemModel>
-#include <QToolButton>
-#include <QSplitter>
-#include <QDialogButtonBox>
+class qCRSDropTableView;
+class qCRSWidget;
+class ctkCheckableHeaderView;
+class QSortFilterProxyModel;
+class QStandardItemModel;
+class QToolButton;
+class QDialogButtonBox;
+class QSplitter;
 
 class Q_COLADA_APP_EXPORT qColadaReaderPrivate {
   Q_DECLARE_PUBLIC(qColadaReader);

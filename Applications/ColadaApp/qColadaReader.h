@@ -15,7 +15,7 @@ class Q_COLADA_APP_EXPORT qColadaReader : public QDialog {
 
 public:
   explicit qColadaReader(QWidget *parent = nullptr);
-  virtual ~qColadaReader() override;
+  virtual ~qColadaReader();
 
 public slots:
   virtual void updateRow(int row);

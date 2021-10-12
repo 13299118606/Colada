@@ -1,10 +1,20 @@
 // Colada includes
 #include "qColadaReader.h"
 #include "qColadaReader_p.h"
+#include "qCRSDropTableView.h"
+#include "qCRSWidget.h"
 
 // Qt includes
 #include <QLayout>
 #include <QLineEdit>
+#include <QSortFilterProxyModel>
+#include <QStandardItemModel>
+#include <QToolButton>
+#include <QSplitter>
+#include <QDialogButtonBox>
+
+// CTK includes
+#include <ctkCheckableHeaderView.h>
 
 qColadaReaderPrivate::qColadaReaderPrivate(qColadaReader &q) : q_ptr(&q) {}
 

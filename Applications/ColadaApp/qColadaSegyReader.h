@@ -18,6 +18,8 @@ public:
 public slots:
   virtual void updateRow(int proxy_row) override;
   virtual void resetRow(int proxy_row) override;
+  void addBytesTableRow(const QString& readFile);
+  void removeBytesTableRow(const QString& readFile);
 
   virtual void onAddBtnClicked() override;
   virtual void onRemoveToolBtnClicked() override;
