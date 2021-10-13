@@ -499,8 +499,12 @@ class qColadaLasReader(qColadaReader):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
             # to accelerate this code I reserve a var (`getCurrentProjectUnits()` invokes SQLITE wich is slow)
             currentProjectUnits = ColadaDBCore_py().getCurrentProjectUnits()
+            progressDialog = slicer.util.createProgressDialog(
+                parent=self, maximum=self.wellModel.rowCount())
             for row in range(self.wellModel.rowCount()):
                 p_w = self.getReadWriteWellParamFromTable(row)
+                progressDialog.setLabelText("Reading: " + p_w.readFile)
+                progressDialog.setValue(row)
                 try:
                     h5wellCnt = h5geo.createWellContainerByName(p_w.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
 
@@ -597,6 +601,9 @@ class qColadaLasReader(qColadaReader):
                             '''
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
+
+                        if progressDialog.wasCanceled():
+                            break
                         
                     h5wellCnt.getH5File().flush()
 
@@ -605,7 +612,7 @@ class qColadaLasReader(qColadaReader):
                     # print(ex)
                     continue
 
-            QtGui.QMessageBox.information(self, "Info", "Log files are read!")
+            progressDialog.setValue(self.wellModel.rowCount())
 
         elif button == self.buttonBox.button(QtGui.QDialogButtonBox.Cancel):
             self.close()

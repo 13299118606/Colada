@@ -346,9 +346,13 @@ class qColadaSurfReader(qColadaReader):
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
             # to accelerate this code I reserve a var (`getCurrentProjectUnits()` invokes SQLITE wich is slow)
-            currentProjectUnits = ColadaDBCore_py().getCurrentProjectUnits()            
+            currentProjectUnits = ColadaDBCore_py().getCurrentProjectUnits()
+            progressDialog = slicer.util.createProgressDialog(
+                parent=self, maximum=self.surfModel.rowCount())
             for row in range(self.surfModel.rowCount()):
                 p_s = self.getReadWriteSurfParamFromTable(row)
+                progressDialog.setLabelText("Reading: " + p_s.readFile)
+                progressDialog.setValue(row)
                 try:
                     h5surfCnt = h5geo.createSurfContainerByName(p_s.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
 
@@ -424,6 +428,9 @@ class qColadaSurfReader(qColadaReader):
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
+
+                    if progressDialog.wasCanceled():
+                        break
                         
                     h5surfCnt.getH5File().flush()
 
@@ -432,7 +439,7 @@ class qColadaSurfReader(qColadaReader):
                     # print(ex)
                     continue
 
-            QtGui.QMessageBox.information(self, "Info", "Surface files are read!")
+            progressDialog.setValue(self.surfModel.rowCount())
 
         elif button == self.buttonBox.button(QtGui.QDialogButtonBox.Cancel):
             self.close()
