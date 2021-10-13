@@ -51,11 +51,14 @@ public:
   double nSamples(h5geo::SegyEndian endian);
   quint64 nTraces(h5geo::SegyEndian endian);
 
-  static void readOnlyTraces(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
-                             ReadOnlyParam &p, QString &errMsg);
+  static void readOnlyTraces(
+      Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
+      ReadOnlyParam &p, QString &errMsg,
+      std::vector<std::string> shortHdrNames = std::vector<std::string>());
   static H5Seis *readTracesInHeap(
       ReadWriteParam &p,
-      QString &errMsg);
+      QString &errMsg,
+      std::vector<std::string> shortHdrNames = std::vector<std::string>());
 
 private:
   void init(QString &errMsg);
@@ -64,14 +67,16 @@ private:
                  const qint32 *memFile_qint32, const qint16 *memFile_qint16,
                  const float *memFile_float, const h5geo::SegyFormat &format,
                  const int &nSamp, const size_t &bytesPerTrc,
-                 const size_t &minTrc, const size_t &maxTrc);
+                 const size_t &minTrc, const size_t &maxTrc,
+                 const std::vector<size_t>& mapHdr2origin);
 
   inline static void
   readDataFromBE(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
                  const qint32 *memFile_qint32, const qint16 *memFile_qint16,
                  const float *memFile_float, const h5geo::SegyFormat &format,
                  const int &nSamp, const size_t &bytesPerTrc,
-                 const size_t &minTrc, const size_t &maxTrc);
+                 const size_t &minTrc, const size_t &maxTrc,
+                 const std::vector<size_t>& mapHdr2origin);
 
   inline static void
   crsHeaderCoordTranslate(OGRCoordinateTransformation *coordTrans,

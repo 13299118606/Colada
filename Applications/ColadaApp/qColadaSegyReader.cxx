@@ -223,6 +223,9 @@ qColadaSegyReader::qColadaSegyReader(QWidget *parent)
     : qColadaReader(new qColadaSegyReaderPrivate(*this), parent) {
   Q_D(qColadaSegyReader);
   d->init();
+
+  connect(d->trcHdrBytesModel, &QStandardItemModel::dataChanged,
+          this, &qColadaSegyReader::onBytesTableDataChanged);
 }
 
 qColadaSegyReader::~qColadaSegyReader() {}
@@ -530,6 +533,31 @@ qColadaSegyReader::getReadWriteParamFromTable(int proxy_row, QString &errMsg) {
   return p;
 }
 
+std::vector<std::string> qColadaSegyReader::getTrcHdrNamesFromBytesTable(
+    const QString& readFile)
+{
+  Q_D(qColadaSegyReader);
+  QSortFilterProxyModel* proxy = dynamic_cast<QSortFilterProxyModel*>(
+        d->trcHdrBytesTableView->model());
+  QStandardItemModel* model = dynamic_cast<QStandardItemModel*>(
+        proxy->sourceModel());
+
+  QList<QStandardItem*> itemList = model->findItems(
+          readFile, Qt::MatchFixedString, 0);
+
+  if (itemList.isEmpty()){
+    return std::vector<std::string>();
+  }
+
+  int row = itemList[0]->row();
+  std::vector<std::string> hdrNames(model->columnCount()-1);
+  for (int col = 1; col < model->columnCount(); col++)
+    hdrNames[col-1] = model->data(
+          model->index(row, col)).
+        toString().toStdString();
+  return hdrNames;
+}
+
 void qColadaSegyReader::addBytesTableRow(const QString& readFile){
   Q_D(qColadaSegyReader);
   QSortFilterProxyModel* proxy = dynamic_cast<QSortFilterProxyModel*>(
@@ -554,11 +582,15 @@ void qColadaSegyReader::addBytesTableRow(const QString& readFile){
   std::vector<std::string> trcHdrNames, trcHdrShortNames;
   h5geo::getTraceHeaderNames(trcHdrNames, trcHdrShortNames);
 
+  model->blockSignals(true);
+  proxy->blockSignals(true);
   for (int col = 1; col < proxy->columnCount(); col++){
     proxy->setData(
         proxy->index(proxy_row, col),
           QString::fromStdString(trcHdrShortNames[col-1]));
   }
+  proxy->blockSignals(false);
+  model->blockSignals(false);
 
   model->verticalHeaderItem(row)->setText(
       QString::number(model->rowCount()));
@@ -671,8 +703,9 @@ void qColadaSegyReader::onButtonBoxClicked(QAbstractButton *button) {
         QMessageBox::critical(this, "Error", errMsg);
         continue;
       }
-      SegyRead::readTracesInHeap(p, errMsg);
-      if (!errMsg.isEmpty()) {
+      H5Seis_ptr seis(SegyRead::readTracesInHeap(
+                   p, errMsg, getTrcHdrNamesFromBytesTable(p.readFile)));
+      if (!errMsg.isEmpty() || !seis) {
         QMessageBox::critical(this, "Error", errMsg);
         continue;
       }
@@ -682,6 +715,64 @@ void qColadaSegyReader::onButtonBoxClicked(QAbstractButton *button) {
   }
 }
 
-// void qColadaSegyReader::onDataChanged(const QModelIndex &topLeft,
-//                                  const QModelIndex &bottomRight,
-//                                  const QVector<int> &roles) {}
+void qColadaSegyReader::onBytesTableDataChanged(
+    const QModelIndex &topLeft,
+    const QModelIndex &bottomRight,
+    const QVector<int> &roles)
+{
+  // length or `roles` independent from modified indexes
+  // one index may contain multiple roles
+  if (!roles.contains(Qt::DisplayRole) ||
+      !topLeft.isValid())
+    return;
+
+  Q_D(qColadaSegyReader);
+  QSortFilterProxyModel* proxy = dynamic_cast<QSortFilterProxyModel*>(
+        d->trcHdrBytesTableView->model());
+  QStandardItemModel* model = dynamic_cast<QStandardItemModel*>(
+        proxy->sourceModel());
+
+  std::vector<std::string> trcHdrNames, trcHdrShortNames;
+  h5geo::getTraceHeaderNames(trcHdrNames, trcHdrShortNames);
+
+  QString data = model->data(topLeft).toString();
+  bool isDataValid = std::find(
+        trcHdrShortNames.begin(),
+        trcHdrShortNames.end(),
+        data.toStdString()) != trcHdrShortNames.end();
+  if (isDataValid)
+    model->itemFromIndex(topLeft)->setBackground(Qt::green);
+  else
+    model->itemFromIndex(topLeft)->setBackground(Qt::red);
+
+  for (int col = 1; col < model->columnCount(); col++){
+    if (topLeft.column() == col)
+      continue;
+
+    QModelIndex index = model->index(topLeft.row(), col);
+    if (data == model->data(index).toString()){
+      model->itemFromIndex(index)->setBackground(Qt::red);
+    }
+  }
+
+  // check if any `red` item may become `green`
+  for (int col_out = 1; col_out < model->columnCount(); col_out++){
+    QModelIndex index_out = model->index(topLeft.row(), col_out);
+    if (model->itemFromIndex(index_out)->background() != Qt::red)
+      continue;
+
+    bool recolor = true;
+    for (int col_in = 1; col_in < model->columnCount(); col_in++){
+      if (col_out == col_in)
+        continue;
+
+      QModelIndex index_in = model->index(topLeft.row(), col_in);
+      if (model->data(index_out).toString() == model->data(index_in).toString()){
+        recolor = false;
+        break;
+      }
+    }
+    if (recolor)
+      model->itemFromIndex(index_out)->setBackground(Qt::green);
+  }
+}

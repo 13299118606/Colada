@@ -25,12 +25,20 @@ public slots:
   virtual void onRemoveToolBtnClicked() override;
   virtual void onAutoDefineToolBtnClicked() override;
   virtual void onButtonBoxClicked(QAbstractButton *button) override;
+  void onBytesTableDataChanged(
+      const QModelIndex &topLeft,
+      const QModelIndex &bottomRight,
+      const QVector<int> &roles = QVector<int>());
 
 private:
-  SegyRead::ReadOnlyParam getReadOnlyParamFromTable(int proxy_row,
-                                                    QString &errMsg);
-  SegyRead::ReadWriteParam getReadWriteParamFromTable(int proxy_row,
-                                                      QString &errMsg);
+  SegyRead::ReadOnlyParam getReadOnlyParamFromTable(
+      int proxy_row,
+      QString &errMsg);
+  SegyRead::ReadWriteParam getReadWriteParamFromTable(
+      int proxy_row,
+      QString &errMsg);
+  std::vector<std::string> getTrcHdrNamesFromBytesTable(
+      const QString& readFile);
 
 private:
   Q_DECLARE_PRIVATE(qColadaSegyReader);

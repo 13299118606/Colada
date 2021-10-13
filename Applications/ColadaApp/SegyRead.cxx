@@ -221,10 +221,46 @@ quint64 SegyRead::nTraces(h5geo::SegyEndian endian) {
   return (qFile.size() - 3600) / (nSamp * 4 + 240);
 }
 
-void SegyRead::readOnlyTraces(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
-                              ReadOnlyParam &p, QString &errMsg) {
-  if (p.minTrc > p.maxTrc)
+void SegyRead::readOnlyTraces(
+    Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
+    ReadOnlyParam &p, QString &errMsg,
+    std::vector<std::string> shortHdrNames)
+{
+  std::vector<std::string> fullHdrNames_original, shortHdrNames_original;
+  h5geo::getTraceHeaderNames(fullHdrNames_original, shortHdrNames_original);
+  if (shortHdrNames.empty()){
+    h5geo::getTraceHeaderNames(fullHdrNames_original, shortHdrNames);
+  }
+
+  std::vector<std::string> shortHdrNames_unique(shortHdrNames);
+  sort(shortHdrNames_unique.begin(), shortHdrNames_unique.end());
+  shortHdrNames_unique.erase(unique(
+                               shortHdrNames_unique.begin(),
+                               shortHdrNames_unique.end()),
+                             shortHdrNames_unique.end());
+
+  if (shortHdrNames.size() != shortHdrNames_unique.size()){
+    errMsg = p.readFile + ": Short header names contain duplicates!";
     return;
+  }
+
+  std::vector<size_t> mapHdr2origin(shortHdrNames.size());
+  for (size_t i = 0; i < shortHdrNames.size(); i++){
+    ptrdiff_t ind = find(shortHdrNames_original.begin(),
+                   shortHdrNames_original.end(),
+                   shortHdrNames[i]) - shortHdrNames_original.begin();
+    if (ind >= shortHdrNames.size()) {
+      errMsg = p.readFile + ": Unable to map trace header short names!";
+      return;
+    }
+
+    mapHdr2origin[i] = ind;
+  }
+
+  if (p.minTrc > p.maxTrc){
+    errMsg = p.readFile + ": MIN trace is bigger than MAX trace!";
+    return;
+  }
 
   ptrdiff_t nSamp = p.binHdr[7];
   size_t bytesPerTrc = 4 * nSamp + 240;
@@ -266,13 +302,15 @@ void SegyRead::readOnlyTraces(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
   if (p.endian == h5geo::SegyEndian::Little) {
     /* reads HDR and TRACE */
     readDataFromLE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
-                   p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc);
+                   p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc,
+                   mapHdr2origin);
     if (doCoordTransform)
       crsHeaderCoordTranslate(coordTrans, HDR);
   } else if (p.endian == h5geo::SegyEndian::Big) {
     /* reads HDR and TRACE */
     readDataFromBE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
-                   p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc);
+                   p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc,
+                   mapHdr2origin);
     if (doCoordTransform)
       crsHeaderCoordTranslate(coordTrans, HDR);
   }
@@ -284,8 +322,40 @@ void SegyRead::readOnlyTraces(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
 
 H5Seis *SegyRead::readTracesInHeap(
     ReadWriteParam &p,
-    QString &errMsg)
+    QString &errMsg,
+    std::vector<std::string> shortHdrNames)
 {
+  std::vector<std::string> fullHdrNames_original, shortHdrNames_original;
+  h5geo::getTraceHeaderNames(fullHdrNames_original, shortHdrNames_original);
+  if (shortHdrNames.empty()){
+    h5geo::getTraceHeaderNames(fullHdrNames_original, shortHdrNames);
+  }
+
+  std::vector<std::string> shortHdrNames_unique(shortHdrNames);
+  sort(shortHdrNames_unique.begin(), shortHdrNames_unique.end());
+  shortHdrNames_unique.erase(unique(
+                               shortHdrNames_unique.begin(),
+                               shortHdrNames_unique.end()),
+                             shortHdrNames_unique.end());
+
+  if (shortHdrNames.size() != shortHdrNames_unique.size()){
+    errMsg = p.readFile + ": Short header names contain duplicates!";
+    return nullptr;
+  }
+
+  std::vector<size_t> mapHdr2origin(shortHdrNames.size());
+  for (size_t i = 0; i < shortHdrNames.size(); i++){
+    ptrdiff_t ind = find(shortHdrNames_original.begin(),
+                   shortHdrNames_original.end(),
+                   shortHdrNames[i]) - shortHdrNames_original.begin();
+    if (ind >= shortHdrNames.size()) {
+      errMsg = p.readFile + ": Unable to map trace header short names!";
+      return nullptr;
+    }
+
+    mapHdr2origin[i] = ind;
+  }
+
   Eigen::MatrixXd HDR;
   Eigen::MatrixXf TRACE;
   Eigen::VectorXd minHDRVec(78), maxHDRVec(78);
@@ -331,7 +401,7 @@ H5Seis *SegyRead::readTracesInHeap(
       saveFile, h5geo::CreationType::OPEN_OR_CREATE));
 
   if (seisCnt_ptr == nullptr) {
-    errMsg = p.readFile + ": Can't open or create seis container";
+    errMsg = p.readFile + ": Unable to open or create seis container";
     return nullptr;
   }
 
@@ -343,6 +413,7 @@ H5Seis *SegyRead::readTracesInHeap(
       seisCnt_ptr->createSeis(seisName, p, p.seisCreateType);
   if (seis == nullptr) {
     errMsg = p.readFile + ": Can't open or create seis";
+    seis->Delete();
     return nullptr;
   }
 
@@ -377,7 +448,8 @@ H5Seis *SegyRead::readTracesInHeap(
 
       /* reads HDR and TRACE */
       readDataFromLE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
-                     p.format, nSamp, bytesPerTrc, 0, J);
+                     p.format, nSamp, bytesPerTrc, 0, J,
+                     mapHdr2origin);
       if (doCoordTransform)
         crsHeaderCoordTranslate(coordTrans, HDR);
 
@@ -429,7 +501,8 @@ H5Seis *SegyRead::readTracesInHeap(
 
       /* reads HDR and TRACE */
       readDataFromBE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
-                     p.format, nSamp, bytesPerTrc, 0, J);
+                     p.format, nSamp, bytesPerTrc, 0, J,
+                     mapHdr2origin);
       if (doCoordTransform)
         crsHeaderCoordTranslate(coordTrans, HDR);
 
@@ -460,6 +533,7 @@ H5Seis *SegyRead::readTracesInHeap(
 
   if (progressDialog.wasCanceled()){
     errMsg = p.readFile + ": Aborted";
+    seis->Delete();
     return nullptr;
   }
 
@@ -470,7 +544,8 @@ H5Seis *SegyRead::readTracesInHeap(
   // write min/max HDR
   auto opt = seis->getTraceHeaderD();
   if (!opt.has_value()) {
-    errMsg = p.readFile + ": Can't get trace header dataset";
+    errMsg = p.readFile + ": Unable to get trace header dataset";
+    seis->Delete();
     return nullptr;
   }
   opt->createAttribute<double>("min", h5gt::DataSpace(minHDRVec.size()))
@@ -481,9 +556,9 @@ H5Seis *SegyRead::readTracesInHeap(
   // sort headers
   QStringList hdr2sortList;
   if (p.dataType == h5geo::SeisDataType::PRESTACK) {
-    hdr2sortList =
-        QStringList({"FFID", "SP", "CDP", "DSREG", "SRCX", "SRCY", "GRPX",
-                     "GRPY", "CDP_X", "CDP_Y", "INLINE", "XLINE"});
+    hdr2sortList = QStringList(
+          {"FFID", "SP", "CDP", "DSREG", "SRCX", "SRCY", "GRPX",
+           "GRPY", "CDP_X", "CDP_Y", "INLINE", "XLINE"});
   } else {
     hdr2sortList = QStringList({"CDP_X", "CDP_Y", "INLINE", "XLINE"});
   }
@@ -493,6 +568,7 @@ H5Seis *SegyRead::readTracesInHeap(
   for (int i = 0; i < hdr2sortList.count(); i++) {
     if (progressDialog.wasCanceled()){
       errMsg = p.readFile + ": Aborted";
+      seis->Delete();
       return nullptr;
     }
 
@@ -505,59 +581,65 @@ H5Seis *SegyRead::readTracesInHeap(
   progressDialog.setValue(progressDialog.maximum());
   progressDialog.setLabelText("Calculating boundary...");
   // calculate border of area
-  seis->calcAndWriteBoundary();
+  if (!seis->calcAndWriteBoundary()){
+    errMsg = p.readFile + ": Unable to calculate and write boundary. Check INLINE, XLINE, CDP_X, CDP_Y headers";
+    seis->Delete();
+    return nullptr;
+  }
 
   seis->getH5File().flush();
-
   progressDialog.close();
-
   return seis;
 }
 
-void SegyRead::readDataFromLE(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
-                              const qint32 *memFile_qint32,
-                              const qint16 *memFile_qint16,
-                              const float *memFile_float,
-                              const h5geo::SegyFormat &format, const int &nSamp,
-                              const size_t &bytesPerTrc, const size_t &minTrc,
-                              const size_t &maxTrc) {
+void SegyRead::readDataFromLE(
+    Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
+    const qint32 *memFile_qint32,
+    const qint16 *memFile_qint16,
+    const float *memFile_float,
+    const h5geo::SegyFormat &format, const int &nSamp,
+    const size_t &bytesPerTrc, const size_t &minTrc,
+    const size_t &maxTrc,
+    const std::vector<size_t>& mapHdr2origin)
+{
   for (qint64 j = minTrc; j < maxTrc; j++) {
     for (size_t i = 0; i < 7; i++) {
-      HDR(j, i) = qFromLittleEndian(memFile_qint32[j * bytesPerTrc / 4 + i]);
+      HDR(j, mapHdr2origin[i]) = qFromLittleEndian(
+            memFile_qint32[j * bytesPerTrc / 4 + i]);
     }
     for (size_t i = 7; i < 11; i++) {
-      HDR(j, i) =
+      HDR(j, mapHdr2origin[i]) =
           qFromLittleEndian(memFile_qint16[j * bytesPerTrc / 2 + (i - 7) + 14]);
     }
     for (size_t i = 11; i < 19; i++) {
-      HDR(j, i) =
+      HDR(j, mapHdr2origin[i]) =
           qFromLittleEndian(memFile_qint32[j * bytesPerTrc / 4 + (i - 11) + 9]);
     }
     for (size_t i = 19; i < 21; i++) {
-      HDR(j, i) = qFromLittleEndian(
+      HDR(j, mapHdr2origin[i]) = qFromLittleEndian(
           memFile_qint16[j * bytesPerTrc / 2 + (i - 19) + 34]);
     }
     for (size_t i = 21; i < 25; i++) {
-      HDR(j, i) = qFromLittleEndian(
+      HDR(j, mapHdr2origin[i]) = qFromLittleEndian(
           memFile_qint32[j * bytesPerTrc / 4 + (i - 21) + 18]);
     }
     for (size_t i = 25; i < 71; i++) {
-      HDR(j, i) = qFromLittleEndian(
+      HDR(j, mapHdr2origin[i]) = qFromLittleEndian(
           memFile_qint16[j * bytesPerTrc / 2 + (i - 25) + 44]);
     }
     for (size_t i = 71; i < 76; i++) {
-      HDR(j, i) = qFromLittleEndian(
+      HDR(j, mapHdr2origin[i]) = qFromLittleEndian(
           memFile_qint32[j * bytesPerTrc / 4 + (i - 71) + 45]);
     }
     for (size_t i = 76; i < 78; i++) {
-      HDR(j, i) = qFromLittleEndian(
+      HDR(j, mapHdr2origin[i]) = qFromLittleEndian(
           memFile_qint16[j * bytesPerTrc / 2 + (i - 76) + 100]);
     }
 
     if (format == h5geo::SegyFormat::FourByte_IBM) {
       for (size_t i = 0; i < nSamp; i++) {
         TRACE(i, j) = ibm2ieee(
-            qFromLittleEndian(memFile_qint32[j * bytesPerTrc / 4 + i + 60]));
+              qFromLittleEndian(memFile_qint32[j * bytesPerTrc / 4 + i + 60]));
       }
     } else if (format == h5geo::SegyFormat::FourByte_integer) {
       for (size_t i = 0; i < nSamp; i++) {
@@ -573,44 +655,48 @@ void SegyRead::readDataFromLE(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
   }
 }
 
-void SegyRead::readDataFromBE(Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
-                              const qint32 *memFile_qint32,
-                              const qint16 *memFile_qint16,
-                              const float *memFile_float,
-                              const h5geo::SegyFormat &format, const int &nSamp,
-                              const size_t &bytesPerTrc, const size_t &minTrc,
-                              const size_t &maxTrc) {
+void SegyRead::readDataFromBE(
+    Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
+    const qint32 *memFile_qint32,
+    const qint16 *memFile_qint16,
+    const float *memFile_float,
+    const h5geo::SegyFormat &format, const int &nSamp,
+    const size_t &bytesPerTrc, const size_t &minTrc,
+    const size_t &maxTrc,
+    const std::vector<size_t>& mapHdr2origin)
+{
   for (qint64 j = minTrc; j < maxTrc; j++) {
     for (size_t i = 0; i < 7; i++) {
-      HDR(j, i) = qFromBigEndian(memFile_qint32[j * bytesPerTrc / 4 + i]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint32[j * bytesPerTrc / 4 + i]);
     }
     for (size_t i = 7; i < 11; i++) {
-      HDR(j, i) =
-          qFromBigEndian(memFile_qint16[j * bytesPerTrc / 2 + (i - 7) + 14]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint16[j * bytesPerTrc / 2 + (i - 7) + 14]);
     }
     for (size_t i = 11; i < 19; i++) {
-      HDR(j, i) =
-          qFromBigEndian(memFile_qint32[j * bytesPerTrc / 4 + (i - 11) + 9]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint32[j * bytesPerTrc / 4 + (i - 11) + 9]);
     }
     for (size_t i = 19; i < 21; i++) {
-      HDR(j, i) =
-          qFromBigEndian(memFile_qint16[j * bytesPerTrc / 2 + (i - 19) + 34]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint16[j * bytesPerTrc / 2 + (i - 19) + 34]);
     }
     for (size_t i = 21; i < 25; i++) {
-      HDR(j, i) =
-          qFromBigEndian(memFile_qint32[j * bytesPerTrc / 4 + (i - 21) + 18]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint32[j * bytesPerTrc / 4 + (i - 21) + 18]);
     }
     for (size_t i = 25; i < 71; i++) {
-      HDR(j, i) =
-          qFromBigEndian(memFile_qint16[j * bytesPerTrc / 2 + (i - 25) + 44]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint16[j * bytesPerTrc / 2 + (i - 25) + 44]);
     }
     for (size_t i = 71; i < 76; i++) {
-      HDR(j, i) =
-          qFromBigEndian(memFile_qint32[j * bytesPerTrc / 4 + (i - 71) + 45]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint32[j * bytesPerTrc / 4 + (i - 71) + 45]);
     }
     for (size_t i = 76; i < 78; i++) {
-      HDR(j, i) =
-          qFromBigEndian(memFile_qint16[j * bytesPerTrc / 2 + (i - 76) + 100]);
+      HDR(j, mapHdr2origin[i]) = qFromBigEndian(
+            memFile_qint16[j * bytesPerTrc / 2 + (i - 76) + 100]);
     }
 
     if (format == h5geo::SegyFormat::FourByte_IBM) {
