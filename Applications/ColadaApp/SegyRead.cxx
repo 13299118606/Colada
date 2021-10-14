@@ -419,6 +419,7 @@ H5Seis *SegyRead::readTracesInHeap(
 
   QProgressDialog progressDialog("Reading file:\t" + p.seisName, "Abort", 0, N);
   progressDialog.setWindowModality(Qt::WindowModal);
+  progressDialog.setWindowTitle("Processing...");
   progressDialog.setAutoClose(false);
 
   qint64 progress = 0;
