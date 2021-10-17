@@ -1,0 +1,4 @@
+set(vtkEigen_INCLUDE_DIRS "@vtkEigen_INCLUDE_DIRS@")
+set(vtkEigen_LIB_DIR "@CMAKE_BINARY_DIR@/bin" "@CMAKE_BINARY_DIR@")
+set(Eigen3_DIR "@Eigen3_DIR@")
+set(VTK_DIR "@VTK_DIR@")

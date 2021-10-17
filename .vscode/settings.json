@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "*.txx": "cpp",
-    "*.tcc": "cpp"
+    "*.tcc": "cpp",
+    "qwidget": "cpp"
   }
 }

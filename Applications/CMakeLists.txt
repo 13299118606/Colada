@@ -18,6 +18,7 @@
 
 # add_subdirectory(ColadaCore)
 # add_subdirectory(ColadaQT)
+add_subdirectory(Libs)
 add_subdirectory(ColadaApp)
 
 add_subdirectory(Python)
