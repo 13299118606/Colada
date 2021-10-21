@@ -24,7 +24,6 @@
 // Slicer includes
 #include "qSlicerMainWindow_p.h"
 
-class QProgressBar;
 class QLabel;
 class QDockWidget;
 class qColadaH5SurfTreeView;
@@ -57,6 +56,8 @@ protected:
   virtual void setupMenuBar(QMainWindow* mainWindow);
   virtual void setupFileMenu(QMainWindow* mainWindow);
   virtual void setupViewMenu(QMainWindow* mainWindow);
+  virtual void setupSliceNodes(QMainWindow * mainWindow);
+
   vtkSmartPointer<vtkMatrix3x3> GenerateOrientationMatrix(const std::string& name);
   vtkSmartPointer<vtkMatrix3x3> GenerateXYOrientationMatrix();
   vtkSmartPointer<vtkMatrix3x3> GenerateXZOrientationMatrix();
@@ -64,7 +65,6 @@ protected:
 
 public:
   QLabel *currentProjectLabel, *currentCRSLabel;
-  QProgressBar* progressBar;
   QDockWidget* seisDockWidget, *surfDockWidget, *wellDockWidget;
   qColadaH5SurfTreeView *surfTreeView;
   qColadaH5SeisTreeView *seisTreeView;

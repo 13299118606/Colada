@@ -32,7 +32,6 @@
 #include <QDesktopWidget>
 #include <QSqlDatabase>
 #include <QMessageBox>
-#include <QProgressBar>
 #include <QPushButton>
 #include <QToolButton>
 
@@ -158,6 +157,7 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   setupTreeViews(mainWindow);
   setupStatusBar(mainWindow);
   setupMenuBar(mainWindow);
+  setupSliceNodes(mainWindow);
 }
 
 void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
@@ -184,138 +184,6 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
   mainWindow->tabifyDockWidget(wellDockWidget, surfDockWidget);
   mainWindow->tabifyDockWidget(surfDockWidget, seisDockWidget);
   mainWindow->tabifyDockWidget(seisDockWidget, PanelDockWidget);
-
-  std::vector<std::string> axesNames({"X", "-X", "-Y", "Y", "-Z", "Z"});
-  std::vector<std::string> orientationPresetOld({"Axial", "Sagittal", "Coronal"});
-  std::vector<std::string> orientationPresetNew({"XY", "YZ", "XZ"});
-  std::vector<std::string> defaultOrientation({"XY", "YZ", "XZ"});
-
-
-  vtkSmartPointer<vtkMRMLNode> defaultViewNode_tmp =
-      this->LayoutManager->mrmlScene()->GetDefaultNodeByClass("vtkMRMLViewNode");
-  if (!defaultViewNode_tmp)
-  {
-    vtkMRMLNode *foo = this->LayoutManager->mrmlScene()->CreateNodeByClass("vtkMRMLViewNode");
-    defaultViewNode_tmp.TakeReference(foo);
-    this->LayoutManager->mrmlScene()->AddDefaultNode(defaultViewNode_tmp);
-  }
-  vtkMRMLViewNode *defaultViewNode = vtkMRMLViewNode::SafeDownCast(defaultViewNode_tmp);
-  defaultViewNode->DisableModifiedEventOn();
-
-  for (size_t i = 0; i < axesNames.size(); i++)
-    defaultViewNode->SetAxisLabel(
-          i, axesNames[i].c_str());
-
-
-
-  vtkSmartPointer<vtkMRMLNode> defaultNode =
-      this->LayoutManager->mrmlScene()->GetDefaultNodeByClass("vtkMRMLSliceNode");
-  if (!defaultNode)
-  {
-    vtkMRMLNode *foo = this->LayoutManager->mrmlScene()->CreateNodeByClass("vtkMRMLSliceNode");
-    defaultNode.TakeReference(foo);
-    this->LayoutManager->mrmlScene()->AddDefaultNode(defaultNode);
-  }
-  vtkMRMLSliceNode *defaultSliceNode = vtkMRMLSliceNode::SafeDownCast(defaultNode);
-  defaultSliceNode->DisableModifiedEventOn();
-
-  for (size_t i = 0; i < axesNames.size(); i++)
-    defaultSliceNode->SetAxisLabel(
-          i, axesNames[i].c_str());
-
-  defaultSliceNode->SetDefaultOrientation(defaultOrientation[0].c_str());
-  for (size_t i = 0; i < orientationPresetOld.size(); i++){
-    if (defaultSliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
-      defaultSliceNode->RemoveSliceOrientationPreset(
-            orientationPresetOld[i]);
-    }
-
-    if (!defaultSliceNode->HasSliceOrientationPreset(orientationPresetNew[i])){
-      defaultSliceNode->AddSliceOrientationPreset(
-            orientationPresetNew[i],
-            GenerateOrientationMatrix(orientationPresetNew[i]));
-    }
-  }
-  defaultSliceNode->DisableModifiedEventOff();
-
-  vtkNew<vtkStringArray> presets;
-  defaultSliceNode->GetSliceOrientationPresetNames(presets);
-  for(int i = 0; i < presets->GetSize(); i++){
-    std::string str = presets->GetValue(i).c_str();
-    std::cout << "Presets:\t" << str << std::endl;
-  }
-
-  for (int j = 0; j < this->LayoutManager->threeDViewCount(); j++)
-    for (int i = 0; i < axesNames.size(); i++)
-      this->LayoutManager->threeDWidget(j)->mrmlViewNode()->SetAxisLabel(
-          i, axesNames[i].c_str());
-
-  for (const QString& sliceViewName : this->LayoutManager->sliceViewNames()){
-    vtkMRMLSliceNode *sliceNode = this->LayoutManager->sliceWidget(sliceViewName)
-          ->mrmlSliceNode();
-
-    for (int i = 0; i < axesNames.size(); i++)
-      sliceNode->SetAxisLabel(i, axesNames[i].c_str());
-
-    for (size_t i = 0; i < orientationPresetOld.size(); i++){
-      if (sliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
-        sliceNode->RemoveSliceOrientationPreset(
-              orientationPresetOld[i]);
-      }
-
-      if (!sliceNode->HasSliceOrientationPreset(orientationPresetNew[i])){
-        sliceNode->AddSliceOrientationPreset(
-              orientationPresetNew[i],
-              GenerateOrientationMatrix(orientationPresetNew[i]));
-        sliceNode->SetDefaultOrientation(defaultOrientation[i].c_str());
-      }
-    }
-  }
-
-  vtkMRMLLayoutNode* layoutNode =  vtkMRMLLayoutNode::SafeDownCast(
-    this->LayoutManager->mrmlScene()->GetSingletonNode("vtkMRMLLayoutNode","vtkMRMLLayoutNode"));
-  if(!layoutNode)
-    {
-    qCritical() << "qSlicerAstroVolumeModule::setup() : layoutNode not found!";
-    return;
-    }
-
-  for(int i = 1 ; i < 36; i++)
-    {
-    if (i == 5 || i == 11 || i == 13 || i == 18 || i == 20)
-      {
-      continue;
-      }
-
-    std::string layoutDescription = layoutNode->GetLayoutDescription(i);
-    std::vector<std::string>::const_iterator it;
-    std::vector<std::string>::const_iterator jt;
-    for(it = orientationPresetOld.begin(), jt = orientationPresetNew.begin();
-        it != orientationPresetOld.end() && jt != orientationPresetNew.end(); ++it, ++jt)
-      {
-      size_t found = layoutDescription.find(*it);
-      while (found!=std::string::npos)
-        {
-        layoutDescription.replace(found, it->size(), *jt);
-        found = layoutDescription.find(*it);
-        }
-      }
-    layoutNode->SetLayoutDescription(i, layoutDescription.c_str());
-    }
-
-  LayoutManager->threeDWidget(0)->threeDController()->setWindowTitle("MyTitle");
-  LayoutManager->threeDWidget(0)->threeDController()->setToolTip("MyToolTip");
-
-  LayoutManager->threeDWidget(0)->threeDView()->displayableManagerByClassName(
-      "vtkMRMLModelDisplayableManager");
-
-  LayoutManager->threeDWidget(0)->threeDController()->barWidget()->setToolTip(
-      "BarWidget");
-
-  vtkMRMLAbstractDisplayableManager* modelDisplayableManager =
-      LayoutManager->threeDWidget(0)
-          ->threeDView()
-          ->displayableManagerByClassName("vtkMRMLModelDisplayableManager");
 }
 
 void qColadaAppMainWindowPrivate::setupTreeViews(QMainWindow *mainWindow) {
@@ -349,12 +217,9 @@ void qColadaAppMainWindowPrivate::setupStatusBar(QMainWindow* mainWindow) {
   currentProjectLabel->setObjectName("CurrentProjectLabel");
   currentCRSLabel = new QLabel(mainWindow);
   currentCRSLabel->setObjectName("currentCRSLabel");
-  progressBar = new QProgressBar(mainWindow);
-  progressBar->setObjectName("ProgressBar");
 
   StatusBar->addWidget(currentProjectLabel);
   StatusBar->addWidget(currentCRSLabel);
-  StatusBar->addPermanentWidget(progressBar);
 }
 
 void qColadaAppMainWindowPrivate::setupMenuBar(QMainWindow* mainWindow) {
@@ -391,6 +256,130 @@ void qColadaAppMainWindowPrivate::setupViewMenu(QMainWindow* mainWindow) {
     surfDockWidget->toggleViewAction(),
     wellDockWidget->toggleViewAction() });
 }
+
+void qColadaAppMainWindowPrivate::setupSliceNodes(QMainWindow * mainWindow)
+{
+  Q_Q(qColadaAppMainWindow);
+  std::vector<std::string> axesNames({"-X", "X", "-Y", "Y", "-Z", "Z"});
+  std::vector<std::string> orientationPresetOld({"Axial", "Sagittal", "Coronal"});
+  std::vector<std::string> orientationPresetNew({"XY", "YZ", "XZ"});
+  std::vector<std::string> defaultOrientations({"XY", "YZ", "XZ"});
+
+  // Default View nodes
+  vtkSmartPointer<vtkMRMLNode> dViewNode =
+      this->LayoutManager->mrmlScene()->GetDefaultNodeByClass("vtkMRMLViewNode");
+  if (!dViewNode)
+  {
+    vtkMRMLNode *node = this->LayoutManager->mrmlScene()->CreateNodeByClass("vtkMRMLViewNode");
+    dViewNode.TakeReference(node);
+    this->LayoutManager->mrmlScene()->AddDefaultNode(dViewNode);
+  }
+  vtkMRMLViewNode *defaultViewNode = vtkMRMLViewNode::SafeDownCast(dViewNode);
+  defaultViewNode->DisableModifiedEventOn();
+
+  for (size_t i = 0; i < axesNames.size(); i++)
+    defaultViewNode->SetAxisLabel(
+          i, axesNames[i].c_str());
+
+  // Default Slice nodes
+  vtkSmartPointer<vtkMRMLNode> dSliceNode =
+      this->LayoutManager->mrmlScene()->GetDefaultNodeByClass("vtkMRMLSliceNode");
+  if (!dSliceNode)
+  {
+    vtkMRMLNode *node = this->LayoutManager->mrmlScene()->CreateNodeByClass("vtkMRMLSliceNode");
+    dSliceNode.TakeReference(node);
+    this->LayoutManager->mrmlScene()->AddDefaultNode(dSliceNode);
+  }
+  vtkMRMLSliceNode *defaultSliceNode = vtkMRMLSliceNode::SafeDownCast(dSliceNode);
+  defaultSliceNode->DisableModifiedEventOn();
+
+  for (size_t i = 0; i < axesNames.size(); i++)
+    defaultSliceNode->SetAxisLabel(
+          i, axesNames[i].c_str());
+
+  defaultSliceNode->SetDefaultOrientation(defaultOrientations[0].c_str());
+  for (size_t i = 0; i < orientationPresetOld.size(); i++){
+    if (defaultSliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
+      defaultSliceNode->RemoveSliceOrientationPreset(
+            orientationPresetOld[i]);
+    }
+
+    if (!defaultSliceNode->HasSliceOrientationPreset(orientationPresetNew[i])){
+      defaultSliceNode->AddSliceOrientationPreset(
+            orientationPresetNew[i],
+            GenerateOrientationMatrix(orientationPresetNew[i]));
+    }
+  }
+  defaultSliceNode->DisableModifiedEventOff();
+
+  // View nodes
+  for (int j = 0; j < this->LayoutManager->threeDViewCount(); j++)
+    for (int i = 0; i < axesNames.size(); i++)
+      this->LayoutManager->threeDWidget(j)->mrmlViewNode()->SetAxisLabel(
+          i, axesNames[i].c_str());
+
+  // Slice nodes
+  size_t ii = 0;
+  for (const QString& sliceViewName : this->LayoutManager->sliceViewNames()){
+    vtkMRMLSliceNode *sliceNode = this->LayoutManager->
+        sliceWidget(sliceViewName)->mrmlSliceNode();
+
+    for (int i = 0; i < axesNames.size(); i++)
+      sliceNode->SetAxisLabel(i, axesNames[i].c_str());
+
+    for (size_t i = 0; i < orientationPresetOld.size(); i++){
+      if (sliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
+        sliceNode->RemoveSliceOrientationPreset(
+              orientationPresetOld[i]);
+      }
+
+      if (!sliceNode->HasSliceOrientationPreset(orientationPresetNew[i])){
+        sliceNode->AddSliceOrientationPreset(
+              orientationPresetNew[i],
+              GenerateOrientationMatrix(orientationPresetNew[i]));
+      }
+    }
+
+    if (ii < defaultOrientations.size())
+      sliceNode->SetDefaultOrientation(defaultOrientations[ii].c_str());
+    else
+      sliceNode->SetDefaultOrientation(defaultOrientations[0].c_str());
+    ii++;
+  }
+
+  // Replace layout description with new presets
+  vtkMRMLLayoutNode* layoutNode =  vtkMRMLLayoutNode::SafeDownCast(
+    this->LayoutManager->mrmlScene()->GetSingletonNode("vtkMRMLLayoutNode","vtkMRMLLayoutNode"));
+  if(!layoutNode)
+    {
+    qCritical() << "qSlicerAstroVolumeModule::setup() : layoutNode not found!";
+    return;
+  }
+
+  for(int i = 1 ; i < 36; i++)
+  {
+    if (i == 5 || i == 11 || i == 13 || i == 18 || i == 20)
+    {
+      continue;
+    }
+
+    std::string layoutDescription = layoutNode->GetLayoutDescription(i);
+    std::vector<std::string>::const_iterator it;
+    std::vector<std::string>::const_iterator jt;
+    for(it = orientationPresetOld.begin(), jt = orientationPresetNew.begin();
+        it != orientationPresetOld.end() && jt != orientationPresetNew.end(); ++it, ++jt)
+    {
+      size_t found = layoutDescription.find(*it);
+      while (found!=std::string::npos)
+      {
+        layoutDescription.replace(found, it->size(), *jt);
+        found = layoutDescription.find(*it);
+      }
+    }
+    layoutNode->SetLayoutDescription(i, layoutDescription.c_str());
+  }
+}
+
 
 vtkSmartPointer<vtkMatrix3x3> qColadaAppMainWindowPrivate::GenerateOrientationMatrix(const std::string& name)
 {
