@@ -53,6 +53,7 @@ set(vtkEigen_SRCS
   vtkEigenDoubleArray.cxx
   vtkEigenFloatArray.cxx
   vtkEigenFloatArray.cxx
+  vtkRaisedGrid.cxx
   )
 
 # these types are never instantiated, so they don't

@@ -837,7 +837,7 @@ class qColadaDevReader(qColadaReader):
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
 
-                        if progressDialog.wasCanceled():
+                        if progressDialog.wasCanceled:
                             break
                         
                     h5wellCnt.getH5File().flush()

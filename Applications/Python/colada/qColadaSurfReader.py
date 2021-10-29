@@ -414,7 +414,7 @@ class qColadaSurfReader(qColadaReader):
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
                     
-                    arr = ds.ReadAsArray()
+                    arr = np.asfortranarray(ds.ReadAsArray(), dtype=float)
                     if p_s.xNorth:
                         val = h5surf.writeData(np.transpose(arr) * p_s.depthMult, p_s.dataUnits)
                     else:
@@ -429,7 +429,7 @@ class qColadaSurfReader(qColadaReader):
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
 
-                    if progressDialog.wasCanceled():
+                    if progressDialog.wasCanceled:
                         break
                         
                     h5surfCnt.getH5File().flush()
