@@ -3,14 +3,14 @@ set(Colada_PYTHON_SCRIPTS
   colada/__init__
   colada/qColadaDevReader
   colada/qColadaLasReader
-  colada/qColadaSurfReader
+  colada/qColadaMapReader
   )
 
 set(Colada_PYTHON_MODULES_CONFIG "
 # colada libs
 'colada.qColadaDevReader',
 'colada.qColadaLasReader',
-'colada.qColadaSurfReader',
+'colada.qColadaMapReader',
 "
   )
 

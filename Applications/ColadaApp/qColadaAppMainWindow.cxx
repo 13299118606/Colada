@@ -19,14 +19,14 @@
 #include "qColadaAppMainWindow.h"
 #include "qColadaAppMainWindow_p.h"
 #include "qColadaNewProject.h"
-#include "qColadaH5SurfTreeView.h"
+#include "qColadaH5MapTreeView.h"
 #include "qColadaH5SeisTreeView.h"
 #include "qColadaH5WellTreeView.h"
-#include "qColadaH5SurfModel.h"
+#include "qColadaH5MapModel.h"
 #include "qColadaH5SeisModel.h"
 #include "qColadaH5WellModel.h"
 #include "qColadaH5ProxyModel.h"
-#include "ColadaDBCore.h"
+#include "dbcore.h"
 
 // Qt includes
 #include <QDesktopWidget>
@@ -164,50 +164,50 @@ void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
   PanelDockWidget->setWindowTitle("Modules");
 
   seisDockWidget = new QDockWidget("Seismic", mainWindow);
-  surfDockWidget = new QDockWidget("Surface", mainWindow);
+  mapDockWidget = new QDockWidget("Map", mainWindow);
   wellDockWidget = new QDockWidget("Well", mainWindow);
 
   seisDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
                                   Qt::DockWidgetArea::RightDockWidgetArea);
-  surfDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
+  mapDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
                                   Qt::DockWidgetArea::RightDockWidgetArea);
   wellDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
                                   Qt::DockWidgetArea::RightDockWidgetArea);
 
   mainWindow->addDockWidget(Qt::LeftDockWidgetArea, seisDockWidget);
   seisDockWidget->setObjectName("SeisDockWidget");
-  mainWindow->addDockWidget(Qt::LeftDockWidgetArea, surfDockWidget);
-  surfDockWidget->setObjectName("SurfDockWidget");
+  mainWindow->addDockWidget(Qt::LeftDockWidgetArea, mapDockWidget);
+  mapDockWidget->setObjectName("MapDockWidget");
   mainWindow->addDockWidget(Qt::LeftDockWidgetArea, wellDockWidget);
   wellDockWidget->setObjectName("WellDockWidget");
 
-  mainWindow->tabifyDockWidget(wellDockWidget, surfDockWidget);
-  mainWindow->tabifyDockWidget(surfDockWidget, seisDockWidget);
+  mainWindow->tabifyDockWidget(wellDockWidget, mapDockWidget);
+  mainWindow->tabifyDockWidget(mapDockWidget, seisDockWidget);
   mainWindow->tabifyDockWidget(seisDockWidget, PanelDockWidget);
 }
 
 void qColadaAppMainWindowPrivate::setupTreeViews(QMainWindow *mainWindow) {
-  surfTreeView = new qColadaH5SurfTreeView(surfDockWidget);
+  mapTreeView = new qColadaH5MapTreeView(mapDockWidget);
   seisTreeView = new qColadaH5SeisTreeView(seisDockWidget);
   wellTreeView = new qColadaH5WellTreeView(wellDockWidget);
 
-  surfDockWidget->setWidget(surfTreeView);
+  mapDockWidget->setWidget(mapTreeView);
   seisDockWidget->setWidget(seisTreeView);
   wellDockWidget->setWidget(wellTreeView);
 
-  qColadaH5SurfModel *surfModel = new qColadaH5SurfModel("Surface tree model");
+  qColadaH5MapModel *mapModel = new qColadaH5MapModel("Map tree model");
   qColadaH5SeisModel *seisModel = new qColadaH5SeisModel("Seismic tree model");
   qColadaH5WellModel *wellModel = new qColadaH5WellModel("Well tree model");
 
-  qColadaH5ProxyModel *surfProxy = new qColadaH5ProxyModel(surfTreeView);
+  qColadaH5ProxyModel *mapProxy = new qColadaH5ProxyModel(mapTreeView);
   qColadaH5ProxyModel *seisProxy = new qColadaH5ProxyModel(seisTreeView);
   qColadaH5ProxyModel *wellProxy = new qColadaH5ProxyModel(wellTreeView);
 
-  surfProxy->setSourceModel(surfModel);
+  mapProxy->setSourceModel(mapModel);
   seisProxy->setSourceModel(seisModel);
   wellProxy->setSourceModel(wellModel);
 
-  surfTreeView->setModel(surfProxy);
+  mapTreeView->setModel(mapProxy);
   seisTreeView->setModel(seisProxy);
   wellTreeView->setModel(wellProxy);
 }
@@ -253,7 +253,7 @@ void qColadaAppMainWindowPrivate::setupViewMenu(QMainWindow* mainWindow) {
   
   ViewMenu->insertActions(actionList[3],
     { seisDockWidget->toggleViewAction(),
-    surfDockWidget->toggleViewAction(),
+    mapDockWidget->toggleViewAction(),
     wellDockWidget->toggleViewAction() });
 }
 
@@ -483,9 +483,9 @@ void qColadaAppMainWindow::on_OpenProjectAction_triggered()
   d->currentCRSLabel->setText(CRSname + ":" + authName + ":" + code);
 }
 
-QDockWidget* qColadaAppMainWindow::getSurfDockWidget() {
+QDockWidget* qColadaAppMainWindow::getMapDockWidget() {
   Q_D(qColadaAppMainWindow);
-  return d->surfDockWidget;
+  return d->mapDockWidget;
 }
 
 QDockWidget *qColadaAppMainWindow::getSeisDockWidget() {
@@ -498,9 +498,9 @@ QDockWidget *qColadaAppMainWindow::getWellDockWidget() {
   return d->wellDockWidget;
 }
 
-qColadaH5SurfTreeView *qColadaAppMainWindow::getSurfTreeView() {
+qColadaH5MapTreeView *qColadaAppMainWindow::getMapTreeView() {
   Q_D(qColadaAppMainWindow);
-  return d->surfTreeView;
+  return d->mapTreeView;
 }
 
 qColadaH5SeisTreeView *qColadaAppMainWindow::getSeisTreeView() {

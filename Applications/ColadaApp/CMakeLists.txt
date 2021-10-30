@@ -51,14 +51,10 @@ set(APPLIB_SRCS
   qColadaAppMainWindow.cxx
   qColadaAppMainWindow.h
 
-  ColadaDBCore.cxx
-  ColadaDBCore.h
-  ColadaDBCore_py.cxx
-  ColadaDBCore_py.h
-  ColadaUtil.cxx
-  ColadaUtil.h
-  ColadaUtil_py.cxx
-  ColadaUtil_py.h
+  dbcore.cxx
+  dbcore.h
+  util.cxx
+  util.h
   
   qAppStyle.cxx
   qAppStyle.h
@@ -78,8 +74,8 @@ set(APPLIB_SRCS
   qColadaH5TreeView.h
   qColadaH5SeisTreeView.cxx
   qColadaH5SeisTreeView.h
-  qColadaH5SurfTreeView.cxx
-  qColadaH5SurfTreeView.h
+  qColadaH5MapTreeView.cxx
+  qColadaH5MapTreeView.h
   qColadaH5WellTreeView.cxx
   qColadaH5WellTreeView.h
   qColadaH5Item.cxx
@@ -90,8 +86,8 @@ set(APPLIB_SRCS
   qColadaH5Model.h
   qColadaH5SeisModel.cxx
   qColadaH5SeisModel.h
-  qColadaH5SurfModel.cxx
-  qColadaH5SurfModel.h
+  qColadaH5MapModel.cxx
+  qColadaH5MapModel.h
   qColadaH5WellModel.cxx
   qColadaH5WellModel.h
   qColadaH5ProxyModel.cxx
@@ -100,19 +96,12 @@ set(APPLIB_SRCS
   qColadaReader.cxx
   qColadaSegyReader.h
   qColadaSegyReader.cxx
-  #qColadaDevReader.h
-  #qColadaDevReader.cxx
-
-  #qMRMLThreeDColadaWidget.h
-  #qMRMLThreeDColadaWidget.cxx
 
   qColadaGainWidget.cxx
   qColadaGainWidget.h
 
   SegyRead.h
   SegyRead.cxx
-  #DevRead.h
-  #DevRead.cxx
 
   qCopyPasteTableView.h
   qCopyPasteTableView.cxx
@@ -137,9 +126,6 @@ set(APPLIB_MOC_SRCS
   qColadaAppMainWindow.h
   qAppStyle.h
 
-  ColadaDBCore_py.h
-  ColadaUtil_py.h
-
   qColadaNewProject.h
   qCRSDropTableView.h
   qCRSWidget.h
@@ -147,20 +133,17 @@ set(APPLIB_MOC_SRCS
   qCheckableHHeaderView.h
   qCheckableVHeaderView.h
   qColadaH5TreeView.h
-  qColadaH5SurfTreeView.h
+  qColadaH5MapTreeView.h
   qColadaH5SeisTreeView.h
   qColadaH5WellTreeView.h
   qColadaH5ItemDelegate.h
   qColadaH5Model.h
-  qColadaH5SurfModel.h
+  qColadaH5MapModel.h
   qColadaH5SeisModel.h
   qColadaH5WellModel.h
   qColadaH5ProxyModel.h
   qColadaReader.h
   qColadaSegyReader.h
-  #qColadaDevReader.h
-
-  #qMRMLThreeDColadaWidget_p.h
 
   qColadaGainWidget.h
 

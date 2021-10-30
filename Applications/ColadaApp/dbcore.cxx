@@ -1,5 +1,5 @@
 // Colada includes
-#include "ColadaDBCore.h"
+#include "dbcore.h"
 
 // Qt includes
 #include <QByteArray>
@@ -143,13 +143,8 @@ bool dbcore::createProjectFolders(const QString &prjDir) {
     return false;
   if (!qDir.mkpath(prjDir + "/DATA/wells"))
     return false;
-  if (!qDir.mkpath(prjDir + "/DATA/horizons"))
+  if (!qDir.mkpath(prjDir + "/DATA/maps"))
     return false;
-  return true;
-}
-
-bool dbcore::saveSettings() {
-  QSettings settings("MyCompany", "MySeismicVision");
   return true;
 }
 
@@ -206,7 +201,7 @@ QString dbcore::getSeisDir() {
   return fi.absolutePath() + "/DATA/seismic";
 }
 
-QString dbcore::getSurfDir() {
+QString dbcore::getMapDir() {
   // default db is the current project db
   QSqlDatabase db = QSqlDatabase::database();
   if (!db.open())
@@ -217,7 +212,7 @@ QString dbcore::getSurfDir() {
   if (!fi.exists())
     return "";
 
-  return fi.absolutePath() + "/DATA/horizons";
+  return fi.absolutePath() + "/DATA/maps";
 }
 
 QString dbcore::getWellDir() {

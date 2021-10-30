@@ -1,7 +1,7 @@
 //Colada includes
 #include "qCRSWidget.h"
 #include "qCRSWidget_p.h"
-#include "ColadaDBCore.h"
+#include "dbcore.h"
 
 // Qt insludes
 #include <QLayout>

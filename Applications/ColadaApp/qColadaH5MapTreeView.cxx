@@ -1,9 +1,9 @@
 // Colada includes
-#include "qColadaH5SurfTreeView.h"
+#include "qColadaH5MapTreeView.h"
 #include "qColadaH5ItemDelegate.h"
 #include "qColadaH5ProxyModel.h"
-#include "qColadaH5SurfModel.h"
-#include "qColadaH5SurfTreeView_p.h"
+#include "qColadaH5MapModel.h"
+#include "qColadaH5MapTreeView_p.h"
 
 // Qt includes
 #include <QAction>
@@ -16,42 +16,42 @@
 // PythonQt includes
 #include <PythonQt.h>
 
-qColadaH5SurfTreeViewPrivate::qColadaH5SurfTreeViewPrivate(
-    qColadaH5SurfTreeView &q)
+qColadaH5MapTreeViewPrivate::qColadaH5MapTreeViewPrivate(
+    qColadaH5MapTreeView &q)
     : Superclass(q) {}
 
-qColadaH5SurfTreeViewPrivate::~qColadaH5SurfTreeViewPrivate() {}
+qColadaH5MapTreeViewPrivate::~qColadaH5MapTreeViewPrivate() {}
 
-void qColadaH5SurfTreeViewPrivate::init() {
-  Q_Q(qColadaH5SurfTreeView);
+void qColadaH5MapTreeViewPrivate::init() {
+  Q_Q(qColadaH5MapTreeView);
   this->Superclass::init();
 }
 
-qColadaH5SurfTreeView::qColadaH5SurfTreeView(QWidget *parent)
-    : qColadaH5TreeView(new qColadaH5SurfTreeViewPrivate(*this), parent) {
-  Q_D(qColadaH5SurfTreeView);
+qColadaH5MapTreeView::qColadaH5MapTreeView(QWidget *parent)
+    : qColadaH5TreeView(new qColadaH5MapTreeViewPrivate(*this), parent) {
+  Q_D(qColadaH5MapTreeView);
   d->init();
 }
 
-qColadaH5SurfTreeView::qColadaH5SurfTreeView(
-    qColadaH5SurfTreeViewPrivate *pimpl, QWidget *parent)
+qColadaH5MapTreeView::qColadaH5MapTreeView(
+    qColadaH5MapTreeViewPrivate *pimpl, QWidget *parent)
     : qColadaH5TreeView(pimpl, parent) {
   // init() is called by derived class.
 }
 
-qColadaH5SurfTreeView::~qColadaH5SurfTreeView() {}
+qColadaH5MapTreeView::~qColadaH5MapTreeView() {}
 
-void qColadaH5SurfTreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
-  QAction *readSurfAct = menu->addAction("Read Surface");
-  connect(readSurfAct, &QAction::triggered, this,
-          &qColadaH5SurfTreeView::onReadSurf);
+void qColadaH5MapTreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
+  QAction *readMapAct = menu->addAction("Read Map");
+  connect(readMapAct, &QAction::triggered, this,
+          &qColadaH5MapTreeView::onReadMap);
 
   QAction *addContainerAction = menu->addAction("Add container");
   connect(addContainerAction, &QAction::triggered, this,
-          &qColadaH5SurfTreeView::onAddContainer);
+          &qColadaH5MapTreeView::onAddContainer);
 }
 
-void qColadaH5SurfTreeView::hdrMenuRequested(QPoint pos) {
+void qColadaH5MapTreeView::hdrMenuRequested(QPoint pos) {
   QMenu *menu = new QMenu(header());
 
   QAction *checkedOnlyAct = menu->addAction("Show checked only");
@@ -76,16 +76,16 @@ void qColadaH5SurfTreeView::hdrMenuRequested(QPoint pos) {
   menu->deleteLater();
 }
 
-void qColadaH5SurfTreeView::onReadSurf() {
+void qColadaH5MapTreeView::onReadMap() {
   PythonQtObjectPtr mainModule = PythonQt::self()->getMainModule();
   PythonQtObjectPtr context =
-      mainModule.evalScript(QString("reader = colada.qColadaSurfReader();"
+      mainModule.evalScript(QString("reader = colada.qColadaMapReader();"
                                     "reader.show();"));
 }
 
-void qColadaH5SurfTreeView::onAddContainer() {
+void qColadaH5MapTreeView::onAddContainer() {
   QStringList h5FileNameList = ctkFileDialog::getOpenFileNames(
-      nullptr, QObject::tr("Open surface container"), "",
+      nullptr, QObject::tr("Open map container"), "",
       QObject::tr("hdf5 file (*.h5 *.hdf5); all (*.*)"));
 
   qColadaH5ProxyModel *proxyModel =

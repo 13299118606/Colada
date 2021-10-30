@@ -26,7 +26,7 @@
 
 class QLabel;
 class QDockWidget;
-class qColadaH5SurfTreeView;
+class qColadaH5MapTreeView;
 class qColadaH5SeisTreeView;
 class qColadaH5WellTreeView;
 template<class T>
@@ -65,8 +65,8 @@ protected:
 
 public:
   QLabel *currentProjectLabel, *currentCRSLabel;
-  QDockWidget* seisDockWidget, *surfDockWidget, *wellDockWidget;
-  qColadaH5SurfTreeView *surfTreeView;
+  QDockWidget* seisDockWidget, *mapDockWidget, *wellDockWidget;
+  qColadaH5MapTreeView *mapTreeView;
   qColadaH5SeisTreeView *seisTreeView;
   qColadaH5WellTreeView *wellTreeView;
 };

@@ -4,7 +4,7 @@
 #include "qColadaH5Item.h"
 #include "qColadaH5ProxyModel.h"
 #include "qREValidator.h"
-#include "ColadaUtil.h"
+#include "util.h"
 
 // h5gt includes
 #include <h5gt/H5File.hpp>

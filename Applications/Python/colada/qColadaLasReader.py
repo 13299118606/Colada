@@ -155,8 +155,8 @@ class qColadaLasReader(qColadaReader):
         self.well_UWI_lineEditDelegate.setParent(self.wellTableView)
 
         self.validator.setParent(self.wellTableView)
-        self.validator.setRegularExpression(ColadaUtil_py().fileNameRegExp())
-        self.validator.setToolTipText(ColadaUtil_py().fileNameToolTipText())
+        self.validator.setRegularExpression(Util.fileNameRegExp())
+        self.validator.setToolTipText(Util.fileNameToolTipText())
         self.validator.setToolTipDuration(3000)
 
         self.well_name_lineEditDelegate.setValidator(self.validator)
@@ -195,8 +195,8 @@ class qColadaLasReader(qColadaReader):
         self.log_name_lineEditDelegate.setParent(self.logTableView)
 
         self.validator_noSpaces.setParent(self.wellTableView)
-        self.validator_noSpaces.setRegularExpression(ColadaUtil_py().fileNameNoSpaceRegExp())
-        self.validator_noSpaces.setToolTipText(ColadaUtil_py().fileNameNoSpaceToolTipText())
+        self.validator_noSpaces.setRegularExpression(Util.fileNameNoSpaceRegExp())
+        self.validator_noSpaces.setToolTipText(Util.fileNameNoSpaceToolTipText())
         self.validator_noSpaces.setToolTipDuration(3000)
 
         self.log_type_lineEditDelegate.setValidator(self.validator_noSpaces)
@@ -413,9 +413,9 @@ class qColadaLasReader(qColadaReader):
             return
 
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("save to")),
-                    ColadaDBCore_py().getWellDir() + "/" + fi.baseName() + ".h5")
+                    DBCore.getWellDir() + "/" + fi.baseName() + ".h5")
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")),
-                    ColadaDBCore_py().getCurrentProjectionNameCode())
+                    DBCore.getCurrentProjectionNameCode())
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")), 
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")), 'meter')
@@ -498,7 +498,7 @@ class qColadaLasReader(qColadaReader):
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
             # to accelerate this code I reserve a var (`getCurrentProjectUnits()` invokes SQLITE wich is slow)
-            currentProjectUnits = ColadaDBCore_py().getCurrentProjectUnits()
+            currentProjectUnits = DBCore.getCurrentProjectUnits()
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.wellModel.rowCount())
             for row in range(self.wellModel.rowCount()):
@@ -519,12 +519,12 @@ class qColadaLasReader(qColadaReader):
                         continue
                     
                     if p_w.xNorth:
-                        p_w.headX, p_w.headY, val = ColadaDBCore_py().convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = DBCore.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.spatialUnits)
                     else:
-                        p_w.headX, p_w.headY, val = ColadaDBCore_py().convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = DBCore.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.spatialUnits)
                         
                     # if new well will be created then the units will be `p_w.spatialUnits`
-                    coef_w = ColadaUtil_py().convertUnits(
+                    coef_w = Util.convertUnits(
                         currentProjectUnits,
                         p_w.spatialUnits)
                     
@@ -532,7 +532,7 @@ class qColadaLasReader(qColadaReader):
                     p_w.headY *= coef_w
                         
                     if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + ColadaDBCore_py().getCurrentProjectionNameCode() + ''' 
+                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + DBCore.getCurrentProjectionNameCode() + ''' 
                         Possible reasons:
                         - project is not set or contains incorrect CRS;
                         - `CRS` is incorrect;

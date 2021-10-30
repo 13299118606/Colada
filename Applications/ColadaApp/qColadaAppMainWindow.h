@@ -26,7 +26,7 @@
 
 class qColadaAppMainWindowPrivate;
 class QDockWidget;
-class qColadaH5SurfTreeView;
+class qColadaH5MapTreeView;
 class qColadaH5SeisTreeView;
 class qColadaH5WellTreeView;
 
@@ -45,11 +45,11 @@ public slots:
   virtual void on_NewProjectAction_triggered();
   virtual void on_OpenProjectAction_triggered();
 
-  QDockWidget *getSurfDockWidget();
+  QDockWidget *getMapDockWidget();
   QDockWidget *getSeisDockWidget();
   QDockWidget *getWellDockWidget();
 
-  qColadaH5SurfTreeView *getSurfTreeView();
+  qColadaH5MapTreeView *getMapTreeView();
   qColadaH5SeisTreeView *getSeisTreeView();
   qColadaH5WellTreeView *getWellTreeView();
 

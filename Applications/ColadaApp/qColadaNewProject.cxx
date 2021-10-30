@@ -3,8 +3,8 @@
 #include "qColadaNewProject_p.h"
 #include "qCRSWidget.h"
 #include "qREValidator.h"
-#include "ColadaUtil.h"
-#include "ColadaDBCore.h"
+#include "util.h"
+#include "dbcore.h"
 
 // Qt includes
 #include <QVBoxLayout>

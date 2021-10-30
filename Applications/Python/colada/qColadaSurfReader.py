@@ -7,19 +7,19 @@ import numpy as np
 from osgeo import gdal
 
 
-class ReadWriteSurfParam(h5geo.SurfParam):
-    """Contains data needed to create new `h5geo.H5Surf` object. Inherits from `h5geo.SurfParam`"""
+class ReadWriteMapParam(h5geo.MapParam):
+    """Contains data needed to create new `h5geo.H5Map` object. Inherits from `h5geo.MapParam`"""
     readFile = ''
     saveFile = '' 
     crs = '' 
-    surfName = ''
-    surfCreateType = ''
+    mapName = ''
+    mapCreateType = ''
     depthMult = -1
     xNorth = False
 
 
-class qColadaSurfReader(qColadaReader):
-    """Class designated to read surface files (via GDAL)
+class qColadaMapReader(qColadaReader):
+    """Class designated to read map files (via GDAL)
 
     Args:
         qColadaReader (PythonQt.QtGui.QObject): parent object
@@ -27,11 +27,11 @@ class qColadaSurfReader(qColadaReader):
     Returns:
         qColadaReader: object instance
     """
-    surfTableView = None
-    surfHrzHeader = None
-    surfVertHeader = None
-    surfProxy = None
-    surfModel = None
+    mapTableView = None
+    mapHrzHeader = None
+    mapVertHeader = None
+    mapProxy = None
+    mapModel = None
 
     buttonBox = None
     addToolBtn = None
@@ -41,32 +41,32 @@ class qColadaSurfReader(qColadaReader):
     mainSplitter = None
 
     # delegates must exist during object's lifetime or application will be break down!
-    surf_save_to_pathEditDelegate = qPathEditDelegate()
-    surf_create_comboDelegate = qComboBoxDelegate()
-    surf_x0_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
-    surf_y0_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
-    surf_dx_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
-    surf_dy_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
-    surf_nx_spinBoxDelegate = qSpinBoxDelegate()
-    surf_ny_spinBoxDelegate = qSpinBoxDelegate()
-    surf_name_lineEditDelegate = qLineEditDelegate()
-    surf_domain_comboDelegate = qComboBoxDelegate()
-    surf_depthMult_spinBoxDelegate = qSpinBoxDelegate()
+    map_save_to_pathEditDelegate = qPathEditDelegate()
+    map_create_comboDelegate = qComboBoxDelegate()
+    map_x0_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_y0_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_dx_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_dy_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_nx_spinBoxDelegate = qSpinBoxDelegate()
+    map_ny_spinBoxDelegate = qSpinBoxDelegate()
+    map_name_lineEditDelegate = qLineEditDelegate()
+    map_domain_comboDelegate = qComboBoxDelegate()
+    map_depthMult_spinBoxDelegate = qSpinBoxDelegate()
 
     validator = qREValidator()
     validator_noSpaces = qREValidator()
 
-    surfTableHdrNames = [
+    mapTableHdrNames = [
         "read file", "save to", "CRS",
-        "surf name", "surf create", 
+        "map name", "map create", 
         "domain", "spatial units", "data units",
         "x0", "y0", "dx", "dy", "nx", "ny", 
         "depth mult",
         "XNorth"]
 
-    surfTableHdrTips = [
-        "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). . Must be set if new surf is going to be created",
-        "Surf name", "Creation type for surf", 
+    mapTableHdrTips = [
+        "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). . Must be set if new map is going to be created",
+        "Map name", "Creation type for map", 
         "Domain", "Spatial units", "Data units",
         "Starting point - x0", "Starting point - y0", "Spacing dx", "Spacing dy", "Number of x points", "Number of y points",
         "Depth multiplier: downwards is negative (usually -1)",
@@ -75,18 +75,18 @@ class qColadaSurfReader(qColadaReader):
     def __init__(self, parent=None):
         super(qColadaReader, self).__init__(parent)
         self.initGUIVars()
-        self.initSurfTable()
+        self.initMapTable()
         self.addToolBtn.clicked.connect(self.onAddBtnClicked)
         self.removeToolBtn.clicked.connect(self.onRemoveToolBtnClicked)
         self.autoDefineBtn.clicked.connect(self.onAutoDefineToolBtnClicked)
         self.buttonBox.clicked.connect(self.onButtonBoxClicked)
 
     def initGUIVars(self):
-        self.surfTableView = slicer.util.findChild(self, 'TableView')
-        self.surfHrzHeader = slicer.util.findChild(self.surfTableView, 'HrzHeader')
-        self.surfVertHeader = slicer.util.findChild(self.surfTableView, 'VertHeader')
-        self.surfProxy = self.surfTableView.model()
-        self.surfModel = self.surfProxy.sourceModel
+        self.mapTableView = slicer.util.findChild(self, 'TableView')
+        self.mapHrzHeader = slicer.util.findChild(self.mapTableView, 'HrzHeader')
+        self.mapVertHeader = slicer.util.findChild(self.mapTableView, 'VertHeader')
+        self.mapProxy = self.mapTableView.model()
+        self.mapModel = self.mapProxy.sourceModel
         self.buttonBox = slicer.util.findChild(self, 'ButtonBox')
         self.addToolBtn = slicer.util.findChild(self, 'AddToolBtn')
         self.removeToolBtn = slicer.util.findChild(self, 'RemoveToolBtn')
@@ -94,144 +94,144 @@ class qColadaSurfReader(qColadaReader):
         self.vSplitter = slicer.util.findChild(self, 'VSplitter')
         self.mainSplitter = slicer.util.findChild(self, 'MainSplitter')
 
-    def initSurfTable(self):
-        self.surfModel.setColumnCount(len(self.surfTableHdrNames))
-        self.surfModel.setHorizontalHeaderLabels(self.surfTableHdrNames)
-        for i in range(0, self.surfModel.columnCount()):
-            self.surfModel.horizontalHeaderItem(i).setToolTip(self.surfTableHdrTips[i])
+    def initMapTable(self):
+        self.mapModel.setColumnCount(len(self.mapTableHdrNames))
+        self.mapModel.setHorizontalHeaderLabels(self.mapTableHdrNames)
+        for i in range(0, self.mapModel.columnCount()):
+            self.mapModel.horizontalHeaderItem(i).setToolTip(self.mapTableHdrTips[i])
 
-        self.surf_save_to_pathEditDelegate.setParent(self.surfTableView)
-        self.surf_create_comboDelegate.setParent(self.surfTableView)
-        self.surf_domain_comboDelegate.setParent(self.surfTableView)
+        self.map_save_to_pathEditDelegate.setParent(self.mapTableView)
+        self.map_create_comboDelegate.setParent(self.mapTableView)
+        self.map_domain_comboDelegate.setParent(self.mapTableView)
         
-        self.surf_x0_scienceSpinBoxDelegate.setParent(self.surfTableView)
-        self.surf_y0_scienceSpinBoxDelegate.setParent(self.surfTableView)
-        self.surf_dx_scienceSpinBoxDelegate.setParent(self.surfTableView)
-        self.surf_dy_scienceSpinBoxDelegate.setParent(self.surfTableView)
-        self.surf_nx_spinBoxDelegate.setParent(self.surfTableView)
-        self.surf_ny_spinBoxDelegate.setParent(self.surfTableView)
+        self.map_x0_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_y0_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_dx_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_dy_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_nx_spinBoxDelegate.setParent(self.mapTableView)
+        self.map_ny_spinBoxDelegate.setParent(self.mapTableView)
         
-        self.surf_depthMult_spinBoxDelegate.setParent(self.surfTableView)
-        self.surf_depthMult_spinBoxDelegate.setStep(2)
-        self.surf_depthMult_spinBoxDelegate.setMinValue(-1)
-        self.surf_depthMult_spinBoxDelegate.setMaxValue(1)
+        self.map_depthMult_spinBoxDelegate.setParent(self.mapTableView)
+        self.map_depthMult_spinBoxDelegate.setStep(2)
+        self.map_depthMult_spinBoxDelegate.setMinValue(-1)
+        self.map_depthMult_spinBoxDelegate.setMaxValue(1)
         
-        self.surf_name_lineEditDelegate.setParent(self.surfTableView)
+        self.map_name_lineEditDelegate.setParent(self.mapTableView)
 
-        self.validator.setParent(self.surfTableView)
-        self.validator.setRegularExpression(ColadaUtil_py().fileNameRegExp())
-        self.validator.setToolTipText(ColadaUtil_py().fileNameToolTipText())
+        self.validator.setParent(self.mapTableView)
+        self.validator.setRegularExpression(Util.fileNameRegExp())
+        self.validator.setToolTipText(Util.fileNameToolTipText())
         self.validator.setToolTipDuration(3000)
 
-        self.surf_name_lineEditDelegate.setValidator(self.validator)
+        self.map_name_lineEditDelegate.setValidator(self.validator)
 
-        self.surfTableView.setItemDelegateForColumn(
-            self.surfTableHdrNames.index("save to"), self.surf_save_to_pathEditDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("save to"), self.map_save_to_pathEditDelegate)
 
-        self.surf_create_comboDelegate.setTexts(list(h5geo.CreationType.__members__.keys()))
-        self.surfTableView.setItemDelegateForColumn(
-            self.surfTableHdrNames.index("surf create"), self.surf_create_comboDelegate)
-        self.surf_domain_comboDelegate.setTexts(list(h5geo.Domain.__members__.keys()))
-        self.surfTableView.setItemDelegateForColumn(
-            self.surfTableHdrNames.index("domain"), self.surf_domain_comboDelegate)
+        self.map_create_comboDelegate.setTexts(list(h5geo.CreationType.__members__.keys()))
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("map create"), self.map_create_comboDelegate)
+        self.map_domain_comboDelegate.setTexts(list(h5geo.Domain.__members__.keys()))
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("domain"), self.map_domain_comboDelegate)
         
-        self.surfTableView.setItemDelegateForColumn(
-            self.surfTableHdrNames.index("depth mult"), self.surf_depthMult_spinBoxDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("depth mult"), self.map_depthMult_spinBoxDelegate)
         
-        self.surfTableView.setItemDelegateForColumn(
-            self.surfTableHdrNames.index("surf name"), self.surf_name_lineEditDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("map name"), self.map_name_lineEditDelegate)
 
-    def getReadWriteSurfParamFromTable(self, s_proxy_row: int) -> ReadWriteSurfParam:
-        """Read data needed to open/create `h5geo.H5Surf` object. 
+    def getReadWriteMapParamFromTable(self, s_proxy_row: int) -> ReadWriteMapParam:
+        """Read data needed to open/create `h5geo.H5Map` object. 
 
         Args:
-            s_proxy_row (int): surf table's proxy model row number
+            s_proxy_row (int): map table's proxy model row number
 
         Returns:
-            ReadWriteSurfParam: filled with values instance
+            ReadWriteMapParam: filled with values instance
         """
-        p = ReadWriteSurfParam()
+        p = ReadWriteMapParam()
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("read file")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("read file")))
         p.readFile = tmp if tmp else ''
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("save to")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("save to")))
         p.saveFile = tmp if tmp else ''
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("CRS")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")))
         p.crs = tmp if tmp else ''
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("surf name")))
-        p.surfName = tmp if tmp else ''
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map name")))
+        p.mapName = tmp if tmp else ''
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("surf create")))
-        p.surfCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")))
+        p.mapCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
         
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("domain")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")))
         p.domain = h5geo.Domain.__members__[tmp] if tmp in h5geo.Domain.__members__ else h5geo.Domain(0)
         
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("spatial units")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("spatial units")))
         p.spatialUnits = tmp if tmp else ''
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("data units")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("data units")))
         p.dataUnits = tmp if tmp else ''
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("x0")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x0")))
         p.X0 = float(tmp) if tmp else np.nan
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("y0")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y0")))
         p.Y0 = float(tmp) if tmp else np.nan
         
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("dx")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dx")))
         p.dX = float(tmp) if tmp else np.nan
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("dy")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dy")))
         p.dY = float(tmp) if tmp else np.nan
         
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("nx")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("nx")))
         p.nX = int(tmp) if tmp else 0
 
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("ny")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("ny")))
         p.nY = int(tmp) if tmp else 0
         
-        tmp = self.surfProxy.data(
-            self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("depth mult")))
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("depth mult")))
         p.depthMult = int(tmp) if tmp else 1
         
-        tmp = self.surfTableView.indexWidget(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("XNorth"))).checkState()
+        tmp = self.mapTableView.indexWidget(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("XNorth"))).checkState()
         p.xNorth = True if tmp == Qt.Qt.Checked else False
 
         return p
 
-    def updateSurfTableRow(self, s_proxy_row: int):
-        """Resets surf table's row and then updates surf table. 
-        Fills surf table as much as it can.
+    def updateMapTableRow(self, s_proxy_row: int):
+        """Resets map table's row and then updates map table. 
+        Fills map table as much as it can.
 
         Args:
-            s_proxy_row (int): surf table's proxy model row number
+            s_proxy_row (int): map table's proxy model row number
         """
-        s_model_row = self.surfProxy.mapToSource(self.surfProxy.index(s_proxy_row, 0)).row()
+        s_model_row = self.mapProxy.mapToSource(self.mapProxy.index(s_proxy_row, 0)).row()
         
-        self.resetSurfTableRow(s_proxy_row)
+        self.resetMapTableRow(s_proxy_row)
 
-        readFile = self.surfProxy.data(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("read file")))
+        readFile = self.mapProxy.data(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("read file")))
 
-        surf_name = os.path.splitext(os.path.basename(readFile))[0]
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("surf name")), surf_name)
+        map_name = os.path.splitext(os.path.basename(readFile))[0]
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map name")), map_name)
         
         ds = gdal.Open(readFile, gdal.GA_ReadOnly)
         if not ds:
@@ -242,43 +242,43 @@ class qColadaSurfReader(qColadaReader):
         ulx, xres, xskew, uly, yskew, yres  = ds.GetGeoTransform()
         lrx = ulx + (ds.RasterXSize * xres)
         lry = uly + (ds.RasterYSize * yres)
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("x0")), ulx)
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("y0")), uly)
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("dx")), xres)
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("dy")), yres)
-        # self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("nx")), ds.RasterXSize)
-        # self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("ny")), ds.RasterYSize)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x0")), ulx)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y0")), uly)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dx")), xres)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dy")), yres)
+        # self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("nx")), ds.RasterXSize)
+        # self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("ny")), ds.RasterYSize)
         
         nx_item = QtGui.QStandardItem(str(ds.RasterXSize))
         nx_item.setFlags(nx_item.flags() & ~Qt.Qt.ItemIsEditable)
-        self.surfModel.setItem(s_model_row, self.surfTableHdrNames.index("nx"), nx_item)
+        self.mapModel.setItem(s_model_row, self.mapTableHdrNames.index("nx"), nx_item)
         
         ny_item = QtGui.QStandardItem(str(ds.RasterYSize))
         ny_item.setFlags(ny_item.flags() & ~Qt.Qt.ItemIsEditable)
-        self.surfModel.setItem(s_model_row, self.surfTableHdrNames.index("ny"), ny_item)
+        self.mapModel.setItem(s_model_row, self.mapTableHdrNames.index("ny"), ny_item)
 
-    def resetSurfTableRow(self, s_proxy_row: int):
-        """Set some default values to surf table.
+    def resetMapTableRow(self, s_proxy_row: int):
+        """Set some default values to map table.
 
         Args:
-            s_proxy_row (int): surf table's proxy model row number
+            s_proxy_row (int): map table's proxy model row number
         """
-        readFile = self.surfProxy.data(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("read file")))
+        readFile = self.mapProxy.data(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("read file")))
         fi = QtCore.QFileInfo(readFile);
         if not fi.exists():
             return
 
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("save to")),
-                    ColadaDBCore_py().getSurfDir() + "/" + fi.baseName() + ".h5")
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("CRS")),
-                    ColadaDBCore_py().getCurrentProjectionNameCode())
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("surf create")), 
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("save to")),
+                    DBCore.getMapDir() + "/" + fi.baseName() + ".h5")
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")),
+                    DBCore.getCurrentProjectionNameCode())
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")), 
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("domain")), 
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")), 
             str(h5geo.Domain.TVDSS).rsplit('.', 1)[-1])
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("spatial units")), 'meter')
-        self.surfProxy.setData(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("depth mult")), str(-1))
-        self.surfTableView.setIndexWidget(self.surfProxy.index(s_proxy_row, self.surfTableHdrNames.index("XNorth")), QtGui.QCheckBox())
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("spatial units")), 'meter')
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("depth mult")), str(-1))
+        self.mapTableView.setIndexWidget(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("XNorth")), QtGui.QCheckBox())
 
     def onAddBtnClicked(self):
         long_name_list = []
@@ -301,28 +301,28 @@ class qColadaSurfReader(qColadaReader):
             
         qt_styled_extension_filter += 'all (*.*)'
         
-        fileNames = ctk.ctkFileDialog.getOpenFileNames(None, 'Select one or more surface files to open', '', qt_styled_extension_filter)
+        fileNames = ctk.ctkFileDialog.getOpenFileNames(None, 'Select one or more map files to open', '', qt_styled_extension_filter)
 
         for name in fileNames:
-            if self.surfModel.findItems(name, Qt.Qt.MatchFixedString, self.surfTableHdrNames.index("read file")):
+            if self.mapModel.findItems(name, Qt.Qt.MatchFixedString, self.mapTableHdrNames.index("read file")):
                 QtGui.QMessageBox.warning(self, "Warning", name+": is already in table!");
                 continue
 
-            self.surfModel.insertRow(self.surfModel.rowCount())
-            row = self.surfModel.rowCount()-1
+            self.mapModel.insertRow(self.mapModel.rowCount())
+            row = self.mapModel.rowCount()-1
 
             readFileItem = QtGui.QStandardItem(name)
             readFileItem.setFlags(readFileItem.flags() & ~Qt.Qt.ItemIsEditable)
-            self.surfModel.setItem(row, self.surfTableHdrNames.index("read file"), readFileItem)
+            self.mapModel.setItem(row, self.mapTableHdrNames.index("read file"), readFileItem)
 
-            for row in range(self.surfModel.rowCount()):
-                self.surfModel.verticalHeaderItem(row).setText(str(row + 1))
+            for row in range(self.mapModel.rowCount()):
+                self.mapModel.verticalHeaderItem(row).setText(str(row + 1))
 
-            self.updateSurfTableRow(row);
+            self.updateMapTableRow(row);
 
     def onRemoveToolBtnClicked(self):
-        """Removes selected rows from surf model."""
-        indexList = self.surfTableView.selectionModel().selectedRows()
+        """Removes selected rows from map model."""
+        indexList = self.mapTableView.selectionModel().selectedRows()
 
         rowList = []
         for index in indexList:
@@ -332,35 +332,35 @@ class qColadaSurfReader(qColadaReader):
         rowList.sort(reverse = True)
 
         for row in rowList:
-            self.surfProxy.removeRow(row)
+            self.mapProxy.removeRow(row)
 
-        for row in range(self.surfModel.rowCount()):
-            self.surfModel.verticalHeaderItem(row).setText(str(row + 1))
+        for row in range(self.mapModel.rowCount()):
+            self.mapModel.verticalHeaderItem(row).setText(str(row + 1))
             
     def onAutoDefineToolBtnClicked(self):
-        """Calls `updateSurfTableRow` for selected surf table's rows."""
-        indexList = self.surfTableView.selectionModel().selectedRows()
+        """Calls `updateMapTableRow` for selected map table's rows."""
+        indexList = self.mapTableView.selectionModel().selectedRows()
         for index in indexList:
-            self.updateSurfTableRow(index.row())
+            self.updateMapTableRow(index.row())
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
             # to accelerate this code I reserve a var (`getCurrentProjectUnits()` invokes SQLITE wich is slow)
-            currentProjectUnits = ColadaDBCore_py().getCurrentProjectUnits()
+            currentProjectUnits = DBCore.getCurrentProjectUnits()
             progressDialog = slicer.util.createProgressDialog(
-                parent=self, maximum=self.surfModel.rowCount())
-            for row in range(self.surfModel.rowCount()):
-                p_s = self.getReadWriteSurfParamFromTable(row)
+                parent=self, maximum=self.mapModel.rowCount())
+            for row in range(self.mapModel.rowCount()):
+                p_s = self.getReadWriteMapParamFromTable(row)
                 progressDialog.setLabelText("Reading: " + p_s.readFile)
                 progressDialog.setValue(row)
                 try:
-                    h5surfCnt = h5geo.createSurfContainerByName(p_s.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
+                    h5mapCnt = h5geo.createMapContainerByName(p_s.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
 
-                    if not h5surfCnt:
+                    if not h5mapCnt:
                         errMsg = 'Can`t open or create: ' + p_s.saveFile + ''' 
                         Possible reasons:
                         - `save to` is incorrect;
-                        - `save to` points to an existing NON SURF CONTAINER file;
+                        - `save to` points to an existing NON MAP CONTAINER file;
                         - you don't have permissions to create files in destination folder;
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
@@ -371,10 +371,10 @@ class qColadaSurfReader(qColadaReader):
                         p_s.dX, p_s.dY = p_s.dY, p_s.dX
                         p_s.nX, p_s.nY = p_s.nY, p_s.nX
                         
-                    p_s.X0, p_s.Y0, val = ColadaDBCore_py().convCoord2CurrentProjection(p_s.X0, p_s.Y0, p_s.crs, p_s.spatialUnits)
+                    p_s.X0, p_s.Y0, val = DBCore.convCoord2CurrentProjection(p_s.X0, p_s.Y0, p_s.crs, p_s.spatialUnits)
                     
-                    # if new surf will be created then the units will be `p_s.spatialUnits`
-                    coef = ColadaUtil_py().convertUnits(
+                    # if new map will be created then the units will be `p_s.spatialUnits`
+                    coef = Util.convertUnits(
                         currentProjectUnits,
                         p_s.spatialUnits)
                     
@@ -384,7 +384,7 @@ class qColadaSurfReader(qColadaReader):
                     p_s.dY *= coef
                     
                     if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_s.crs + ' to: ' + ColadaDBCore_py().getCurrentProjectionNameCode() + ''' 
+                        errMsg = 'Can`t transform coordinates from: ' + p_s.crs + ' to: ' + DBCore.getCurrentProjectionNameCode() + ''' 
                         Possible reasons:
                         - project is not set or contains incorrect CRS;
                         - `CRS` is incorrect;
@@ -392,13 +392,13 @@ class qColadaSurfReader(qColadaReader):
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
                     
-                    h5surf = h5surfCnt.createSurf(p_s.surfName, p_s, p_s.surfCreateType)
-                    if not h5surf:
-                        errMsg = 'Can`t open, create or overwrite surf: ' + p_s.surfName + ' from container: ' + p_s.saveFile + ''' 
+                    h5map = h5mapCnt.createMap(p_s.mapName, p_s, p_s.mapCreateType)
+                    if not h5map:
+                        errMsg = 'Can`t open, create or overwrite map: ' + p_s.mapName + ' from container: ' + p_s.saveFile + ''' 
                         Possible reasons:
-                        - `surf name` is incorrect;
-                        - `surf create` is incorrect;
-                        - surf container contains a group with the same name `surf name` but this group can`t be treated as surf and `surf create` flag is `OPEN/CREATE/OPEN_OR_CREATE`;
+                        - `map name` is incorrect;
+                        - `map create` is incorrect;
+                        - map container contains a group with the same name `map name` but this group can`t be treated as map and `map create` flag is `OPEN/CREATE/OPEN_OR_CREATE`;
                         - you don't have permissions to create objects inside specified container (maybe 3rd party app is blocking this container);
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
@@ -416,14 +416,14 @@ class qColadaSurfReader(qColadaReader):
                     
                     arr = np.asfortranarray(ds.ReadAsArray(), dtype=float)
                     if p_s.xNorth:
-                        val = h5surf.writeData(np.transpose(arr) * p_s.depthMult, p_s.dataUnits)
+                        val = h5map.writeData(np.transpose(arr) * p_s.depthMult, p_s.dataUnits)
                     else:
-                        val = h5surf.writeData(arr * p_s.depthMult, p_s.dataUnits)
+                        val = h5map.writeData(arr * p_s.depthMult, p_s.dataUnits)
                         
                     if not val:
-                        errMsg = 'Can`t write data to surf: ' + p_s.surfName + ' from container: ' + p_s.saveFile + ''' 
+                        errMsg = 'Can`t write data to map: ' + p_s.mapName + ' from container: ' + p_s.saveFile + ''' 
                         Possible reasons:
-                        - `surf_data` dataset is broken (some attributes are missing);
+                        - `map_data` dataset is broken (some attributes are missing);
                         - you don't have write permissions inside specified container (maybe 3rd party app is blocking this container);
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
@@ -432,14 +432,14 @@ class qColadaSurfReader(qColadaReader):
                     if progressDialog.wasCanceled:
                         break
                         
-                    h5surfCnt.getH5File().flush()
+                    h5mapCnt.getH5File().flush()
 
                 except h5gt.Exception as ex:
                     QtGui.QMessageBox.critical(self, "Error", ex)
                     # print(ex)
                     continue
 
-            progressDialog.setValue(self.surfModel.rowCount())
+            progressDialog.setValue(self.mapModel.rowCount())
 
         elif button == self.buttonBox.button(QtGui.QDialogButtonBox.Cancel):
             self.close()

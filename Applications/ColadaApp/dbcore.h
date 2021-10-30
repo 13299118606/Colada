@@ -1,5 +1,5 @@
-#ifndef __qColadaDBCore_h
-#define __qColadaDBCore_h
+#ifndef __qdbcore_h
+#define __qdbcore_h
 
 // Colada includes
 #include "qColadaAppExport.h"
@@ -11,6 +11,7 @@ class QSqlQuery;
 class OGRSpatialReference;
 class QByteArray;
 
+// PythonQt wrapper for functions is in `qColadaAppPythonQtDecorators.h`
 
 namespace dbcore {
 ///
@@ -63,23 +64,17 @@ bool Q_COLADA_APP_EXPORT createWellTable();
 bool Q_COLADA_APP_EXPORT createHrzTable();
 bool Q_COLADA_APP_EXPORT createProjectFolders(const QString &prjDir);
 
-///
-/// \brief dbcore::saveSettings
-/// \return IT IS NOT FINISHED
-///
-bool Q_COLADA_APP_EXPORT saveSettings();
-
-/// @brief return current project fullname
-/// @return 
+/// \brief return current project fullname
+/// \return
 QString Q_COLADA_APP_EXPORT getCurrentProjectName();
 
 QString Q_COLADA_APP_EXPORT getCurrentProjectUnits();
 
-/// @brief return path where database file (.db) resides
-/// @return 
+/// \brief return path where database file (.db) resides
+/// \return
 QString Q_COLADA_APP_EXPORT getCurrentProjectDir();
 QString Q_COLADA_APP_EXPORT getSeisDir();
-QString Q_COLADA_APP_EXPORT getSurfDir();
+QString Q_COLADA_APP_EXPORT getMapDir();
 QString Q_COLADA_APP_EXPORT getWellDir();
 
 QSqlQuery Q_COLADA_APP_EXPORT getTable(const QString &tableName);

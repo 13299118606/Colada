@@ -1,5 +1,5 @@
-#ifndef __ColadaUtil_h
-#define __ColadaUtil_h
+#ifndef __util_h
+#define __util_h
 
 // std includes
 #include <cstring>  // memcpy
@@ -19,6 +19,8 @@ class QRegularExpression;
 class QRegExp;
 class QString;
 class QStringList;
+
+// PythonQt wrapper for functions is in `qColadaAppPythonQtDecorators.h`
 
 namespace util {
 
@@ -54,12 +56,12 @@ typename std::enable_if<(sizeof(To) == sizeof(From)) &&
 }
 
 template <typename T>
-/// @brief Type `T` is specified as enum class. All enum class
+/// /brief Type `T` is specified as enum class. All enum class
 /// members are added to combo.
-/// @tparam T
-/// @param tableView
-/// @param
-/// @return
+/// /tparam T
+/// /param tableView
+/// /param
+/// /return
 void setComboDelegateFromEnumClassForTable(QTableView *tableView, int col) {
   auto comboData = magic_enum::enum_names<T>();
   QStringList comboDataList;
@@ -72,5 +74,6 @@ void setComboDelegateFromEnumClassForTable(QTableView *tableView, int col) {
 }
 
 } // namespace util
+
 
 #endif

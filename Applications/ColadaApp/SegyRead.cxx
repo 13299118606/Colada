@@ -1,7 +1,7 @@
 // Colada includes
 #include "SegyRead.h"
-#include "ColadaDBCore.h"
-#include "ColadaUtil.h"
+#include "dbcore.h"
+#include "util.h"
 
 // GDAL includes
 #include <gdal/gdal.h>
