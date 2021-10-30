@@ -58,10 +58,10 @@ bool Q_COLADA_APP_EXPORT createSeisTable();
 bool Q_COLADA_APP_EXPORT createWellTable();
 
 ///
-/// \brief dbcore::createHrzTable
+/// \brief dbcore::createMapTable
 /// \return there is only one column 'full_name'
 ///
-bool Q_COLADA_APP_EXPORT createHrzTable();
+bool Q_COLADA_APP_EXPORT createMapTable();
 bool Q_COLADA_APP_EXPORT createProjectFolders(const QString &prjDir);
 
 /// \brief return current project fullname

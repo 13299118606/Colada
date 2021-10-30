@@ -217,10 +217,10 @@ void qColadaNewProject::onButtonBoxClicked(QAbstractButton* button) {
       msgBox.exec();
       return;
     }
-    if (!dbcore::createHrzTable()) {
+    if (!dbcore::createMapTable()) {
       QMessageBox msgBox;
       msgBox.setIcon(QMessageBox::Critical);
-      msgBox.setText(tr("Can't create 'hrz_containers' table"));
+      msgBox.setText(tr("Can't create 'map_containers' table"));
       msgBox.exec();
       return;
     }

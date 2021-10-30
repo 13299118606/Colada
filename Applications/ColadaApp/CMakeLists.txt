@@ -118,7 +118,6 @@ set(APPLIB_SRCS
   qPathEditDelegate.h
   qPathEditDelegate.cxx
 
-  qColadaAppPythonQtDecorators.cxx
   qColadaAppPythonQtDecorators.h
   )
 

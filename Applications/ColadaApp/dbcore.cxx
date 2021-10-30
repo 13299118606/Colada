@@ -121,11 +121,11 @@ bool dbcore::createWellTable() {
   return true;
 }
 
-bool dbcore::createHrzTable() {
+bool dbcore::createMapTable() {
   if (!QSqlDatabase::database().isOpen() || !QSqlDatabase::database().isValid())
     return false;
 
-  QString query = "CREATE TABLE hrz_containers ("
+  QString query = "CREATE TABLE map_containers ("
                   "full_name TEXT)";
 
   QSqlQuery qry;

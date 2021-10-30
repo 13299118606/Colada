@@ -32,6 +32,12 @@
 // units includes
 #include <units/units.hpp>
 
+
+
+#include <h5gt/H5File.hpp>
+#include <h5geo/h5seiscontainer.h>
+
+
 /* Rules to create bindings via PythonQt:
    - don`t write `~MyClass = default`;
    - don`t use EXPORT directive for a decorator class;
@@ -56,13 +62,22 @@ class qColadaAppPythonQtDecorators : public QObject {
   Q_OBJECT
 //
 public:
-  explicit qColadaAppPythonQtDecorators(QObject *parent = nullptr): 
+  explicit qColadaAppPythonQtDecorators(QObject *parent = nullptr):
     QObject(parent) {
 
     // `ctkCheckableHeaderView` is doesn't have a default constructor and
     // to fix that I add it in decorator. See more: https://github.com/commontk/CTK/pull/985
     PythonQt::self()->registerClass(
           &ctkCheckableHeaderView::staticMetaObject, "qColadaApp");
+
+
+//    auto m = PythonQt::self()->importModule("h5gtpy"); // gives error as it doesn't have default constructor?
+//    PythonQt::self()->registerCPPClass(
+//          "h5gt::File", "", "qColadaApp");
+
+//    PythonQt::self()->importModule("h5geopy");
+//    PythonQt::self()->registerCPPClass(
+//          "H5SeisContainer", "", "h5geopy");
 
     PythonQt::self()->registerCPPClass(
           "DBCore", "", "qColadaApp");
@@ -83,6 +98,10 @@ public slots:
     return new DBCore();
   }
 
+//  h5gt::File *new_File(std::string fileName, int val) {
+//    return new h5gt::File(fileName, val);
+//  }
+
   /*---------ADD STATIC METHODS TO `DBCore` class---------*/
   QSqlDatabase static_DBCore_createDB(QString &fullName){ return dbcore::createDB(fullName); }
   QSqlDatabase static_DBCore_createDB(const QString &path, QString &name){ return dbcore::createDB(path, name); }
@@ -95,7 +114,7 @@ public slots:
   { return dbcore::fillInfoTable(owner, prjName, prjDir, units, crsAuthName, crsCode, crsName); }
   bool static_DBCore_createSeisTable(){ return dbcore::createSeisTable(); }
   bool static_DBCore_createWellTable(){ return dbcore::createWellTable(); }
-  bool static_DBCore_createHrzTable(){ return dbcore::createHrzTable(); }
+  bool static_DBCore_createMapTable(){ return dbcore::createMapTable(); }
   bool static_DBCore_createProjectFolders(const QString &prjDir){ return dbcore::createProjectFolders(prjDir); }
   QString static_DBCore_getCurrentProjectName(){ return dbcore::getCurrentProjectName(); }
   QString static_DBCore_getCurrentProjectUnits(){ return dbcore::getCurrentProjectUnits(); }
@@ -149,19 +168,28 @@ public slots:
 
 
   /*---------ADD STATIC METHODS TO `Util` class---------*/
-  QRegularExpression static_fileNameRegExp(){ return util::fileNameRegExp(); }
-  QRegularExpression static_fileNameNoSpaceRegExp(){ return util::fileNameNoSpaceRegExp(); }
-  QRegExp static_floatRegExp(){ return util::floatRegExp(); }
-  QString fstatic_ileNameToolTipText(){ return util::fileNameToolTipText(); }
-  QString static_fileNameNoSpaceToolTipText(){ return util::fileNameNoSpaceToolTipText(); }
-  QStringList static_readTxtFileByLines(const QString &filePath){ return util::readTxtFileByLines(filePath); }
-  bool rstatic_emoveDir(const QString &dirName){ return util::removeDir(dirName); }
-  double static_convertUnits(
+  QRegularExpression static_Util_fileNameRegExp(){ return util::fileNameRegExp(); }
+  QRegularExpression static_Util_fileNameNoSpaceRegExp(){ return util::fileNameNoSpaceRegExp(); }
+  QRegExp static_Util_floatRegExp(){ return util::floatRegExp(); }
+  QString fstatic_Util_ileNameToolTipText(){ return util::fileNameToolTipText(); }
+  QString static_Util_fileNameNoSpaceToolTipText(){ return util::fileNameNoSpaceToolTipText(); }
+  QStringList static_Util_readTxtFileByLines(const QString &filePath){ return util::readTxtFileByLines(filePath); }
+  bool rstatic_Util_emoveDir(const QString &dirName){ return util::removeDir(dirName); }
+  double static_Util_convertUnits(
       const QString &unitsFrom, const QString &unitsTo){
     return units::convert(
           units::unit_from_string(unitsFrom.toStdString()),
           units::unit_from_string(unitsTo.toStdString()));
   }
+
+
+  // TEST EXTERNAL LIBRARY COMPLIENCE
+//  std::string static_Util_h5gt(h5gt::File file){
+//    return file.getFileName();
+//  }
+//  std::string static_Util_h5geo(H5SeisContainer* seisCnt){
+//    return seisCnt->getH5File().getFileName();
+//  }
 };
 
 Q_DECLARE_METATYPE(std::vector<double>)
