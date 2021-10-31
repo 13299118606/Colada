@@ -78,10 +78,10 @@ public:
   /**
    * Not implemented yet!
    */
-  void InterpolateScalarsOnImageData(
-      double origin[3],
-      double spacings[3],
-      vtkDataArray* dataArray);
+//  void InterpolateScalarsOnImageData(
+//      double origin[3],
+//      double spacings[3],
+//      vtkDataArray* dataArray);
 
   void SetSurfacePoints(vtkPoints* points);
   vtkPoints* GetSurfacePoints();

@@ -375,13 +375,13 @@ void vtkRaisedGrid::GetPointsNearVerticalSlice(
 }
 
 //------------------------------------------------------------------------------
-void InterpolateScalarsOnImageData(
-    double origin[3],
-    double spacings[3],
-    vtkDataArray* dataArray)
-{
+//void vtkRaisedGrid::InterpolateScalarsOnImageData(
+//    double origin[3],
+//    double spacings[3],
+//    vtkDataArray* dataArray)
+//{
 
-}
+//}
 
 //------------------------------------------------------------------------------
 void vtkRaisedGrid::SetSurfacePoints(vtkPoints* points){
