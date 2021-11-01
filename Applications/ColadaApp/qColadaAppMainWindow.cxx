@@ -457,13 +457,13 @@ void qColadaAppMainWindow::on_HelpAboutColadaAppAction_triggered()
   about.exec();
 }
 
-void qColadaAppMainWindow::on_NewProjectAction_triggered()
+void qColadaAppMainWindow::on_NewProjectAction_triggered(bool checked)
 {
   qColadaNewProject* newproject = new qColadaNewProject();
   newproject->exec();
 }
 
-void qColadaAppMainWindow::on_OpenProjectAction_triggered()
+void qColadaAppMainWindow::on_OpenProjectAction_triggered(bool checked)
 {
   Q_D(qColadaAppMainWindow);
 
