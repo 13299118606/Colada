@@ -339,6 +339,16 @@ coladaMacroEditcpp(
 )
 
 coladaMacroEditcpp(
+  TARGET MRMLDisplayableManager
+  TARGET_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/DisplayableManager/CMakeLists.txt
+  SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/MRMLDisplayableManager/vtkMRMLCameraWidget.cxx
+  DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/DisplayableManager/vtkMRMLCameraWidget.cxx
+  CXX_STANDARD ${CMAKE_CXX_STANDARD}
+  OVERWRITE
+  OLDFILE_DELETE
+)
+
+coladaMacroEditcpp(
   TARGET qSlicerViewControllersModule
   TARGET_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Modules/Loadable/ViewControllers/CMakeLists.txt
   SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/ViewControllers/qSlicerViewControllersModule.cxx
