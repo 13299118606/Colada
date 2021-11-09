@@ -111,6 +111,8 @@ set(APPLIB_SRCS
   qScienceSpinBox.cxx
   qSpinBoxDelegate.h
   qSpinBoxDelegate.cxx
+  qCompletableComboBox.h
+  qCompletableComboBox.cxx
   qScienceSpinBoxDelegate.h
   qScienceSpinBoxDelegate.cxx
   qLineEditDelegate.h
@@ -150,6 +152,7 @@ set(APPLIB_MOC_SRCS
   qScienceSpinBox.h
   qComboBoxDelegate.h
   qSpinBoxDelegate.h
+  qCompletableComboBox.h
   qScienceSpinBoxDelegate.h
   qLineEditDelegate.h
   qPathEditDelegate.h

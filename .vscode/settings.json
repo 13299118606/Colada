@@ -2,6 +2,7 @@
   "files.associations": {
     "*.txx": "cpp",
     "*.tcc": "cpp",
-    "qwidget": "cpp"
+    "qwidget": "cpp",
+    "cstdlib": "cpp"
   }
 }

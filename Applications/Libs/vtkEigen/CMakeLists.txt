@@ -50,9 +50,8 @@ endif()
 # --------------------------------------------------------------------------
 set(vtkEigen_SRCS
   vtkEigenDoubleArray.cxx
-  vtkEigenDoubleArray.cxx
   vtkEigenFloatArray.cxx
-  vtkEigenFloatArray.cxx
+  vtkEigenProbeFilter.cxx
   vtkRaisedGrid.cxx
   )
 

@@ -119,7 +119,7 @@ if(WIN32)
 endif()
 
 # Slicer options
-option(BUILD_TESTING                            "Build application test suite"                        OFF)
+option(BUILD_TESTING                            "Build application test suite"                        ON)
 option(Slicer_BUILD_DOCUMENTATION               "Build documentation (Doxygen, sphinx, ...)"          OFF)
 if(WIN32)
   option(Slicer_BUILD_WIN32_CONSOLE             "Build application executable as a console app"       OFF)
@@ -159,6 +159,9 @@ set(Slicer_BUILD_CompareVolumes               ON CACHE BOOL    "Build applicatio
 set(Slicer_BUILD_LandmarkRegistration         OFF CACHE BOOL    "Build application with LandmarkRegistration module"  FORCE)
 set(Slicer_BUILD_SurfaceToolbox               ON CACHE BOOL    "Build application with SurfaceToolbox module"         FORCE)
 
+message("BUILD_TESTING: ${BUILD_TESTING}")
+message("Slicer_BUILD_DOCUMENTATION: ${Slicer_BUILD_DOCUMENTATION}")
+message("Slicer_BUILD_WIN32_CONSOLE: ${Slicer_BUILD_WIN32_CONSOLE}")
 message("Slicer_BUILD_DICOM_SUPPORT: ${Slicer_BUILD_DICOM_SUPPORT}")
 message("Slicer_BUILD_DIFFUSION_SUPPORT: ${Slicer_BUILD_DIFFUSION_SUPPORT}")
 message("Slicer_BUILD_EXTENSIONMANAGER_SUPPORT: ${Slicer_BUILD_EXTENSIONMANAGER_SUPPORT}")

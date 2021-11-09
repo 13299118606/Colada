@@ -125,6 +125,7 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
 
   QPixmap logo(":/LogoFull.png");
   this->LogoLabel->setPixmap(logo);
+  this->LogoLabel->hide();
 
   // Hide the toolbars
   this->MainToolBar->setVisible(false);

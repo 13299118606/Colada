@@ -247,26 +247,54 @@ double pcoords[3], double* weights)
 }
 
 //------------------------------------------------------------------------------
+void calculateCellCenter(vtkCell* cell, double c[3])
+{
+  int nPts = cell->GetNumberOfPoints();
+  double p[3];
+  for (vtkIdType i = 0; i < nPts; i++){
+    cell->Points->GetPoint(i, p);
+    for (int ii = 0; ii < 3; ii++){
+      c[ii] += p[ii];
+    }
+  }
+  for (int ii = 0; ii < 3; ii++){
+    c[ii] /= nPts;
+  }
+}
+
+//------------------------------------------------------------------------------
 vtkIdType vtkRaisedGrid::FindCell(double x[3], vtkCell* vtkNotUsed(cell),
 vtkIdType vtkNotUsed(cellId), double tol2, int& subId, double pcoords[3], double* weights)
 {
-  // find nearest cell in XY plane and then look only for nearest Z point
-  vtkIdType surfCellId = this->SurfaceDelaunay2D->GetOutput()->FindCell(
-        x, nullptr, 0, std::numeric_limits<double>::max(), subId, pcoords, weights);
-  vtkIdType zCellId = 0;
-  vtkIdType cellId = this->GetCellIdFromSurfCellIdAndZCellId(surfCellId, zCellId);
-  double c[3];
-  vtkCell* cell = this->GetCell(cellId);
-  cell->GetParametricCenter(c);
-  double z = c[2];
   // `dist` is squared as `tol2` is squared
   // suffix `2` means `squared`
-  double dist2 = (x[0]-c[0])*(x[0]-c[0]) + (x[1]-c[1])*(x[1]-c[1]) + (x[2]-z)*(x[2]-z);
-  double minDist2 = dist2;
-  double distNew2 = dist2;
+  double c[3];
+  double dist2;
+  double minDist2 = std::numeric_limits<double>::max();
+  vtkIdType surfCellId = -1;
+  vtkPolyData* surfPolyData = this->SurfaceDelaunay2D->GetOutput();
+  // find nearest cell in XY plane and then look only for nearest Z point
+  for (vtkIdType i = 0; i < this->SurfaceDelaunay2D->GetOutput()->GetNumberOfCells(); i++){
+    vtkCell* cell = surfPolyData->GetCell(i);
+    calculateCellCenter(cell, c);
+    dist2 = (x[0]-c[0])*(x[0]-c[0]) + (x[1]-c[1])*(x[1]-c[1]) + (x[2]-c[2])*(x[2]-c[2]);
 
-  for (vtkIdType i = 0; i < this->ZSpacings.size(); i++){
-    z += this->ZSpacings[i];
+    if (dist2 < minDist2){
+      minDist2 = dist2;
+      surfCellId = i;
+    }
+  }
+
+  vtkCell* surfCell = this->SurfaceDelaunay2D->GetOutput()->GetCell(surfCellId);
+  calculateCellCenter(surfCell, c);
+
+  double z = c[2] + this->ZSpacings[0]/2;
+  dist2 = (x[0]-c[0])*(x[0]-c[0]) + (x[1]-c[1])*(x[1]-c[1]) + (x[2]-z)*(x[2]-z);
+  minDist2 = dist2;
+  double distNew2 = dist2;
+  vtkIdType zCellId = 0;
+  for (vtkIdType i = 1; i < this->ZSpacings.size(); i++){
+    z += this->ZSpacings[i-1]/2 + this->ZSpacings[i]/2;
     distNew2 = (x[0]-c[0])*(x[0]-c[0]) + (x[1]-c[1])*(x[1]-c[1]) + (x[2]-z)*(x[2]-z);
     if (distNew2 > dist2)
       break;
@@ -274,41 +302,24 @@ vtkIdType vtkNotUsed(cellId), double tol2, int& subId, double pcoords[3], double
     dist2 = distNew2;
     if (dist2 < minDist2){
       minDist2 = dist2;
-      zCellId = i+1;
+      zCellId = i;
     }
   }
 
-  if (minDist2 > tol2)
+  // Commented as vtkProbeFilter passes tol2 that is much smaller than minDist2
+//  if (minDist2 > tol2)
+//    return -1;
+
+  vtkIdType cellId = this->GetCellIdFromSurfCellIdAndZCellId(surfCellId, zCellId);
+  vtkCell* cell = this->GetCell(cellId);
+  double closestPoint[3];
+  int inCell = cell->EvaluatePosition(x, nullptr, subId, pcoords, dist2, weights);
+
+  // if `x` is outside the cell or computational problems occured
+  if (inCell <= 0)
     return -1;
 
-  //---------DONT KNOW HOW WHAT IS `pcoords` (parametric coords) AND HOW TO CALCULATE `weights`-------
-  if (weights)
-  {
-    // Shift parametric coordinates for XZ/YZ planes
-    if (this->DataDescription == VTK_XZ_PLANE)
-    {
-      pcoords[1] = pcoords[2];
-      pcoords[2] = 0.0;
-    }
-    else if (this->DataDescription == VTK_YZ_PLANE)
-    {
-      pcoords[0] = pcoords[1];
-      pcoords[1] = pcoords[2];
-      pcoords[2] = 0.0;
-    }
-    else if (this->DataDescription == VTK_XY_PLANE)
-    {
-      pcoords[2] = 0.0;
-    }
-    vtkWedge::InterpolationFunctions(pcoords, weights);
-  }
-  //-----------END OF UNCERTAIN BLOCK-----------
-
-  //
-  //  From this location get the cell id
-  //
-  subId = 0;
-  return this->GetCellIdFromSurfCellIdAndZCellId(surfCellId, cellId);
+  return cellId;
 }
 
 //------------------------------------------------------------------------------
@@ -326,7 +337,7 @@ void vtkRaisedGrid::ComputeBounds()
   if (z > 0){
     bounds[5] += z;
   } else {
-    bounds[2] += z;
+    bounds[4] += z;
   }
   memcpy(this->Bounds, bounds, sizeof(this->Bounds));
   this->ComputeTime.Modified();
@@ -478,25 +489,25 @@ void vtkRaisedGrid::AddPointsToCellTemplate(vtkCell* cell, vtkIdType cellId)
   ploc0 = 0;
   ploc1 = I;
 
-  cell->GetPointIds()->SetNumberOfIds(I);
+  cell->GetPointIds()->SetNumberOfIds(2*I); // Very important for filters (vtkProbeFilter for example)
   if (VerticalEnumerationOrder){
     for (vtkIdType i = 0; i < I; i++){
-      surfPointId = surfCell->GetPointIds()->GetId(i);
       double p[3];
-      surfCellPoints->GetPoint(surfPointId, p);
+      surfCellPoints->GetPoint(i, p); // here id is not a global id but a number [0, N]
       double z0 = z+p[2];
       double z1 = z0+this->ZSpacings[zCellId];
 
+      surfPointId = surfCell->GetPointId(i);
       pid0 = surfPointId * nZPoints + zCellId;
       pid1 = pid0 + 1;
 
-      cell->GetPointIds()->SetId(ploc0, pid0);
-      cell->GetPoints()->SetPoint(
+      cell->PointIds->SetId(ploc0, pid0);
+      cell->Points->SetPoint(
             ploc0,
             p[0], p[1], z0);
 
-      cell->GetPointIds()->SetId(ploc1, pid1);
-      cell->GetPoints()->SetPoint(
+      cell->PointIds->SetId(ploc1, pid1);
+      cell->Points->SetPoint(
             ploc1,
             p[0], p[1], z1);
 
@@ -505,22 +516,22 @@ void vtkRaisedGrid::AddPointsToCellTemplate(vtkCell* cell, vtkIdType cellId)
     }
   } else {
     for (vtkIdType i = 0; i < I; i++){
-      surfPointId = surfCell->GetPointIds()->GetId(i);
       double p[3];
-      surfCellPoints->GetPoint(surfPointId, p);
+      surfCellPoints->GetPoint(i, p); // here id is not a global id but a number [0, N]
       double z0 = z+p[2];
       double z1 = z0+this->ZSpacings[zCellId];
 
+      surfPointId = surfCell->GetPointId(i);
       pid0 = surfPointId + nSurfPoints * zCellId;
       pid1 = pid0 + nSurfPoints;
 
-      cell->GetPointIds()->SetId(ploc0, pid0);
-      cell->GetPoints()->SetPoint(
+      cell->PointIds->SetId(ploc0, pid0);
+      cell->Points->SetPoint(
             ploc0,
             p[0], p[1], z0);
 
-      cell->GetPointIds()->SetId(ploc1, pid1);
-      cell->GetPoints()->SetPoint(
+      cell->PointIds->SetId(ploc1, pid1);
+      cell->Points->SetPoint(
             ploc1,
             p[0], p[1], z1);
 

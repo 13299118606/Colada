@@ -5,6 +5,35 @@
   "version": "0.2.0",
   "configurations": [
   {
+    "name": "(gdb) Launch vtkMRMLCameraWidgetTest1",
+    "type": "cppdbg",
+    "request": "launch",
+    "program": "${workspaceFolder}/d/Slicer-build/Colada",
+    "args": [
+      "--launch",
+      "/home/kerim/Documents/Colada/d/Slicer-build/bin/MRMLDisplayableManagerCxxTests",
+      "vtkMRMLCameraWidgetTest1",
+      "-D",
+      "/home/kerim/Documents/Colada/d/slicersources-src/Libs/MRML/DisplayableManager/Testing/Cxx/../",
+      "-T",
+      "/home/kerim/Documents/Colada/d/Slicer-build/Testing/Temporary", 
+      "-V",
+      "Baseline/vtkMRMLCameraWidgetTest1.png"
+    ],
+    "stopAtEntry": false,
+    "cwd": "${fileDirname}",
+    "environment": [],
+    "externalConsole": false,
+    "MIMode": "gdb",
+    "setupCommands": [
+        {
+            "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+        }
+    ]
+  },
+  {
     "name": "(gdb) Attach",
     "type": "cppdbg",
     "request": "attach",
