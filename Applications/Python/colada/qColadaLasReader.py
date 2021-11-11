@@ -413,9 +413,9 @@ class qColadaLasReader(qColadaReader):
             return
 
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("save to")),
-                    DBCore.getWellDir() + "/" + fi.baseName() + ".h5")
+                    QtGui.QApplication.instance().cachePath + "/" + fi.baseName() + ".h5")
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")),
-                    DBCore.getCurrentProjectionNameCode())
+                    Util.CRSAuthName() + ":" + str(Util.CRSCode()))
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")), 
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")), 'meter')
@@ -497,8 +497,7 @@ class qColadaLasReader(qColadaReader):
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
-            # to accelerate this code I reserve a var (`getCurrentProjectUnits()` invokes SQLITE wich is slow)
-            currentProjectUnits = DBCore.getCurrentProjectUnits()
+            currentProjectUnits = Util.LengthUnits()
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.wellModel.rowCount())
             for row in range(self.wellModel.rowCount()):
@@ -519,9 +518,9 @@ class qColadaLasReader(qColadaReader):
                         continue
                     
                     if p_w.xNorth:
-                        p_w.headX, p_w.headY, val = DBCore.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.spatialUnits)
                     else:
-                        p_w.headX, p_w.headY, val = DBCore.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.spatialUnits)
                         
                     # if new well will be created then the units will be `p_w.spatialUnits`
                     coef_w = Util.convertUnits(
@@ -532,7 +531,7 @@ class qColadaLasReader(qColadaReader):
                     p_w.headY *= coef_w
                         
                     if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + DBCore.getCurrentProjectionNameCode() + ''' 
+                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + Util.CRSAuthName() + ":" + str(Util.CRSCode()) + ''' 
                         Possible reasons:
                         - project is not set or contains incorrect CRS;
                         - `CRS` is incorrect;

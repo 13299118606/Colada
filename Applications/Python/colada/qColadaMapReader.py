@@ -269,9 +269,9 @@ class qColadaMapReader(qColadaReader):
             return
 
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("save to")),
-                    DBCore.getMapDir() + "/" + fi.baseName() + ".h5")
+                    QtGui.QApplication.instance().cachePath + "/" + fi.baseName() + ".h5")
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")),
-                    DBCore.getCurrentProjectionNameCode())
+                    Util.CRSAuthName() + ":" + str(Util.CRSCode()))
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")), 
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")), 
@@ -345,8 +345,7 @@ class qColadaMapReader(qColadaReader):
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
-            # to accelerate this code I reserve a var (`getCurrentProjectUnits()` invokes SQLITE wich is slow)
-            currentProjectUnits = DBCore.getCurrentProjectUnits()
+            currentProjectUnits = Util.LengthUnits()
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.mapModel.rowCount())
             for row in range(self.mapModel.rowCount()):
@@ -371,7 +370,7 @@ class qColadaMapReader(qColadaReader):
                         p_s.dX, p_s.dY = p_s.dY, p_s.dX
                         p_s.nX, p_s.nY = p_s.nY, p_s.nX
                         
-                    p_s.X0, p_s.Y0, val = DBCore.convCoord2CurrentProjection(p_s.X0, p_s.Y0, p_s.crs, p_s.spatialUnits)
+                    p_s.X0, p_s.Y0, val = Units.convCoord2CurrentProjection(p_s.X0, p_s.Y0, p_s.crs, p_s.spatialUnits)
                     
                     # if new map will be created then the units will be `p_s.spatialUnits`
                     coef = Util.convertUnits(
@@ -384,7 +383,7 @@ class qColadaMapReader(qColadaReader):
                     p_s.dY *= coef
                     
                     if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_s.crs + ' to: ' + DBCore.getCurrentProjectionNameCode() + ''' 
+                        errMsg = 'Can`t transform coordinates from: ' + p_s.crs + ' to: ' + Util.CRSAuthName() + ":" + str(Util.CRSCode()) + ''' 
                         Possible reasons:
                         - project is not set or contains incorrect CRS;
                         - `CRS` is incorrect;

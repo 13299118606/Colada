@@ -18,7 +18,6 @@
 // Colada includes
 #include "qColadaAppMainWindow.h"
 #include "qColadaAppMainWindow_p.h"
-#include "qColadaNewProject.h"
 #include "qColadaH5MapTreeView.h"
 #include "qColadaH5SeisTreeView.h"
 #include "qColadaH5WellTreeView.h"
@@ -26,7 +25,7 @@
 #include "qColadaH5SeisModel.h"
 #include "qColadaH5WellModel.h"
 #include "qColadaH5ProxyModel.h"
-#include "dbcore.h"
+#include "util.h"
 
 // Qt includes
 #include <QDesktopWidget>
@@ -233,18 +232,8 @@ void qColadaAppMainWindowPrivate::setupFileMenu(QMainWindow* mainWindow) {
   Q_Q(qColadaAppMainWindow);
 
   QList<QAction*> actionList = FileMenu->actions();
-  for (int i = 0; i < actionList.count(); i++)
-    FileMenu->removeAction(actionList[i]);
-
-  QAction* newProjectAction = new QAction("New project", mainWindow);
-  newProjectAction->setObjectName("NewProjectAction");
-  QObject::connect(newProjectAction, &QAction::triggered, q, &qColadaAppMainWindow::on_NewProjectAction_triggered);
-
-  QAction* openProjectAction = new QAction("Open project", mainWindow);
-  openProjectAction->setObjectName("OpenProjectAction");
-  QObject::connect(openProjectAction, &QAction::triggered, q, &qColadaAppMainWindow::on_OpenProjectAction_triggered);
-
-  FileMenu->addActions({ newProjectAction, openProjectAction });
+//  for (int i = 0; i < actionList.count(); i++)
+//    FileMenu->removeAction(actionList[i]);
 }
 
 void qColadaAppMainWindowPrivate::setupViewMenu(QMainWindow* mainWindow) {
@@ -434,7 +423,7 @@ qColadaAppMainWindow::qColadaAppMainWindow(QWidget* windowParent)
   Q_D(qColadaAppMainWindow);
   d->init();
 
-  dbcore::initProjLibDB();
+  util::initProjLibDB();
 }
 
 //-----------------------------------------------------------------------------
@@ -456,32 +445,6 @@ void qColadaAppMainWindow::on_HelpAboutColadaAppAction_triggered()
   qSlicerAboutDialog about(this);
   about.setLogo(QPixmap(":/Logo.png"));
   about.exec();
-}
-
-void qColadaAppMainWindow::on_NewProjectAction_triggered(bool checked)
-{
-  qColadaNewProject* newproject = new qColadaNewProject();
-  newproject->exec();
-}
-
-void qColadaAppMainWindow::on_OpenProjectAction_triggered(bool checked)
-{
-  Q_D(qColadaAppMainWindow);
-
-  QString projFullName = ctkFileDialog::getOpenFileName(nullptr, QObject::tr("Open Project"), "", QObject::tr("Project file (*.db)"));
-  if (projFullName.isEmpty())
-    return;
-  QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-  db.setDatabaseName(projFullName);
-  if (!db.open())
-    QMessageBox::critical(this, "Error", "QSqlDatabase: Can't open project database!");
-
-  d->currentProjectLabel->setText(QSqlDatabase::database().databaseName());
-  QString authName, code, CRSname;
-  if (!dbcore::getCurrentProjection(authName, code, CRSname))
-    QMessageBox::critical(this, "Error",
-                          "QSqlDatabase: Can't get projection!");
-  d->currentCRSLabel->setText(CRSname + ":" + authName + ":" + code);
 }
 
 QDockWidget* qColadaAppMainWindow::getMapDockWidget() {

@@ -51,15 +51,13 @@ set(APPLIB_SRCS
   qColadaAppMainWindow.cxx
   qColadaAppMainWindow.h
 
-  dbcore.cxx
-  dbcore.h
   util.cxx
   util.h
   
   qAppStyle.cxx
   qAppStyle.h
-  qColadaNewProject.cxx
-  qColadaNewProject.h
+  qColadaApplication.cxx
+  qColadaApplication.h
   qCRSDropTableView.h
   qCRSDropTableView.cxx
   qCRSWidget.cxx
@@ -127,7 +125,7 @@ set(APPLIB_MOC_SRCS
   qColadaAppMainWindow.h
   qAppStyle.h
 
-  qColadaNewProject.h
+  qColadaApplication.h
   qCRSDropTableView.h
   qCRSWidget.h
   qREValidator.h
@@ -167,7 +165,7 @@ set(APPLIB_RESOURCES
   Resources/App.qrc
   )
 
-set(APPLIB_TARGET_LIBRARIES 
+set(APPLIB_TARGET_LIBRARIES
   # ColadaCore  # this may be useful when splitting qColadaApp by few subprojects
   OpenMP::OpenMP_CXX
   hdf5::hdf5-shared

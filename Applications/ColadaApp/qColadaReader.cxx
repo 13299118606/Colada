@@ -69,12 +69,15 @@ void qColadaReaderPrivate::setupUi(QDialog *q) {
   addToolBtn = new QToolButton();
   addToolBtn->setObjectName("AddToolBtn");
   addToolBtn->setToolTip("Add file");
+  addToolBtn->setIcon(QIcon(":/Icons/Add.png"));
   removeToolBtn = new QToolButton();
   removeToolBtn->setObjectName("RemoveToolBtn");
   removeToolBtn->setToolTip("Remove selected file");
+  removeToolBtn->setIcon(QIcon(":/Icons/Remove.png"));
   autoDefineBtn = new QToolButton();
   autoDefineBtn->setObjectName("AutoDefineBtn");
   autoDefineBtn->setToolTip("Auto define");
+  autoDefineBtn->setIcon(QIcon(":/Icons/Reload.png"));
   crsWidget = new qCRSWidget();
   crsWidget->setObjectName("CrsWidget");
   crsWidget->getTableView()->setDragEnabled(true);

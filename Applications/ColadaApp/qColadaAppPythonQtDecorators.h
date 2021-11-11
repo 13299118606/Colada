@@ -11,7 +11,6 @@
 #include <ctkCheckableHeaderView.h>
 
 // Colada includes
-#include "dbcore.h"
 #include "util.h"
 
 // Colada includes
@@ -32,8 +31,6 @@
 // units includes
 #include <units/units.hpp>
 
-
-
 #include <h5gt/H5File.hpp>
 #include <h5geo/h5seiscontainer.h>
 
@@ -50,13 +47,8 @@
    - Slicer automatically passes classes to PythonQt that are named the exactly the same as the filename
 */
 
-class DBCore {
-//  Q_OBJECT
-};
 
-class Util {
-//  Q_OBJECT
-};
+class Util {};
 
 class qColadaAppPythonQtDecorators : public QObject {
   Q_OBJECT
@@ -80,8 +72,6 @@ public:
 //          "H5SeisContainer", "", "h5geopy");
 
     PythonQt::self()->registerCPPClass(
-          "DBCore", "", "qColadaApp");
-    PythonQt::self()->registerCPPClass(
           "Util", "", "qColadaApp");
   }
 
@@ -94,87 +84,54 @@ public slots:
     return new Util();
   }
 
-  DBCore *new_DBCore(){
-    return new DBCore();
-  }
-
 //  h5gt::File *new_File(std::string fileName, int val) {
 //    return new h5gt::File(fileName, val);
 //  }
-
-  /*---------ADD STATIC METHODS TO `DBCore` class---------*/
-  QSqlDatabase static_DBCore_createDB(QString &fullName){ return dbcore::createDB(fullName); }
-  QSqlDatabase static_DBCore_createDB(const QString &path, QString &name){ return dbcore::createDB(path, name); }
-  bool static_DBCore_createInfoTable(){ return dbcore::createInfoTable(); }
-  bool static_DBCore_fillInfoTable(
-      const QString &owner, const QString &prjName,
-      const QString &prjDir, const QString &units,
-      const QString &crsAuthName, const QString &crsCode,
-      const QString &crsName)
-  { return dbcore::fillInfoTable(owner, prjName, prjDir, units, crsAuthName, crsCode, crsName); }
-  bool static_DBCore_createSeisTable(){ return dbcore::createSeisTable(); }
-  bool static_DBCore_createWellTable(){ return dbcore::createWellTable(); }
-  bool static_DBCore_createMapTable(){ return dbcore::createMapTable(); }
-  bool static_DBCore_createProjectFolders(const QString &prjDir){ return dbcore::createProjectFolders(prjDir); }
-  QString static_DBCore_getCurrentProjectName(){ return dbcore::getCurrentProjectName(); }
-  QString static_DBCore_getCurrentProjectUnits(){ return dbcore::getCurrentProjectUnits(); }
-  QString static_DBCore_getCurrentProjectDir(){ return dbcore::getCurrentProjectDir(); }
-  QString static_DBCore_getSeisDir(){ return dbcore::getSeisDir(); }
-  QString static_DBCore_getMapDir(){ return dbcore::getMapDir(); }
-  QString static_DBCore_getWellDir(){ return dbcore::getWellDir(); }
-  QSqlQuery static_DBCore_getTable(const QString &tableName){ return dbcore::getTable(tableName); }
-  QSqlQuery static_DBCore_getFromTable(
-      const QString &tableName, const QString &colName, const QString &value)
-  { return dbcore::getFromTable(tableName, colName, value); }
-  QVariantList static_DBCore_getAvailableProjections(){
-    QStringList authNameList, codeList, nameList;
-    bool val = dbcore::getAvailableProjections(authNameList, codeList, nameList);
-    return QVariantList({authNameList, codeList, nameList, val});
-  }
-  QVariantList static_DBCore_getCurrentProjectionInfo(){
-    QString authName, code, name;
-    dbcore::getCurrentProjection(authName, code, name);
-    return QVariantList({authName, code, name});
-  }
-  OGRSpatialReference static_DBCore_getCurrentProjection(){ return dbcore::getCurrentProjection(); }
-  QString static_DBCore_getCurrentProjectionNameCode(){ return dbcore::getCurrentProjectionNameCode(); }
-  QVariantList static_DBCore_convCoord2CurrentProjection(
-      double x, double y, QByteArray authCodeFrom, const QString &units)
-  {
-    bool val = dbcore::convCoord2CurrentProjection(1, &x, &y, authCodeFrom, units);
-    return QVariantList({x, y, val});
-  }
-  QVariantList static_DBCore_convCoord2CurrentProjection(
-      std::vector<double>& x_vec,
-      std::vector<double>& y_vec,
-      QByteArray authCodeFrom,
-      const QString &units)
-  {
-    if (x_vec.size() != y_vec.size())
-      return QVariantList({0, 0, false});
-
-    bool val = dbcore::convCoord2CurrentProjection(
-        x_vec.size(), x_vec.data(), y_vec.data(), authCodeFrom, units);
-    QVariant var1, var2, var3;
-    var1.setValue(x_vec);
-    var2.setValue(y_vec);
-    var3.setValue(val);
-    return QVariantList({var1, var2, var3});
-  }
-
-  bool static_DBCore_initProjLibDB(){
-    return dbcore::initProjLibDB();
-  }
-
 
   /*---------ADD STATIC METHODS TO `Util` class---------*/
   QRegularExpression static_Util_fileNameRegExp(){ return util::fileNameRegExp(); }
   QRegularExpression static_Util_fileNameNoSpaceRegExp(){ return util::fileNameNoSpaceRegExp(); }
   QRegExp static_Util_floatRegExp(){ return util::floatRegExp(); }
-  QString fstatic_Util_ileNameToolTipText(){ return util::fileNameToolTipText(); }
+  QString static_Util_fileNameToolTipText(){ return util::fileNameToolTipText(); }
   QString static_Util_fileNameNoSpaceToolTipText(){ return util::fileNameNoSpaceToolTipText(); }
   QStringList static_Util_readTxtFileByLines(const QString &filePath){ return util::readTxtFileByLines(filePath); }
-  bool rstatic_Util_emoveDir(const QString &dirName){ return util::removeDir(dirName); }
+  bool static_Util_removeDir(const QString &dirName){ return util::removeDir(dirName); }
+  QString static_Util_CRSName(){ return util::CRSName(); };
+  QString static_Util_CRSAuthName(){ return util::CRSAuthName(); };
+  int static_Util_CRSCode(){ return util::CRSCode(); };
+
+  QString static_Util_LengthUnits(){ return util::LengthUnits(); };
+  QString static_Util_TimeUnits(){ return util::TimeUnits(); };
+  QString static_Util_FrequencyUnits(){ return util::FrequencyUnits(); };
+  QString static_Util_VelocityUnits(){ return util::VelocityUnits(); };
+  QString static_Util_IntensityUnits(){ return util::IntensityUnits(); };
+  QString static_Util_AreaUnits(){ return util::AreaUnits(); };
+  QString static_Util_VolumeUnits(){ return util::VolumeUnits(); };
+
+  bool static_Util_getAvailableProjections(
+      QStringList &authNameList,
+      QStringList &codeList,
+      QStringList &nameList){
+    return util::getAvailableProjections(
+          authNameList, codeList, nameList);
+  };
+  void static_Util_getCurrentProjection(
+      QString &authName,
+      QString &code,
+      QString &name){
+    return util::getCurrentProjection(authName, code, name);
+  };
+  OGRSpatialReference static_Util_getCurrentProjection(){ return util::getCurrentProjection(); };
+
+  bool static_Util_convCoord2CurrentProjection(
+      int nCount, double *x,
+      double *y,
+      QByteArray authCodeFrom,
+      const QString &units){
+    return util::convCoord2CurrentProjection(
+          nCount, x, y, authCodeFrom, units);
+  };
+
   double static_Util_convertUnits(
       const QString &unitsFrom, const QString &unitsTo){
     return units::convert(

@@ -7,11 +7,13 @@
 #include "qREValidator.h"
 #include "qLineEditDelegate.h"
 #include "qPathEditDelegate.h"
-#include "dbcore.h"
 #include "util.h"
 #include "SegyRead.h"
 #include "qCRSWidget.h"
 #include "qCRSDropTableView.h"
+
+// Slicer includes
+#include "qSlicerApplication.h"
 
 // Qt includes
 #include <QLayout>
@@ -32,6 +34,28 @@
 
 // magic_enum includes
 #include <magic_enum.hpp>
+
+namespace {
+
+template <typename T>
+/// /brief Type `T` is specified as enum class. All enum class
+/// members are added to combo.
+/// /tparam T
+/// /param tableView
+/// /param
+/// /return
+void setComboDelegateFromEnumClassForTable(QTableView *tableView, int col) {
+  auto comboData = magic_enum::enum_names<T>();
+  QStringList comboDataList;
+  for (const auto &name : comboData) {
+    comboDataList.push_back(QString::fromStdString(std::string(name)));
+  }
+  qComboBoxDelegate *comboDelegate = new qComboBoxDelegate(comboDataList);
+  comboDelegate->setParent(tableView);
+  tableView->setItemDelegateForColumn(col, comboDelegate);
+}
+
+}
 
 qColadaSegyReaderPrivate::qColadaSegyReaderPrivate(qColadaSegyReader &q)
     : Superclass(q) {}
@@ -75,7 +99,12 @@ void qColadaSegyReaderPrivate::initVars() {
   }
 
   spinboxColNameList = QStringList({"chunk size", "N threads"});
-  spinboxColNameList.append(util::toQStringList(shortHeaderNameList));
+
+  QStringList shortHeaderNameQList;
+  shortHeaderNameQList.reserve(shortHeaderNameList.size());
+  for (int i = 0; i < shortHeaderNameList.size(); i++)
+    shortHeaderNameQList.append(QString::fromStdString(shortHeaderNameList[i]));
+  spinboxColNameList.append(shortHeaderNameQList);
 
   scSpinboxColNameList = QStringList({"SRD"});
 
@@ -92,19 +121,19 @@ void qColadaSegyReaderPrivate::initTable() {
   }
 
   /* ComboBoxDelegate */
-  util::setComboDelegateFromEnumClassForTable<h5geo::CreationType>(
+  setComboDelegateFromEnumClassForTable<h5geo::CreationType>(
       tableView, tableHdrNames.indexOf("creation type"));
-  util::setComboDelegateFromEnumClassForTable<h5geo::SurveyType>(
+  setComboDelegateFromEnumClassForTable<h5geo::SurveyType>(
       tableView, tableHdrNames.indexOf("survey type"));
-  util::setComboDelegateFromEnumClassForTable<h5geo::SeisDataType>(
+  setComboDelegateFromEnumClassForTable<h5geo::SeisDataType>(
       tableView, tableHdrNames.indexOf("data type"));
-  util::setComboDelegateFromEnumClassForTable<h5geo::Domain>(
+  setComboDelegateFromEnumClassForTable<h5geo::Domain>(
       tableView, tableHdrNames.indexOf("domain"));
-  util::setComboDelegateFromEnumClassForTable<h5geo::TxtEncoding>(
+  setComboDelegateFromEnumClassForTable<h5geo::TxtEncoding>(
       tableView, tableHdrNames.indexOf("text encoding"));
-  util::setComboDelegateFromEnumClassForTable<h5geo::SegyEndian>(
+  setComboDelegateFromEnumClassForTable<h5geo::SegyEndian>(
       tableView, tableHdrNames.indexOf("endianness"));
-  util::setComboDelegateFromEnumClassForTable<h5geo::SegyFormat>(
+  setComboDelegateFromEnumClassForTable<h5geo::SegyFormat>(
       tableView, tableHdrNames.indexOf("format"));
 
   /* SpinBoxDelegate */
@@ -294,10 +323,16 @@ void qColadaSegyReader::resetRow(int proxy_row) {
                     4);
   d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("seis name")),
                     seisName);
-  d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("save to")),
-                    dbcore::getSeisDir() + "/" + seisName + ".h5");
+
+  qSlicerApplication* app = qSlicerApplication::application();
+  if (app){
+    d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("save to")),
+                      app->cachePath() + "/" + seisName + ".h5");
+  }
+
   d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("CRS")),
-                    dbcore::getCurrentProjectionNameCode());
+                    util::CRSAuthName() + ":" + QString::number(util::CRSCode()));
+
   d->proxy->setData(
       d->proxy->index(proxy_row, d->tableHdrNames.indexOf("creation type")),
       QString::fromStdString(std::string{

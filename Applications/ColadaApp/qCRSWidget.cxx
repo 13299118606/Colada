@@ -1,7 +1,7 @@
 //Colada includes
 #include "qCRSWidget.h"
 #include "qCRSWidget_p.h"
-#include "dbcore.h"
+#include "util.h"
 
 // Qt insludes
 #include <QLayout>
@@ -26,7 +26,7 @@
 #include <units/units.hpp>
 
 qCRSWidgetPrivate::qCRSWidgetPrivate(qCRSWidget& q)
-	: q_ptr(&q)
+  : q_ptr(&q)
 {
 
 }
@@ -36,32 +36,32 @@ qCRSWidgetPrivate::~qCRSWidgetPrivate() {
 }
 
 void qCRSWidgetPrivate::init() {
-	Q_Q(qCRSWidget);
-	this->setupUi(q);
-	this->setupTableData(q);
+  Q_Q(qCRSWidget);
+  this->setupUi(q);
+  this->setupTableData(q);
 }
 
 void qCRSWidgetPrivate::setupUi(QWidget* q) {
-	searchBox = new ctkSearchBox();
+  searchBox = new ctkSearchBox();
   unitsLineEdit = new QLineEdit();
   unitsLineEdit->setPlaceholderText("Units...");
   tableView = new QTableView();
   tableView->setSortingEnabled(true);
-	tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-	tableView->setSelectionMode(QAbstractItemView::SingleSelection);
-	tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-	proxy = new QSortFilterProxyModel(tableView);
-	model = new QStandardItemModel(proxy);
-	proxy->setSourceModel(model);
-	tableView->setModel(proxy);
-	txtBrowser = new QTextBrowser();
-	txtBrowser->setReadOnly(true);
-	txtBrowser->viewport()->setCursor(Qt::IBeamCursor); // set cursor type
+  tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+  tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+  tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  proxy = new QSortFilterProxyModel(tableView);
+  model = new QStandardItemModel(proxy);
+  proxy->setSourceModel(model);
+  tableView->setModel(proxy);
+  txtBrowser = new QTextBrowser();
+  txtBrowser->setReadOnly(true);
+  txtBrowser->viewport()->setCursor(Qt::IBeamCursor); // set cursor type
 
-	splitter = new QSplitter(Qt::Horizontal);
-	splitter->setOpaqueResize(false);
-	splitter->addWidget(tableView);
-	splitter->addWidget(txtBrowser);
+  splitter = new QSplitter(Qt::Horizontal);
+  splitter->setOpaqueResize(false);
+  splitter->addWidget(tableView);
+  splitter->addWidget(txtBrowser);
 
   mainLayout = new QVBoxLayout(q);
   mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -71,39 +71,39 @@ void qCRSWidgetPrivate::setupUi(QWidget* q) {
 }
 
 void qCRSWidgetPrivate::setupTableData(QWidget* q) {
-	QStringList authNameList, codeList, nameList;
-	if (!dbcore::getAvailableProjections(
-		authNameList, codeList, nameList))
-		return;
+  QStringList authNameList, codeList, nameList;
+  if (!util::getAvailableProjections(
+        authNameList, codeList, nameList))
+    return;
 
-	model->setColumnCount(3);
-	model->setHorizontalHeaderLabels({ "name",
-																	 "auth name",
-																	 "code" });
+  model->setColumnCount(3);
+  model->setHorizontalHeaderLabels({ "name",
+                                     "auth name",
+                                     "code" });
 
-	model->horizontalHeaderItem(0)->setToolTip("CRS name");
-	model->horizontalHeaderItem(1)->setToolTip("Authority name");
-	model->horizontalHeaderItem(2)->setToolTip("Code");
+  model->horizontalHeaderItem(0)->setToolTip("CRS name");
+  model->horizontalHeaderItem(1)->setToolTip("Authority name");
+  model->horizontalHeaderItem(2)->setToolTip("Code");
 
-	model->insertRows(0, authNameList.count());
-	for (int i = 0; i < authNameList.count(); i++) {
-		model->setData(model->index(i, 0), nameList[i]);
-		model->setData(model->index(i, 1), authNameList[i]);
-		model->setData(model->index(i, 2), codeList[i]);
-	}
+  model->insertRows(0, authNameList.count());
+  for (int i = 0; i < authNameList.count(); i++) {
+    model->setData(model->index(i, 0), nameList[i]);
+    model->setData(model->index(i, 1), authNameList[i]);
+    model->setData(model->index(i, 2), codeList[i]);
+  }
 }
 
 qCRSWidget::qCRSWidget(QWidget* parent) :
-	QWidget(parent), d_ptr(new qCRSWidgetPrivate(*this))
+  QWidget(parent), d_ptr(new qCRSWidgetPrivate(*this))
 {
-	Q_D(qCRSWidget);
-	d->init();
+  Q_D(qCRSWidget);
+  d->init();
 
-	QItemSelectionModel* selectionModel = d->tableView->selectionModel();
+  QItemSelectionModel* selectionModel = d->tableView->selectionModel();
 
-	connect(d->searchBox, &ctkSearchBox::editingFinished, this, &qCRSWidget::onSearchBoxEditingFinished);
-	connect(selectionModel, &QItemSelectionModel::selectionChanged,
-		this, &qCRSWidget::onModelSelectionChanged);
+  connect(d->searchBox, &ctkSearchBox::editingFinished, this, &qCRSWidget::onSearchBoxEditingFinished);
+  connect(selectionModel, &QItemSelectionModel::selectionChanged,
+          this, &qCRSWidget::onModelSelectionChanged);
 }
 
 qCRSWidget::~qCRSWidget() {
@@ -112,19 +112,19 @@ qCRSWidget::~qCRSWidget() {
 
 void qCRSWidget::onSearchBoxEditingFinished()
 {
-	Q_D(qCRSWidget);
+  Q_D(qCRSWidget);
 
-	QList<QStandardItem*> itemList = d->model->findItems(
-		d->searchBox->text(), Qt::MatchContains);
+  QList<QStandardItem*> itemList = d->model->findItems(
+        d->searchBox->text(), Qt::MatchContains);
 
-	for (int i = 0; i < d->proxy->rowCount(); i++) {
-		d->tableView->verticalHeader()->hideSection(i);
-	}
+  for (int i = 0; i < d->proxy->rowCount(); i++) {
+    d->tableView->verticalHeader()->hideSection(i);
+  }
 
-	for (int i = 0; i < itemList.count(); i++) {
-		int row = d->proxy->mapFromSource(d->model->index(itemList[i]->row(), 0)).row();
-		d->tableView->verticalHeader()->showSection(row);
-	}
+  for (int i = 0; i < itemList.count(); i++) {
+    int row = d->proxy->mapFromSource(d->model->index(itemList[i]->row(), 0)).row();
+    d->tableView->verticalHeader()->showSection(row);
+  }
 }
 
 void qCRSWidget::onModelSelectionChanged(const QItemSelection &selected,
@@ -146,7 +146,7 @@ void qCRSWidget::onModelSelectionChanged(const QItemSelection &selected,
   QString units = getUnits();
 
   double coef = units::convert(units::unit_from_string(units.toStdString()),
-      units::unit_from_string("meter"));
+                               units::unit_from_string("meter"));
 
   OGRSpatialReference sr;
   sr.SetFromUserInput((authName + ":" + code).toUtf8());
@@ -184,8 +184,8 @@ QString qCRSWidget::getUnits() {
 }
 
 ctkSearchBox* qCRSWidget::getSearchBox() {
-	Q_D(qCRSWidget);
-	return d->searchBox;
+  Q_D(qCRSWidget);
+  return d->searchBox;
 }
 
 QLineEdit* qCRSWidget::getUnitsLineEdit() {
@@ -194,23 +194,23 @@ QLineEdit* qCRSWidget::getUnitsLineEdit() {
 }
 
 QTableView* qCRSWidget::getTableView() {
-	Q_D(qCRSWidget);
-	return d->tableView;
+  Q_D(qCRSWidget);
+  return d->tableView;
 }
 
 QTextBrowser* qCRSWidget::getTextBrowser() {
-	Q_D(qCRSWidget);
-	return d->txtBrowser;
+  Q_D(qCRSWidget);
+  return d->txtBrowser;
 }
 
 QSortFilterProxyModel* qCRSWidget::getProxyModel() {
-	Q_D(qCRSWidget);
-	return d->proxy;
+  Q_D(qCRSWidget);
+  return d->proxy;
 }
 
 QStandardItemModel* qCRSWidget::getModel() {
-	Q_D(qCRSWidget);
-	return d->model;
+  Q_D(qCRSWidget);
+  return d->model;
 }
 
 QVBoxLayout *qCRSWidget::getMainLayout() {

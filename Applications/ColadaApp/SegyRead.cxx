@@ -1,6 +1,5 @@
 // Colada includes
 #include "SegyRead.h"
-#include "dbcore.h"
 #include "util.h"
 
 // GDAL includes
@@ -16,6 +15,22 @@
 // stl includes
 #include <bitset>
 #include <omp.h>
+
+namespace {
+
+template <class To, class From>
+typename std::enable_if<(sizeof(To) == sizeof(From)) &&
+std::is_trivially_copyable<From>::value &&
+std::is_trivial<To>::value,
+// this implementation requires that To is
+// trivially default constructible
+To>::type
+// constexpr support needs compiler magic
+inline bit_cast(const From &src) noexcept {
+  To dst;
+  std::memcpy(&dst, &src, sizeof(To));
+  return dst;
+}
 
 inline float ibm2ieee(const qint32 &from) {
   std::bitset<32> bits_from(from);
@@ -60,6 +75,9 @@ unsigned char ebc_to_ascii_table(unsigned char ascii) {
   return (asc);
 }
 
+}
+
+
 SegyRead::SegyRead(QString readFile, QString &errMsg)
     : readFile(readFile), qFile(readFile) {
   init(errMsg);
@@ -84,9 +102,9 @@ QString SegyRead::getSegyEndian() {
   qint16_be dataFormatCode_be;
 
   qFile.seek(3224);
-  qFile.read(util::bit_cast<char *>(&dataFormatCode_le), 2);
+  qFile.read(bit_cast<char *>(&dataFormatCode_le), 2);
   qFile.seek(3224);
-  qFile.read(util::bit_cast<char *>(&dataFormatCode_be), 2);
+  qFile.read(bit_cast<char *>(&dataFormatCode_be), 2);
   if (dataFormatCode_le > 0 && dataFormatCode_le <= 8) {
     endian = h5geo::SegyEndian::Little;
   } else if (dataFormatCode_be > 0 && dataFormatCode_be <= 8) {
@@ -105,9 +123,9 @@ QString SegyRead::getSegyFormat(h5geo::SegyEndian endian) {
   qint16 dataFormatCode;
 
   qFile.seek(3224);
-  qFile.read(util::bit_cast<char *>(&dataFormatCode_le), 2);
+  qFile.read(bit_cast<char *>(&dataFormatCode_le), 2);
   qFile.seek(3224);
-  qFile.read(util::bit_cast<char *>(&dataFormatCode_be), 2);
+  qFile.read(bit_cast<char *>(&dataFormatCode_be), 2);
 
   if (endian == h5geo::SegyEndian::Little) {
     dataFormatCode = dataFormatCode_le;
@@ -177,10 +195,10 @@ void SegyRead::readBinHdr(double binHdr[30], h5geo::SegyEndian endian) {
   qFile.seek(3200);
   QDataStream in(&qFile);
 
-  in.readRawData(util::bit_cast<char *>(&binHdr4), 12);
-  in.readRawData(util::bit_cast<char *>(&binHdr2), 48);
+  in.readRawData(bit_cast<char *>(&binHdr4), 12);
+  in.readRawData(bit_cast<char *>(&binHdr2), 48);
   qFile.seek(3500);
-  in.readRawData(util::bit_cast<char *>(&binHdr2tmp), 6);
+  in.readRawData(bit_cast<char *>(&binHdr2tmp), 6);
   binHdr2[24] = binHdr2tmp[0];
   binHdr2[25] = binHdr2tmp[1];
   binHdr2[26] = binHdr2tmp[2];
@@ -277,25 +295,25 @@ void SegyRead::readOnlyTraces(
 
   double coef = units::convert(
       units::unit_from_string(p.spatialUnits),
-      units::unit_from_string(dbcore::getCurrentProjectUnits().toStdString()));
+      units::unit_from_string(util::LengthUnits().toStdString()));
 
   OGRSpatialReference srFrom;
   srFrom.SetFromUserInput(p.crs.toUtf8());
   srFrom.SetLinearUnitsAndUpdateParameters(p.spatialUnits.c_str(), coef);
 
-  OGRSpatialReference srTo = dbcore::getCurrentProjection();
+  OGRSpatialReference srTo = util::getCurrentProjection();
   OGRCoordinateTransformation *coordTrans =
       OGRCreateCoordinateTransformation(&srFrom, &srTo);
 
   bool doCoordTransform =
-      srFrom.IsEmpty() && srTo.IsEmpty() && !srFrom.IsSame(&srTo);
+      !srFrom.IsEmpty() && !srTo.IsEmpty() && !srFrom.IsSame(&srTo);
 
   qint32 *memFile_qint32 =
-      util::bit_cast<qint32 *>(qFile.map(3600, qFile.size() - 3600));
+      bit_cast<qint32 *>(qFile.map(3600, qFile.size() - 3600));
   qint16 *memFile_qint16 =
-      util::bit_cast<qint16 *>(qFile.map(3600, qFile.size() - 3600));
+      bit_cast<qint16 *>(qFile.map(3600, qFile.size() - 3600));
   float *memFile_float =
-      util::bit_cast<float *>(qFile.map(3600, qFile.size() - 3600));
+      bit_cast<float *>(qFile.map(3600, qFile.size() - 3600));
 
   HDR.resize(p.maxTrc - p.minTrc + 1, 78);
   TRACE.resize(nSamp, p.maxTrc - p.minTrc + 1);
@@ -315,9 +333,9 @@ void SegyRead::readOnlyTraces(
       crsHeaderCoordTranslate(coordTrans, HDR);
   }
 
-  qFile.unmap(util::bit_cast<uchar *>(memFile_qint32));
-  qFile.unmap(util::bit_cast<uchar *>(memFile_qint16));
-  qFile.unmap(util::bit_cast<uchar *>(memFile_float));
+  qFile.unmap(bit_cast<uchar *>(memFile_qint32));
+  qFile.unmap(bit_cast<uchar *>(memFile_qint16));
+  qFile.unmap(bit_cast<uchar *>(memFile_float));
 }
 
 H5Seis *SegyRead::readTracesInHeap(
@@ -383,18 +401,18 @@ H5Seis *SegyRead::readTracesInHeap(
 
   double coef = units::convert(
       units::unit_from_string(p.spatialUnits),
-      units::unit_from_string(dbcore::getCurrentProjectUnits().toStdString()));
+      units::unit_from_string(util::LengthUnits().toStdString()));
 
   OGRSpatialReference srFrom;
   srFrom.SetFromUserInput(p.crs.toUtf8());
   srFrom.SetLinearUnitsAndUpdateParameters(p.spatialUnits.c_str(), coef);
 
-  OGRSpatialReference srTo = dbcore::getCurrentProjection();
+  OGRSpatialReference srTo = util::getCurrentProjection();
   OGRCoordinateTransformation *coordTrans =
       OGRCreateCoordinateTransformation(&srFrom, &srTo);
 
   bool doCoordTransform =
-      srFrom.IsEmpty() && srTo.IsEmpty() && !srFrom.IsSame(&srTo);
+      !srFrom.IsEmpty() && !srTo.IsEmpty() && !srFrom.IsSame(&srTo);
 
   std::string saveFile = p.saveFile.toStdString();
   H5SeisCnt_ptr seisCnt_ptr = H5SeisCnt_ptr(h5geo::createSeisContainerByName(
@@ -441,11 +459,11 @@ H5Seis *SegyRead::readTracesInHeap(
           3600 + n * p.traceHeapSize * bytesPerTrc; // traceHeapSize !!! NOT J
       qint64 memorySize = J * bytesPerTrc;
       qint32 *memFile_qint32 =
-          util::bit_cast<qint32 *>(qFile.map(memoryOffset, memorySize));
+          bit_cast<qint32 *>(qFile.map(memoryOffset, memorySize));
       qint16 *memFile_qint16 =
-          util::bit_cast<qint16 *>(qFile.map(memoryOffset, memorySize));
+          bit_cast<qint16 *>(qFile.map(memoryOffset, memorySize));
       float *memFile_float =
-          util::bit_cast<float *>(qFile.map(memoryOffset, memorySize));
+          bit_cast<float *>(qFile.map(memoryOffset, memorySize));
 
       /* reads HDR and TRACE */
       readDataFromLE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
@@ -473,9 +491,9 @@ H5Seis *SegyRead::readTracesInHeap(
           }
         }
       }
-      qFile.unmap(util::bit_cast<uchar *>(memFile_qint32));
-      qFile.unmap(util::bit_cast<uchar *>(memFile_qint16));
-      qFile.unmap(util::bit_cast<uchar *>(memFile_float));
+      qFile.unmap(bit_cast<uchar *>(memFile_qint32));
+      qFile.unmap(bit_cast<uchar *>(memFile_qint16));
+      qFile.unmap(bit_cast<uchar *>(memFile_float));
     }
   } else if (p.endian == h5geo::SegyEndian::Big) {
 #pragma omp parallel for num_threads(p.nThread2use) private(HDR, TRACE, J)
@@ -494,11 +512,11 @@ H5Seis *SegyRead::readTracesInHeap(
           3600 + n * p.traceHeapSize * bytesPerTrc; // traceHeapSize !!! NOT J
       qint64 memorySize = J * bytesPerTrc;
       qint32 *memFile_qint32 =
-          util::bit_cast<qint32 *>(qFile.map(memoryOffset, memorySize));
+          bit_cast<qint32 *>(qFile.map(memoryOffset, memorySize));
       qint16 *memFile_qint16 =
-          util::bit_cast<qint16 *>(qFile.map(memoryOffset, memorySize));
+          bit_cast<qint16 *>(qFile.map(memoryOffset, memorySize));
       float *memFile_float =
-          util::bit_cast<float *>(qFile.map(memoryOffset, memorySize));
+          bit_cast<float *>(qFile.map(memoryOffset, memorySize));
 
       /* reads HDR and TRACE */
       readDataFromBE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
@@ -526,9 +544,9 @@ H5Seis *SegyRead::readTracesInHeap(
           }
         }
       }
-      qFile.unmap(util::bit_cast<uchar *>(memFile_qint32));
-      qFile.unmap(util::bit_cast<uchar *>(memFile_qint16));
-      qFile.unmap(util::bit_cast<uchar *>(memFile_float));
+      qFile.unmap(bit_cast<uchar *>(memFile_qint32));
+      qFile.unmap(bit_cast<uchar *>(memFile_qint16));
+      qFile.unmap(bit_cast<uchar *>(memFile_float));
     }
   }
 
@@ -721,7 +739,9 @@ void SegyRead::readDataFromBE(
 
 void SegyRead::crsHeaderCoordTranslate(OGRCoordinateTransformation *coordTrans,
                                        Eigen::MatrixXd &HDR) {
+  // SRCX GRPX CDP_X
   Eigen::Vector3<size_t> x({21, 23, 71});
+  // SRCY GRPY CDP_Y
   Eigen::Vector3<size_t> y({22, 24, 72});
 
   for (size_t i = 0; i < x.size(); i++) {

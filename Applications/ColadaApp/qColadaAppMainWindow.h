@@ -42,8 +42,6 @@ public:
 
 public slots:
   void on_HelpAboutColadaAppAction_triggered();
-  virtual void on_NewProjectAction_triggered(bool checked = false);
-  virtual void on_OpenProjectAction_triggered(bool checked = false);
 
   QDockWidget *getMapDockWidget();
   QDockWidget *getSeisDockWidget();
