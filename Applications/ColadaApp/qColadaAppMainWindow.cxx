@@ -149,8 +149,6 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   this->DataProbeCollapsibleWidget->setCollapsed(true);
   this->DataProbeCollapsibleWidget->setVisible(true);
   this->StatusBar->setVisible(true);
-  this->StatusBar->setStyleSheet(
-      "QStatusBar::item { border: 1px solid red; border-radius: 3px; } ");
 
   // Setup Colada UI
   setupDockWidgets(mainWindow);

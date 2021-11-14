@@ -17,7 +17,7 @@
 
 // Colada includes
 #include "qColadaAppMainWindow.h"
-#include "qAppStyle.h"
+#include "qColadaDarkStyle.h"
 
 // Slicer includes
 #include "qSlicerApplication.h"
@@ -31,7 +31,10 @@ int SlicerAppMain(int argc, char* argv[])
 {
   typedef qColadaAppMainWindow SlicerMainWindowType;
 
-  qSlicerApplicationHelper::preInitializeApplication(argv[0], new qAppStyle);
+  qColadaDarkStyle* style = new qColadaDarkStyle();
+  QPalette pal = style->standardPalette();
+
+  qSlicerApplicationHelper::preInitializeApplication(argv[0], new qColadaDarkStyle);
 
   qSlicerApplication app(argc, argv);
   if (app.returnCode() != -1)

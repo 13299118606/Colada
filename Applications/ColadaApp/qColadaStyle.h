@@ -15,8 +15,8 @@
 
 ==============================================================================*/
 
-#ifndef __qAppStyle_h
-#define __qAppStyle_h
+#ifndef __qColadaStyle_h
+#define __qColadaStyle_h
 
 // Colada includes
 #include "qColadaAppExport.h"
@@ -24,7 +24,7 @@
 // Slicer includes
 #include "qSlicerStyle.h"
 
-class Q_COLADA_APP_EXPORT qAppStyle
+class Q_COLADA_APP_EXPORT qColadaStyle
   : public qSlicerStyle
 {
   Q_OBJECT
@@ -33,12 +33,14 @@ public:
   typedef qSlicerStyle Superclass;
 
   /// Constructors
-  qAppStyle();
-  virtual ~qAppStyle() override;
+  qColadaStyle();
+  virtual ~qColadaStyle() override;
 
   /// Reimplemented to customize colors.
   /// \sa QStyle::standardPalette()
   virtual QPalette standardPalette() const;
+  QPalette standardLightPalette()const;
+  QPalette standardDarkPalette()const;
 
   /// Reimplemented to apply custom palette to widgets
   /// \sa QStyle::drawComplexControl()

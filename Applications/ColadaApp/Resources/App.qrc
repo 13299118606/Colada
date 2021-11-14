@@ -11,5 +11,24 @@
         <file>Icons/Add.png</file>
         <file>Icons/Remove.png</file>
         <file>Icons/Reload.png</file>
+        <file>Icons/checkbox.png</file>
+        <file>Icons/down_arrow.png</file>
+        <file>Icons/QTreeView/branch-closed.png</file>
+        <file>Icons/QTreeView/branch-end.png</file>
+        <file>Icons/QTreeView/branch-more.png</file>
+        <file>Icons/QTreeView/branch-open.png</file>
+        <file>Icons/QTreeView/vline.png</file>
+        <file>Icons/left_arrow.png</file>
+        <file>Icons/right_arrow.png</file>
+        <file>Icons/up_arrow.png</file>
+        <file>Icons/QTreeView/branch-closed-orange.png</file>
+        <file>Icons/QTreeView/branch-open-orange.png</file>
+        <file>Icons/QTreeView/vline-grey.png</file>
+        <file>Icons/QTreeView/branch-more-grey.png</file>
+        <file>Icons/QTreeView/branch-end-grey.png</file>
+        <file>Icons/arrow-down-orange.png</file>
+        <file>Icons/arrow-left-orange.png</file>
+        <file>Icons/arrow-right-orange.png</file>
+        <file>Icons/arrow-up-orange.png</file>
     </qresource>
 </RCC>

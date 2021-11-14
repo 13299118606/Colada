@@ -54,8 +54,12 @@ set(APPLIB_SRCS
   util.cxx
   util.h
   
-  qAppStyle.cxx
-  qAppStyle.h
+  qColadaStyle.cxx
+  qColadaStyle.h
+  qColadaDarkStyle.cxx
+  qColadaDarkStyle.h
+  qColadaLightStyle.cxx
+  qColadaLightStyle.h
   qColadaApplication.cxx
   qColadaApplication.h
   qCRSDropTableView.h
@@ -123,7 +127,9 @@ set(APPLIB_SRCS
 
 set(APPLIB_MOC_SRCS
   qColadaAppMainWindow.h
-  qAppStyle.h
+  qColadaStyle.h
+  qColadaDarkStyle.h
+  qColadaLightStyle.h
 
   qColadaApplication.h
   qCRSDropTableView.h
@@ -208,6 +214,12 @@ slicerMacroBuildAppLibrary(
   TARGET_LIBRARIES ${APPLIB_TARGET_LIBRARIES}
   INCLUDE_DIRECTORIES ${APPLIB_DIRS}
   )
+
+# --------------------------------------------------------------------------
+# Plugins that depend on qColadaApp
+# --------------------------------------------------------------------------
+
+add_subdirectory(StylePlugins)
 
 # --------------------------------------------------------------------------
 # Application executable
