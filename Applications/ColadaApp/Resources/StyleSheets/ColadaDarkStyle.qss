@@ -1,5 +1,5 @@
 /* Matches instances of QWidget, but not of its subclasses. This is equivalent to *[class~="QPushButton"]. */
-.QWidget 
+.QWidget
 {
   color: #b1b1b1;
   background-color: #323232;
@@ -38,18 +38,18 @@ QMenuBar {
 }
 
 QMenuBar::item {
-  spacing: 3px; 
+  spacing: 3px;
   padding: 1px 4px;
   background: transparent;
 }
 
-QMenuBar::item:selected { 
+QMenuBar::item:selected {
   color: #ffffff;
   background-color: #1e1e1e;
 }
 
 QMenu {
-  border-width: 2px; 
+  border-width: 2px;
   border-bottom-right-radius: 10px;
   border-color: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #ffa02f, stop: 1 #ca0619);
   border-style: outset;
@@ -60,16 +60,16 @@ QMenu:disabled {
 }
 
 QMenu::item {
-  spacing: 3px; 
+  spacing: 3px;
   padding: 3px 15px;
 }
 
 QMenu::item:selected {
-  spacing: 3px; 
+  spacing: 3px;
   padding: 3px 15px;
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #ca0619);
   color:rgb(255, 255, 255);
-  border-width: 1px; 
+  border-width: 1px;
   border-radius: 10px;
   border-color: rgb(58, 58, 58);
   border-style: inset;
@@ -83,7 +83,7 @@ QMenu::icon {
     left: 3px;
 }
 
-QMenu::icon:checked { 
+QMenu::icon:checked {
     background: gray;
     border: 1px inset gray;
     position: absolute;
@@ -108,7 +108,7 @@ QMenu::indicator
 
 QMenu::indicator:checked
 {
-  image:url(:/Icons/checkbox.png); 
+  image:url(:/Icons/checkbox.png);
 }
 
 QScrollBar:horizontal {
@@ -143,7 +143,7 @@ QScrollBar::sub-line:horizontal {
   subcontrol-origin: margin;
 }
 
-QScrollBar::right-arrow:horizontal, 
+QScrollBar::right-arrow:horizontal,
 QScrollBar::left-arrow:horizontal
 {
   border: 1px solid black;
@@ -152,7 +152,7 @@ QScrollBar::left-arrow:horizontal
   background: white;
 }
 
-QScrollBar::add-page:horizontal, 
+QScrollBar::add-page:horizontal,
 QScrollBar::sub-page:horizontal
 {
   background: none;
@@ -193,7 +193,7 @@ QScrollBar::sub-line:vertical
   subcontrol-origin: margin;
 }
 
-QScrollBar::up-arrow:vertical, 
+QScrollBar::up-arrow:vertical,
 QScrollBar::down-arrow:vertical
 {
   border: 1px solid black;
@@ -203,13 +203,13 @@ QScrollBar::down-arrow:vertical
 }
 
 
-QScrollBar::add-page:vertical, 
+QScrollBar::add-page:vertical,
 QScrollBar::sub-page:vertical
 {
   background: none;
 }
 
-QRadioButton::indicator:checked, 
+QRadioButton::indicator:checked,
 QRadioButton::indicator:unchecked{
   color: #b1b1b1;
   background-color: #323232;
@@ -228,14 +228,14 @@ QRadioButton::indicator:checked
   );
 }
 
-QRadioButton::indicator:hover, 
+QRadioButton::indicator:hover,
 QCheckBox::indicator:hover,
 QAbstractItemView::indicator:hover
 {
   border: 1px solid #ffaa00;
 }
 
-QCheckBox::indicator, 
+QCheckBox::indicator,
 QPushButton:indicator,
 QAbstractItemView::indicator
 {
@@ -246,30 +246,30 @@ QAbstractItemView::indicator
   height: 9px;
 }
 
-QCheckBox::indicator:checked, 
+QCheckBox::indicator:checked,
 QPushButton::indicator:checked,
 QAbstractItemView::indicator:checked
 {
-  image:url(:/Icons/checkbox.png); 
+  image:url(:/Icons/checkbox.png);
 }
 
-QGroupBox::indicator:checked, 
+QGroupBox::indicator:checked,
 ctkCollapsibleButton::indicator:checked
 {
   /*image:url(:/Icons/down_arrow.png); */
   image:url(:/Icons/arrow-down-orange.png);
 }
 
-QGroupBox::indicator:unchecked, 
+QGroupBox::indicator:unchecked,
 ctkCollapsibleButton::indicator:checked
 {
   /*image:url(:/Icons/right_arrow.png); */
   image:url(:/Icons/arrow-right-orange.png);
 }
 
-QCheckBox::indicator:disabled, 
-QRadioButton::indicator:disabled, 
-QPushButton::indicator:disabled, 
+QCheckBox::indicator:disabled,
+QRadioButton::indicator:disabled,
+QPushButton::indicator:disabled,
 QGroupBox::indicator:disabled,
 QAbstractItemView::indicator:disabled
 {
@@ -434,14 +434,14 @@ QTabBar::tab:!selected:hover
   background-color:#323232;
 }
 
-QCheckBox:focus, 
+QCheckBox:focus,
 QSlider:focus
 {
   border-width: 0px;
 }
 
-QComboBox, 
-QPushButton, 
+QComboBox,
+QPushButton,
 ctkCollapsibleButton
 {
   color: rgb(255,255,255);
@@ -456,8 +456,8 @@ ctkCollapsibleButton
   padding-right: 5px;
 }
 
-QComboBox:hover, 
-QPushButton:hover, 
+QComboBox:hover,
+QPushButton:hover,
 ctkCollapsibleButton:hover
 {
   border: 1px solid #222222;
@@ -490,9 +490,10 @@ QComboBox::down-arrow
   image:url(:/Icons/arrow-down-orange.png);
 }
 
-QPushButton:pressed, 
-QGroupBox::pressed, 
-ctkCollapsibleButton:pressed
+QPushButton:pressed,
+QGroupBox::pressed,
+ctkCollapsibleButton:pressed,
+QPushButton:on
 {
   background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 0));
 }
@@ -542,7 +543,7 @@ QAbstractSpinBox::up-button {
   subcontrol-position: top right;
 
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2d2d2d, stop: 0.1 #2b2b2b, stop: 0.5 #292929, stop: 0.9 #282828, stop: 1 #252525);
-  width: 22px; 
+  width: 22px;
   border: 1px solid #1e1e1e;
   border-radius: 5px;
 }
@@ -566,7 +567,7 @@ QAbstractSpinBox::down-button {
   subcontrol-position: bottom right;
 
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2d2d2d, stop: 0.1 #2b2b2b, stop: 0.5 #292929, stop: 0.9 #282828, stop: 1 #252525);
-  width: 22px; 
+  width: 22px;
   border: 1px solid #1e1e1e;
   border-radius: 5px;
 }
@@ -585,7 +586,7 @@ QAbstractSpinBox::down-arrow {
   width: 16px;
 }
 
-QAbstractSpinBox::up-button:hover, 
+QAbstractSpinBox::up-button:hover,
 QAbstractSpinBox::down-button:hover
 {
   border: 1px solid #222222;
@@ -652,8 +653,8 @@ QColumnView::right-arrow
 
 QHeaderView::section
 {
-  background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, 
-                                    stop:0 rgba(97, 97, 97, 0), stop:0.5 
+  background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0,
+                                    stop:0 rgba(97, 97, 97, 0), stop:0.5
                                     rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 0));
   border-width: 1px;
   border-color: #1e1e1e;
