@@ -34,5 +34,7 @@
         <file>Icons/arrow-left-blue.png</file>
         <file>Icons/arrow-right-blue.png</file>
         <file>Icons/arrow-up-blue.png</file>
+        <file>StyleSheets/ColadaDarkStyle.qss</file>
+        <file>StyleSheets/ColadaLightStyle.qss</file>
     </qresource>
 </RCC>

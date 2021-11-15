@@ -42,6 +42,7 @@ public:
 
 public slots:
   void on_HelpAboutColadaAppAction_triggered();
+  void onCurrentStyleChanged(const QString& name);
 
   QDockWidget *getMapDockWidget();
   QDockWidget *getSeisDockWidget();
@@ -50,6 +51,9 @@ public slots:
   qColadaH5MapTreeView *getMapTreeView();
   qColadaH5SeisTreeView *getSeisTreeView();
   qColadaH5WellTreeView *getWellTreeView();
+
+protected:
+  void showEvent(QShowEvent *event) override;
 
 protected:
   qColadaAppMainWindow(qColadaAppMainWindowPrivate* pimpl, QWidget* parent);

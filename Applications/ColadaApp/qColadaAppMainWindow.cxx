@@ -33,6 +33,9 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QToolButton>
+#include <QFile>
+#include <QSettings>
+#include <QShowEvent>
 
 // CTK includes
 #include <ctkFileDialog.h>
@@ -47,6 +50,7 @@
 #include "qSlicerMainWindow_p.h"
 #include "qSlicerModuleSelectorToolBar.h"
 #include "qSlicerLayoutManager.h"
+#include "qSlicerSettingsStylesPanel.h"
 #include "qMRMLThreeDWidget.h"
 #include "qMRMLSliceWidget.h"
 #include "vtkMRMLViewNode.h"
@@ -99,7 +103,13 @@ void qColadaAppMainWindowPrivate::setupPythonModules() {
 //-----------------------------------------------------------------------------
 void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
 {
+  Q_Q(qColadaAppMainWindow);
+
   qSlicerApplication * app = qSlicerApplication::application();
+  if (!app){
+    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get app instance";
+    return;
+  }
 
   //----------------------------------------------------------------------------
   // Add actions
@@ -156,6 +166,19 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   setupStatusBar(mainWindow);
   setupMenuBar(mainWindow);
   setupSliceNodes(mainWindow);
+
+  // Handle Colada stylesheets
+  qSlicerSettingsStylesPanel* settingsStylesPanel =
+      qobject_cast<qSlicerSettingsStylesPanel*>(
+        app->settingsDialog()->panel(qSlicerApplication::tr("Appearance")));
+
+  if (!settingsStylesPanel){
+    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get `qSlicerSettingsStylesPanel` to connect `currentStyleChanged`";
+    return;
+  }
+
+  q->connect(settingsStylesPanel, &qSlicerSettingsStylesPanel::currentStyleChanged,
+             q, &qColadaAppMainWindow::onCurrentStyleChanged);
 }
 
 void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
@@ -338,9 +361,8 @@ void qColadaAppMainWindowPrivate::setupSliceNodes(QMainWindow * mainWindow)
   // Replace layout description with new presets
   vtkMRMLLayoutNode* layoutNode =  vtkMRMLLayoutNode::SafeDownCast(
     this->LayoutManager->mrmlScene()->GetSingletonNode("vtkMRMLLayoutNode","vtkMRMLLayoutNode"));
-  if(!layoutNode)
-    {
-    qCritical() << "qSlicerAstroVolumeModule::setup() : layoutNode not found!";
+  if(!layoutNode){
+    qCritical() << "qColadaAppMainWindowPrivate::setupSliceNodes(): layoutNode not found!";
     return;
   }
 
@@ -445,6 +467,31 @@ void qColadaAppMainWindow::on_HelpAboutColadaAppAction_triggered()
   about.exec();
 }
 
+void qColadaAppMainWindow::onCurrentStyleChanged(const QString& name)
+{
+  qSlicerApplication * app = qSlicerApplication::application();
+  if (!app){
+    qCritical() << "qColadaAppMainWindow::onCurrentStyleChanged(): unable to get app instance";
+    return;
+  }
+
+  if (QString::compare(name, "Light Colada", Qt::CaseInsensitive) == 0){
+    QFile file(":/StyleSheets/ColadaLightStyle.qss");
+    file.open(QFile::ReadOnly);
+
+    QString styleSheet { QLatin1String(file.readAll()) };
+    app->setStyleSheet(styleSheet);
+  } else if (QString::compare(name, "Dark Colada", Qt::CaseInsensitive) == 0){
+    QFile file(":/StyleSheets/ColadaDarkStyle.qss");
+    file.open(QFile::ReadOnly);
+
+    QString styleSheet { QLatin1String(file.readAll()) };
+    app->setStyleSheet(styleSheet);
+  } else {
+    app->setStyleSheet("");
+  }
+}
+
 QDockWidget* qColadaAppMainWindow::getMapDockWidget() {
   Q_D(qColadaAppMainWindow);
   return d->mapDockWidget;
@@ -473,4 +520,14 @@ qColadaH5SeisTreeView *qColadaAppMainWindow::getSeisTreeView() {
 qColadaH5WellTreeView *qColadaAppMainWindow::getWellTreeView() {
   Q_D(qColadaAppMainWindow);
   return d->wellTreeView;
+}
+
+void qColadaAppMainWindow::showEvent(QShowEvent *event){
+  Superclass::showEvent(event);
+
+  if(event->spontaneous())
+    return;
+
+  // if Colada style is in app settings we need to initialize stylesheet
+  this->onCurrentStyleChanged(qSlicerApplication::application()->style()->objectName());
 }
