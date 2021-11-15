@@ -90,7 +90,7 @@ QPalette qColadaStyle::standardLightPalette()const
   palette.setColor(QPalette::Mid, "#c8c8c8");  // Between Button and Dark.
   palette.setColor(QPalette::Shadow, "#5a5a5a");  // A very dark color.
   // Color roles relate to selected (marked) items
-  palette.setColor(QPalette::Highlight, "#308cc6");
+  palette.setColor(QPalette::Highlight, "#1e83fe");
   palette.setColor(QPalette::Disabled, QPalette::Highlight, "#919191");
   palette.setColor(QPalette::HighlightedText, Qt::white);
   palette.setColor(QPalette::Disabled, QPalette::HighlightedText, Qt::white);

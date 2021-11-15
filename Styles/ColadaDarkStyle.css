@@ -1,4 +1,4 @@
-/* Matches instances of QPushButton, but not of its subclasses. This is equivalent to *[class~="QPushButton"]. */
+/* Matches instances of QWidget, but not of its subclasses. This is equivalent to *[class~="QPushButton"]. */
 .QWidget 
 {
   color: #b1b1b1;
@@ -100,10 +100,10 @@ QMenu::indicator
   border: 1px solid #b1b1b1;
   width: 13px;
   height: 13px;
-    top: 1px;
-    right: 1px;
-    bottom: 1px;
-    left: 3px;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  left: 3px;
 }
 
 QMenu::indicator:checked
@@ -260,7 +260,8 @@ ctkCollapsibleButton::indicator:checked
   image:url(:/Icons/arrow-down-orange.png);
 }
 
-QGroupBox::indicator:unchecked, ctkCollapsibleButton::indicator:checked
+QGroupBox::indicator:unchecked, 
+ctkCollapsibleButton::indicator:checked
 {
   /*image:url(:/Icons/right_arrow.png); */
   image:url(:/Icons/arrow-right-orange.png);
@@ -291,7 +292,7 @@ QSlider::handle:horizontal {
   border-width: 1px;
   border-color: rgb(207,207,207);
   width: 6px;
-  margin: -5px 0;
+  margin: -3px 0;
   border-radius: 2px;
 }
 
@@ -301,7 +302,7 @@ QSlider::handle:vertical {
   border-width: 1px;
   border-color: rgb(207,207,207);
   height: 6px;
-  margin: 0 -5px;
+  margin: 0 -3px;
   border-radius: 7px;
 }
 
@@ -471,7 +472,6 @@ QComboBox:on
   selection-background-color: #ffaa00;
 }
 
-
 QComboBox::drop-down
 {
   subcontrol-origin: padding;
@@ -482,7 +482,7 @@ QComboBox::drop-down
   border-left-style: solid; /* just a single line */
   border-top-right-radius: 3px; /* same radius as the QComboBox */
   border-bottom-right-radius: 3px;
- }
+}
 
 QComboBox::down-arrow
 {
@@ -531,7 +531,7 @@ QAbstractButton::down-arrow
 }
 
 QAbstractSpinBox, QAbstractSpinBox:focus {
-  border-width: 5;
+  border-width: 2;
   border-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2d2d2d, stop: 0.1 #2b2b2b, stop: 0.5 #292929, stop: 0.9 #282828, stop: 1 #252525);
   border-style: solid;
   border-radius: 6;
@@ -592,10 +592,10 @@ QAbstractSpinBox::down-button:hover
   background: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #121212, stop: 0.2 #282828, stop: 1 #484848);
 }
 
-QAbstractSpinBox::up-arrow:disabled,
-QAbstractSpinBox::up-arrow:off,
-QAbstractSpinBox::down-arrow:disabled,
-QAbstractSpinBox::down-arrow:off {
+QAbstractSpinBox::up-button:disabled,
+QAbstractSpinBox::up-button:off,
+QAbstractSpinBox::down-button:disabled,
+QAbstractSpinBox::down-button:off {
   border-style:solid;
   border-width:1px;
   color: rgb(0,0,0);
