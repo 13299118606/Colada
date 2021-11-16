@@ -28,7 +28,7 @@ QWidget:focus
 
 QWidget:disabled
 {
-  color: rgb(0,0,0);
+  color: #b1b1b1;
   background: #1e1e1e;
 }
 
@@ -56,6 +56,7 @@ QMenu {
 }
 
 QMenu:disabled {
+  color: #b1b1b1;
   background: #1e1e1e;
 }
 
@@ -276,6 +277,15 @@ QAbstractItemView::indicator:disabled
   border: 1px solid #444;
 }
 
+QCheckBox:disabled,
+QRadioButton:disabled
+{
+  color: #b1b1b1;
+  background: transparent;
+}
+
+
+
 QSlider::groove:horizontal {
   height: 5px;
   background: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 1.0 #121212, stop: 0.8 #282828, stop: 0 #484848);
@@ -320,6 +330,14 @@ QSlider::sub-page:horizontal {
 
 QSlider::sub-page:vertical {
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #ffa02f, stop: 0.5 #d7801a, stop: 1 #121212);
+}
+
+QSlider:disabled {
+  background: transparent;
+}
+
+QSlider::handle:disabled {
+  background: #1e1e1e;
 }
 
 QToolTip
@@ -432,6 +450,11 @@ QTabBar::tab:!selected:hover
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
   background-color:#323232;
+}
+
+QTabBar::tab:disabled {
+  color: #b1b1b1;
+  background: #1e1e1e;
 }
 
 QCheckBox:focus, 
