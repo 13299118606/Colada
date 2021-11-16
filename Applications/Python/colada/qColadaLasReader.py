@@ -413,7 +413,7 @@ class qColadaLasReader(qColadaReader):
             return
 
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("save to")),
-                    QtGui.QApplication.instance().cachePath + "/" + fi.baseName() + ".h5")
+                    Util.defaultWellDir() + "/" + fi.baseName() + ".h5")
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")),
                     Util.CRSAuthName() + ":" + str(Util.CRSCode()))
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")), 

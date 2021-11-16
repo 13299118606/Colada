@@ -269,7 +269,7 @@ class qColadaMapReader(qColadaReader):
             return
 
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("save to")),
-                    QtGui.QApplication.instance().cachePath + "/" + fi.baseName() + ".h5")
+                    Util.defaultMapDir() + "/" + fi.baseName() + ".h5")
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")),
                     Util.CRSAuthName() + ":" + str(Util.CRSCode()))
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")), 
@@ -414,6 +414,13 @@ class qColadaMapReader(qColadaReader):
                         continue
                     
                     arr = np.asfortranarray(ds.ReadAsArray(), dtype=float)
+                    if arr.ndim > 2:
+                        errMsg = 'Multidimensional data: ' + p_s.readFile + ''' 
+                        Currently ndims > 2 is not supported
+                        '''
+                        QtGui.QMessageBox.critical(self, "Error", errMsg)
+                        continue
+
                     if p_s.xNorth:
                         val = h5map.writeData(np.transpose(arr) * p_s.depthMult, p_s.dataUnits)
                     else:
