@@ -295,7 +295,7 @@ void SegyRead::readOnlyTraces(
 
   double coef = units::convert(
       units::unit_from_string(p.spatialUnits),
-      units::unit_from_string(util::LengthUnits().toStdString()));
+      units::unit_from_string(util::lengthUnits().toStdString()));
 
   OGRSpatialReference srFrom;
   srFrom.SetFromUserInput(p.crs.toUtf8());
@@ -304,6 +304,12 @@ void SegyRead::readOnlyTraces(
   OGRSpatialReference srTo = util::getCurrentProjection();
   OGRCoordinateTransformation *coordTrans =
       OGRCreateCoordinateTransformation(&srFrom, &srTo);
+
+  if (!coordTrans){
+    errMsg = p.readFile + ": Unable to create \"OGRCoordinateTransformation\". "
+"Either CRS or units is incorrect";
+    return;
+  }
 
   bool doCoordTransform =
       !srFrom.IsEmpty() && !srTo.IsEmpty() && !srFrom.IsSame(&srTo);
@@ -401,7 +407,7 @@ H5Seis *SegyRead::readTracesInHeap(
 
   double coef = units::convert(
       units::unit_from_string(p.spatialUnits),
-      units::unit_from_string(util::LengthUnits().toStdString()));
+      units::unit_from_string(util::lengthUnits().toStdString()));
 
   OGRSpatialReference srFrom;
   srFrom.SetFromUserInput(p.crs.toUtf8());
@@ -410,6 +416,12 @@ H5Seis *SegyRead::readTracesInHeap(
   OGRSpatialReference srTo = util::getCurrentProjection();
   OGRCoordinateTransformation *coordTrans =
       OGRCreateCoordinateTransformation(&srFrom, &srTo);
+
+  if (!coordTrans){
+    errMsg = p.readFile + ": Unable to create \"OGRCoordinateTransformation\". "
+"Either CRS or units is incorrect";
+    return nullptr;
+  }
 
   bool doCoordTransform =
       !srFrom.IsEmpty() && !srTo.IsEmpty() && !srFrom.IsSame(&srTo);
@@ -737,15 +749,16 @@ void SegyRead::readDataFromBE(
   }
 }
 
-void SegyRead::crsHeaderCoordTranslate(OGRCoordinateTransformation *coordTrans,
-                                       Eigen::MatrixXd &HDR) {
+void SegyRead::crsHeaderCoordTranslate(
+    OGRCoordinateTransformation *coordTrans, Eigen::MatrixXd &HDR)
+{
   // SRCX GRPX CDP_X
   Eigen::Vector3<size_t> x({21, 23, 71});
   // SRCY GRPY CDP_Y
   Eigen::Vector3<size_t> y({22, 24, 72});
 
   for (size_t i = 0; i < x.size(); i++) {
-    coordTrans->Transform(HDR.size(), HDR.col(x(i)).data(),
+    coordTrans->Transform(HDR.rows(), HDR.col(x(i)).data(),
                           HDR.col(y(i)).data());
   }
 }

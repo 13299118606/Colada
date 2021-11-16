@@ -193,7 +193,23 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   // the same as default scene path to not deal with whether the dir does exist or not
   defaultSeisDirectoryButton->setDirectory(
         qSlicerCoreApplication::application()->defaultScenePath());
-  qSlicerRelativePathMapper* relativePathMapper = new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+  qSlicerRelativePathMapper* relativeSeisPathMapper =
+      new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+
+  ctkDirectoryButton* defaultWellDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
+  // the same as default scene path to not deal with whether the dir does exist or not
+  defaultWellDirectoryButton->setDirectory(
+        qSlicerCoreApplication::application()->defaultScenePath());
+  qSlicerRelativePathMapper* relativeWellPathMapper =
+      new qSlicerRelativePathMapper(defaultWellDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+
+
+  ctkDirectoryButton* defaultMapDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
+  // the same as default scene path to not deal with whether the dir does exist or not
+  defaultMapDirectoryButton->setDirectory(
+        qSlicerCoreApplication::application()->defaultScenePath());
+  qSlicerRelativePathMapper* relativeMapPathMapper =
+      new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
 
   QFormLayout* formLayout =
       qobject_cast<QFormLayout*>(settingsGeneralPanel->layout());
@@ -204,18 +220,26 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   }
 
   formLayout->insertRow(1, "Default seismic data location:", defaultSeisDirectoryButton);
+  formLayout->insertRow(2, "Default well data location:", defaultWellDirectoryButton);
+  formLayout->insertRow(3, "Default map data location:", defaultMapDirectoryButton);
 
-  settingsGeneralPanel->registerProperty("DefaultSeismicDataPath", relativePathMapper, "relativePath",
+  settingsGeneralPanel->registerProperty("DefaultSeismicDataPath", relativeSeisPathMapper, "relativePath",
                       SIGNAL(relativePathChanged(QString)),
                       "Default seismic data path");
+  settingsGeneralPanel->registerProperty("DefaultWellDataPath", relativeWellPathMapper, "relativePath",
+                      SIGNAL(relativePathChanged(QString)),
+                      "Default well data path");
+  settingsGeneralPanel->registerProperty("DefaultMapDataPath", relativeMapPathMapper, "relativePath",
+                      SIGNAL(relativePathChanged(QString)),
+                      "Default map data path");
 }
 
 void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
   PanelDockWidget->setWindowTitle("Modules");
 
   seisDockWidget = new QDockWidget("Seismic", mainWindow);
-  mapDockWidget = new QDockWidget("Map", mainWindow);
-  wellDockWidget = new QDockWidget("Well", mainWindow);
+  mapDockWidget = new QDockWidget("Maps", mainWindow);
+  wellDockWidget = new QDockWidget("Wells", mainWindow);
 
   seisDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
                                   Qt::DockWidgetArea::RightDockWidgetArea);

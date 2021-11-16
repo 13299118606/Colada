@@ -118,60 +118,84 @@ int util::CRSCode()
   return crsCode.toInt();
 }
 
-QString util::LengthUnits(){
+QString util::lengthUnits(){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString units = appSettings->value("Length/suffix", "").toString();
+  QString units = appSettings->value("length/suffix", "").toString();
   return units;
 }
 
-QString util::TimeUnits(){
+QString util::timeUnits(){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString units = appSettings->value("Time/suffix", "").toString();
+  QString units = appSettings->value("time/suffix", "").toString();
   return units;
 }
 
-QString util::FrequencyUnits(){
+QString util::frequencyUnits(){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString units = appSettings->value("Frequency/suffix", "").toString();
+  QString units = appSettings->value("frequency/suffix", "").toString();
   return units;
 }
 
-QString util::VelocityUnits(){
+QString util::velocityUnits(){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString units = appSettings->value("Velocity/suffix", "").toString();
+  QString units = appSettings->value("velocity/suffix", "").toString();
   return units;
 }
 
-QString util::IntensityUnits(){
+QString util::intensityUnits(){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString units = appSettings->value("Intensity/suffix", "").toString();
+  QString units = appSettings->value("intensity/suffix", "").toString();
   return units;
 }
 
-QString util::AreaUnits(){
+QString util::areaUnits(){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString units = appSettings->value("Area/suffix", "").toString();
+  QString units = appSettings->value("area/suffix", "").toString();
   return units;
 }
 
-QString util::VolumeUnits(){
+QString util::volumeUnits(){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString units = appSettings->value("Volume/suffix", "").toString();
+  QString units = appSettings->value("volume/suffix", "").toString();
   return units;
+}
+
+QString util::defaultSeisDir(){
+  qSlicerApplication* app = qSlicerApplication::application();
+  QSettings* appSettings = app->userSettings();
+  Q_ASSERT(appSettings);
+  QString path = appSettings->value("DefaultSeismicDataPath", "").toString();
+  return path;
+}
+
+QString util::defaultWellDir(){
+  qSlicerApplication* app = qSlicerApplication::application();
+  QSettings* appSettings = app->userSettings();
+  Q_ASSERT(appSettings);
+  QString path = appSettings->value("DefaultWellDataPath", "").toString();
+  return path;
+}
+
+QString util::defaultMapDir(){
+  qSlicerApplication* app = qSlicerApplication::application();
+  QSettings* appSettings = app->userSettings();
+  Q_ASSERT(appSettings);
+  QString path = appSettings->value("DefaultMapDataPath", "").toString();
+  return path;
 }
 
 bool util::getAvailableProjections(
@@ -219,7 +243,7 @@ OGRSpatialReference util::getCurrentProjection(){
     return OGRSpatialReference();
 
   // OGR assumes that we set coef related to the meter
-  QString units = util::LengthUnits();
+  QString units = util::lengthUnits();
   double coef = units::convert(units::unit_from_string(units.toStdString()),
       units::unit_from_string("meter"));
 

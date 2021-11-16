@@ -404,9 +404,7 @@ QProgressBar
 
 QProgressBar::chunk
 {
-  background-color: #d7801a;
-  width: 2.15px;
-  margin: 0.5px;
+  background-color: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #d7801a, stop: 1 #ffa02f);
 }
 
 QTabWidget::pane {

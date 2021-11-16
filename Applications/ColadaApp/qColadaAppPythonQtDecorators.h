@@ -100,13 +100,16 @@ public slots:
   QString static_Util_CRSAuthName(){ return util::CRSAuthName(); };
   int static_Util_CRSCode(){ return util::CRSCode(); };
 
-  QString static_Util_LengthUnits(){ return util::LengthUnits(); };
-  QString static_Util_TimeUnits(){ return util::TimeUnits(); };
-  QString static_Util_FrequencyUnits(){ return util::FrequencyUnits(); };
-  QString static_Util_VelocityUnits(){ return util::VelocityUnits(); };
-  QString static_Util_IntensityUnits(){ return util::IntensityUnits(); };
-  QString static_Util_AreaUnits(){ return util::AreaUnits(); };
-  QString static_Util_VolumeUnits(){ return util::VolumeUnits(); };
+  QString static_Util_lengthUnits(){ return util::lengthUnits(); };
+  QString static_Util_timeUnits(){ return util::timeUnits(); };
+  QString static_Util_frequencyUnits(){ return util::frequencyUnits(); };
+  QString static_Util_velocityUnits(){ return util::velocityUnits(); };
+  QString static_Util_intensityUnits(){ return util::intensityUnits(); };
+  QString static_Util_areaUnits(){ return util::areaUnits(); };
+  QString static_Util_volumeUnits(){ return util::volumeUnits(); };
+  QString static_Util_defaultSeisDir(){ return util::defaultSeisDir(); };
+  QString static_Util_defaultWellDir(){ return util::defaultWellDir(); };
+  QString static_Util_defaultMapDir(){ return util::defaultMapDir(); };
 
   bool static_Util_getAvailableProjections(
       QStringList &authNameList,

@@ -327,7 +327,7 @@ void qColadaSegyReader::resetRow(int proxy_row) {
   qSlicerApplication* app = qSlicerApplication::application();
   if (app){
     d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("save to")),
-                      app->cachePath() + "/" + seisName + ".h5");
+                      util::defaultSeisDir() + "/" + seisName + ".h5");
   }
 
   d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("CRS")),

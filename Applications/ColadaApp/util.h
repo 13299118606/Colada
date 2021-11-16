@@ -39,13 +39,17 @@ QString CRSName();
 QString CRSAuthName();
 int CRSCode();
 
-QString LengthUnits();
-QString TimeUnits();
-QString FrequencyUnits();
-QString VelocityUnits();
-QString IntensityUnits();
-QString AreaUnits();
-QString VolumeUnits();
+QString lengthUnits();
+QString timeUnits();
+QString frequencyUnits();
+QString velocityUnits();
+QString intensityUnits();
+QString areaUnits();
+QString volumeUnits();
+
+QString defaultSeisDir();
+QString defaultWellDir();
+QString defaultMapDir();
 
 bool getAvailableProjections(
     QStringList &authNameList,
