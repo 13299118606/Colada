@@ -36,10 +36,12 @@
 #include <QFile>
 #include <QSettings>
 #include <QShowEvent>
+#include <QFormLayout>
 
 // CTK includes
 #include <ctkFileDialog.h>
 #include <ctkPopupWidget.h>
+#include <ctkDirectoryButton.h>
 
 // PythonQt includes
 #include <PythonQt.h>
@@ -51,6 +53,8 @@
 #include "qSlicerModuleSelectorToolBar.h"
 #include "qSlicerLayoutManager.h"
 #include "qSlicerSettingsStylesPanel.h"
+#include "qSlicerSettingsGeneralPanel.h"
+#include "qSlicerRelativePathMapper.h"
 #include "qMRMLThreeDWidget.h"
 #include "qMRMLSliceWidget.h"
 #include "vtkMRMLViewNode.h"
@@ -179,6 +183,31 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
 
   q->connect(settingsStylesPanel, &qSlicerSettingsStylesPanel::currentStyleChanged,
              q, &qColadaAppMainWindow::onCurrentStyleChanged);
+
+  // Handle default geo paths
+  qSlicerSettingsGeneralPanel* settingsGeneralPanel =
+      qobject_cast<qSlicerSettingsGeneralPanel*>(
+        app->settingsDialog()->panel(qSlicerApplication::tr("General")));
+
+  ctkDirectoryButton* defaultSeisDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
+  // the same as default scene path to not deal with whether the dir does exist or not
+  defaultSeisDirectoryButton->setDirectory(
+        qSlicerCoreApplication::application()->defaultScenePath());
+  qSlicerRelativePathMapper* relativePathMapper = new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+
+  QFormLayout* formLayout =
+      qobject_cast<QFormLayout*>(settingsGeneralPanel->layout());
+
+  if (!formLayout){
+    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get QFormLayout from qSlicerSettingsGeneralPanel";
+    return;
+  }
+
+  formLayout->insertRow(1, "Default seismic data location:", defaultSeisDirectoryButton);
+
+  settingsGeneralPanel->registerProperty("DefaultSeismicDataPath", relativePathMapper, "relativePath",
+                      SIGNAL(relativePathChanged(QString)),
+                      "Default seismic data path");
 }
 
 void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
