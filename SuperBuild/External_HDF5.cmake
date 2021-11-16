@@ -116,8 +116,17 @@ mark_as_superbuild(
   LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
   )
 
-# #-----------------------------------------------------------------------------
-# # Launcher setting specific to install tree
+# unlock h5 containers so multiple instances of the same file are able to be created (unsafe for parallel IO)
+set(${proj}_ENVVARS_LAUNCHER_BUILD
+  "HDF5_USE_FILE_LOCKING=FALSE"
+  )
+mark_as_superbuild(
+  VARS ${proj}_ENVVARS_LAUNCHER_BUILD
+  LABELS "ENVVARS_LAUNCHER_BUILD"
+  )
+
+#-----------------------------------------------------------------------------
+# Launcher setting specific to install tree
 
 # library paths
 set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED 
@@ -128,6 +137,14 @@ mark_as_superbuild(
   LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
   )
 
+set(${proj}_ENVVARS_LAUNCHER_INSTALLED 
+  "HDF5_USE_FILE_LOCKING=FALSE"
+  )
+
+mark_as_superbuild(
+  VARS ${proj}_ENVVARS_LAUNCHER_INSTALLED 
+  LABELS "ENVVARS_LAUNCHER_INSTALLED"
+  )
 
 
 
