@@ -18,14 +18,15 @@ public:
   explicit qColadaH5TreeView(QWidget *parent = nullptr);
   virtual ~qColadaH5TreeView() override;
 
+  void addContainer(const QString &fileName);
+  void addContainer(const QStringList &fileNameList);
+
 protected:
   ///
   /// \brief for subclasses to add actions
   /// \param menu add actions here
   ///
   virtual void fillHdrMenu(QMenu *menu, QPoint pos);
-
-  void addContainer(const QStringList &fileName);
 
 private:
   virtual void hdrMenuRequested(QPoint pos);

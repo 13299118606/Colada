@@ -88,8 +88,13 @@ void qColadaAppMainWindowPrivate::init()
   QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
   Q_Q(qColadaAppMainWindow);
+  // Superclass::init() also initializes UI
   this->Superclass::init();
   setupPythonModules();
+
+  this->loadSeisDataFromDefaultDirectory();
+  this->loadWellDataFromDefaultDirectory();
+  this->loadMapDataFromDefaultDirectory();
 }
 
 void qColadaAppMainWindowPrivate::setupPythonModules() {
@@ -170,68 +175,8 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   setupStatusBar(mainWindow);
   setupMenuBar(mainWindow);
   setupSliceNodes(mainWindow);
-
-  // Handle Colada stylesheets
-  qSlicerSettingsStylesPanel* settingsStylesPanel =
-      qobject_cast<qSlicerSettingsStylesPanel*>(
-        app->settingsDialog()->panel(qSlicerApplication::tr("Appearance")));
-
-  if (!settingsStylesPanel){
-    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get `qSlicerSettingsStylesPanel` to connect `currentStyleChanged`";
-    return;
-  }
-
-  q->connect(settingsStylesPanel, &qSlicerSettingsStylesPanel::currentStyleChanged,
-             q, &qColadaAppMainWindow::onCurrentStyleChanged);
-
-  // Handle default geo paths
-  qSlicerSettingsGeneralPanel* settingsGeneralPanel =
-      qobject_cast<qSlicerSettingsGeneralPanel*>(
-        app->settingsDialog()->panel(qSlicerApplication::tr("General")));
-
-  ctkDirectoryButton* defaultSeisDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
-  // the same as default scene path to not deal with whether the dir does exist or not
-  defaultSeisDirectoryButton->setDirectory(
-        qSlicerCoreApplication::application()->defaultScenePath());
-  qSlicerRelativePathMapper* relativeSeisPathMapper =
-      new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
-
-  ctkDirectoryButton* defaultWellDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
-  // the same as default scene path to not deal with whether the dir does exist or not
-  defaultWellDirectoryButton->setDirectory(
-        qSlicerCoreApplication::application()->defaultScenePath());
-  qSlicerRelativePathMapper* relativeWellPathMapper =
-      new qSlicerRelativePathMapper(defaultWellDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
-
-
-  ctkDirectoryButton* defaultMapDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
-  // the same as default scene path to not deal with whether the dir does exist or not
-  defaultMapDirectoryButton->setDirectory(
-        qSlicerCoreApplication::application()->defaultScenePath());
-  qSlicerRelativePathMapper* relativeMapPathMapper =
-      new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
-
-  QFormLayout* formLayout =
-      qobject_cast<QFormLayout*>(settingsGeneralPanel->layout());
-
-  if (!formLayout){
-    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get QFormLayout from qSlicerSettingsGeneralPanel";
-    return;
-  }
-
-  formLayout->insertRow(1, "Default seismic data location:", defaultSeisDirectoryButton);
-  formLayout->insertRow(2, "Default well data location:", defaultWellDirectoryButton);
-  formLayout->insertRow(3, "Default map data location:", defaultMapDirectoryButton);
-
-  settingsGeneralPanel->registerProperty("DefaultSeismicDataPath", relativeSeisPathMapper, "relativePath",
-                      SIGNAL(relativePathChanged(QString)),
-                      "Default seismic data path");
-  settingsGeneralPanel->registerProperty("DefaultWellDataPath", relativeWellPathMapper, "relativePath",
-                      SIGNAL(relativePathChanged(QString)),
-                      "Default well data path");
-  settingsGeneralPanel->registerProperty("DefaultMapDataPath", relativeMapPathMapper, "relativePath",
-                      SIGNAL(relativePathChanged(QString)),
-                      "Default map data path");
+  setupColadaStyles(mainWindow);
+  setupGeneralPanelDefaultDirs(mainWindow);
 }
 
 void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
@@ -443,6 +388,108 @@ void qColadaAppMainWindowPrivate::setupSliceNodes(QMainWindow * mainWindow)
   }
 }
 
+void qColadaAppMainWindowPrivate::setupColadaStyles(QMainWindow * mainWindow)
+{
+  Q_Q(qColadaAppMainWindow);
+  qSlicerApplication * app = qSlicerApplication::application();
+  if (!app){
+    qCritical() << "qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(): unable to get app instance";
+    return;
+  }
+
+  qSlicerSettingsStylesPanel* settingsStylesPanel =
+      qobject_cast<qSlicerSettingsStylesPanel*>(
+        app->settingsDialog()->panel(qSlicerApplication::tr("Appearance")));
+
+  if (!settingsStylesPanel){
+    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get `qSlicerSettingsStylesPanel` to connect `currentStyleChanged`";
+    return;
+  }
+
+  q->connect(settingsStylesPanel, &qSlicerSettingsStylesPanel::currentStyleChanged,
+             q, &qColadaAppMainWindow::onCurrentStyleChanged);
+}
+
+void qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(QMainWindow * mainWindow)
+{
+  qSlicerApplication * app = qSlicerApplication::application();
+  if (!app){
+    qCritical() << "qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(): unable to get app instance";
+    return;
+  }
+
+  qSlicerSettingsGeneralPanel* settingsGeneralPanel =
+      qobject_cast<qSlicerSettingsGeneralPanel*>(
+        app->settingsDialog()->panel(qSlicerApplication::tr("General")));
+
+  ctkDirectoryButton* defaultSeisDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
+  // the same as default scene path to not deal with whether the dir does exist or not
+  defaultSeisDirectoryButton->setDirectory(
+        qSlicerCoreApplication::application()->defaultScenePath());
+  qSlicerRelativePathMapper* relativeSeisPathMapper =
+      new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+
+  ctkDirectoryButton* defaultWellDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
+  // the same as default scene path to not deal with whether the dir does exist or not
+  defaultWellDirectoryButton->setDirectory(
+        qSlicerCoreApplication::application()->defaultScenePath());
+  qSlicerRelativePathMapper* relativeWellPathMapper =
+      new qSlicerRelativePathMapper(defaultWellDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+
+
+  ctkDirectoryButton* defaultMapDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
+  // the same as default scene path to not deal with whether the dir does exist or not
+  defaultMapDirectoryButton->setDirectory(
+        qSlicerCoreApplication::application()->defaultScenePath());
+  qSlicerRelativePathMapper* relativeMapPathMapper =
+      new qSlicerRelativePathMapper(defaultMapDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+
+  QFormLayout* formLayout =
+      qobject_cast<QFormLayout*>(settingsGeneralPanel->layout());
+
+  if (!formLayout){
+    qCritical() << "qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(): unable to get QFormLayout from qSlicerSettingsGeneralPanel";
+    return;
+  }
+
+  formLayout->insertRow(1, "Default seismic data location:", defaultSeisDirectoryButton);
+  formLayout->insertRow(2, "Default well data location:", defaultWellDirectoryButton);
+  formLayout->insertRow(3, "Default map data location:", defaultMapDirectoryButton);
+
+  settingsGeneralPanel->registerProperty("DefaultSeismicDataPath", relativeSeisPathMapper, "relativePath",
+                      SIGNAL(relativePathChanged(QString)),
+                      "Default seismic data path");
+  settingsGeneralPanel->registerProperty("DefaultWellDataPath", relativeWellPathMapper, "relativePath",
+                      SIGNAL(relativePathChanged(QString)),
+                      "Default well data path");
+  settingsGeneralPanel->registerProperty("DefaultMapDataPath", relativeMapPathMapper, "relativePath",
+                      SIGNAL(relativePathChanged(QString)),
+                      "Default map data path");
+}
+
+void qColadaAppMainWindowPrivate::loadSeisDataFromDefaultDirectory()
+{
+  QDir dir(util::defaultSeisDir());
+  QStringList files = dir.entryList(QStringList() << "*", QDir::Files);
+  for (QString& filename : files)
+    this->seisTreeView->addContainer(dir.absoluteFilePath(filename));
+}
+
+void qColadaAppMainWindowPrivate::loadWellDataFromDefaultDirectory()
+{
+  QDir dir(util::defaultWellDir());
+  QStringList files = dir.entryList(QStringList() << "*", QDir::Files);
+  for (QString& filename : files)
+    this->wellTreeView->addContainer(dir.absoluteFilePath(filename));
+}
+
+void qColadaAppMainWindowPrivate::loadMapDataFromDefaultDirectory()
+{
+  QDir dir(util::defaultMapDir());
+  QStringList files = dir.entryList(QStringList() << "*", QDir::Files);
+  for (QString& filename : files)
+    this->mapTreeView->addContainer(dir.absoluteFilePath(filename));
+}
 
 vtkSmartPointer<vtkMatrix3x3> qColadaAppMainWindowPrivate::GenerateOrientationMatrix(const std::string& name)
 {

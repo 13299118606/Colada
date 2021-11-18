@@ -9,6 +9,7 @@
 #include <QAction>
 #include <QHeaderView>
 #include <QMenu>
+#include <QDebug>
 
 // CTK includes
 #include <ctkFileDialog.h>
@@ -81,6 +82,10 @@ void qColadaH5TreeView::hdrMenuRequested(QPoint pos) {
   menu->deleteLater();
 }
 
+void qColadaH5TreeView::addContainer(const QString &fileName) {
+  this->addContainer(QStringList() << fileName);
+}
+
 void qColadaH5TreeView::addContainer(const QStringList &fileNameList) {
   qColadaH5ProxyModel *proxyModel =
       qobject_cast<qColadaH5ProxyModel *>(model());
@@ -93,7 +98,9 @@ void qColadaH5TreeView::addContainer(const QStringList &fileNameList) {
   qColadaH5Item *root = srcModel->getRootItem();
   for (int i = 0; i < fileNameList.count(); i++) {
     if (root->getChildByName(fileNameList[i]) == nullptr)
-      srcModel->addH5File(fileNameList[i]);
+      if (!srcModel->addH5File(fileNameList[i])){
+        qWarning() << "qColadaH5TreeView::addContainer(): unable to add the file:" << fileNameList[i];
+      }
   }
 }
 

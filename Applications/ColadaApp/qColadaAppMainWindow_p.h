@@ -57,6 +57,12 @@ protected:
   virtual void setupFileMenu(QMainWindow* mainWindow);
   virtual void setupViewMenu(QMainWindow* mainWindow);
   virtual void setupSliceNodes(QMainWindow * mainWindow);
+  virtual void setupColadaStyles(QMainWindow * mainWindow);
+  virtual void setupGeneralPanelDefaultDirs(QMainWindow * mainWindow);
+
+  virtual void loadSeisDataFromDefaultDirectory();
+  virtual void loadWellDataFromDefaultDirectory();
+  virtual void loadMapDataFromDefaultDirectory();
 
   vtkSmartPointer<vtkMatrix3x3> GenerateOrientationMatrix(const std::string& name);
   vtkSmartPointer<vtkMatrix3x3> GenerateXYOrientationMatrix();
