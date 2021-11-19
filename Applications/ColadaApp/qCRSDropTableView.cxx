@@ -53,6 +53,12 @@ void qCRSDropTableViewPrivate::init() {
   Q_Q(qCRSDropTableView);
   this->Superclass::init();
   q->setStyle(new qCRSDropTableViewStyle(q->style()));
+  q->setObjectName("TableView");
+  // set row height to match content
+  q->verticalHeader()->setDefaultSectionSize(
+        q->verticalHeader()->minimumSectionSize());
+  q->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  q->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 }
 
 qCRSDropTableView::qCRSDropTableView(QWidget *parent) 

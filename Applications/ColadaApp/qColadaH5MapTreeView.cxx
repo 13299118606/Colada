@@ -25,6 +25,18 @@ qColadaH5MapTreeViewPrivate::~qColadaH5MapTreeViewPrivate() {}
 void qColadaH5MapTreeViewPrivate::init() {
   Q_Q(qColadaH5MapTreeView);
   this->Superclass::init();
+
+  QSortFilterProxyModel* oldProxy =
+      qobject_cast<QSortFilterProxyModel*>(q->model());
+  if (oldProxy){
+    delete oldProxy->sourceModel();
+    delete oldProxy;
+  }
+
+  qColadaH5ProxyModel* proxy = new qColadaH5ProxyModel(q);
+  qColadaH5MapModel* sm = new qColadaH5MapModel("Map data", q);
+  proxy->setSourceModel(sm);
+  q->setModel(proxy);
 }
 
 qColadaH5MapTreeView::qColadaH5MapTreeView(QWidget *parent)
@@ -42,31 +54,15 @@ qColadaH5MapTreeView::qColadaH5MapTreeView(
 qColadaH5MapTreeView::~qColadaH5MapTreeView() {}
 
 void qColadaH5MapTreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
+  this->Superclass::fillHdrMenu(menu, pos);
+
   QAction *readMapAct = menu->addAction("Read Map");
   connect(readMapAct, &QAction::triggered, this,
           &qColadaH5MapTreeView::onReadMap);
-
-  QAction *addContainerAction = menu->addAction("Add container");
-  connect(addContainerAction, &QAction::triggered, this,
-          &qColadaH5MapTreeView::onAddContainer);
 }
 
 void qColadaH5MapTreeView::hdrMenuRequested(QPoint pos) {
   QMenu *menu = new QMenu(header());
-
-  QAction *checkedOnlyAct = menu->addAction("Show checked only");
-  checkedOnlyAct->setCheckable(true);
-
-  qColadaH5ProxyModel *proxyModel =
-      qobject_cast<qColadaH5ProxyModel *>(model());
-  if (proxyModel)
-    checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
-  else
-    checkedOnlyAct->setDisabled(true);
-
-  connect(checkedOnlyAct, &QAction::toggled, proxyModel,
-          &qColadaH5ProxyModel::setShowCheckedItemsOnly);
-  menu->addSeparator();
 
   /* for subclasses to add actions */
   fillHdrMenu(menu, pos);
@@ -81,22 +77,4 @@ void qColadaH5MapTreeView::onReadMap() {
   PythonQtObjectPtr context =
       mainModule.evalScript(QString("reader = colada.qColadaMapReader();"
                                     "reader.show();"));
-}
-
-void qColadaH5MapTreeView::onAddContainer() {
-  QStringList h5FileNameList = ctkFileDialog::getOpenFileNames(
-      nullptr, QObject::tr("Open map container"), "",
-      QObject::tr("hdf5 file (*.h5 *.hdf5); all (*.*)"));
-
-  qColadaH5ProxyModel *proxyModel =
-      qobject_cast<qColadaH5ProxyModel *>(model());
-  if (!proxyModel)
-    return;
-
-  qColadaH5Model *srcModel =
-      static_cast<qColadaH5Model *>(proxyModel->sourceModel());
-
-  for (int i = 0; i < h5FileNameList.count(); i++) {
-    srcModel->addH5File(h5FileNameList[i]);
-  }
 }

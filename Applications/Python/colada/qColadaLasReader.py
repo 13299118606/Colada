@@ -118,6 +118,8 @@ class qColadaLasReader(qColadaReader):
         self.mainSplitter = slicer.util.findChild(self, 'MainSplitter')
         self.logTableView = qCopyPasteTableView()
         self.logTableView.setObjectName("LogTableView")
+        self.logTableView.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.logTableView.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         self.mainSplitter.addWidget(self.logTableView)
         self.logHrzHeader = qCheckableHHeaderView(self.logTableView)
         self.logHrzHeader.setObjectName("LogHrzHeader")
@@ -132,6 +134,8 @@ class qColadaLasReader(qColadaReader):
         self.logVertHeader.setHighlightSections(True)
         self.logVertHeader.setToolTip("Logs to be: read - checked, skipped - unchecked")
         self.logVertHeader.setToolTipDuration(3000)
+        # set row height to match content
+        self.logVertHeader.setDefaultSectionSize(self.logVertHeader.minimumSectionSize)
         self.logTableView.setVerticalHeader(self.logVertHeader)
         self.logTableView.setSortingEnabled(True)
         self.logProxy = QtGui.QSortFilterProxyModel()

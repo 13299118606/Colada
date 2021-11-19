@@ -34,6 +34,12 @@ void qColadaH5TreeViewPrivate::init() {
   qColadaH5ItemDelegate *itDelegate = new qColadaH5ItemDelegate(q);
   q->setItemDelegate(itDelegate);
 
+  qColadaH5ProxyModel* proxy = new qColadaH5ProxyModel(q);
+  qColadaH5Model* model = new qColadaH5Model(proxy);
+  proxy->setSourceModel(model);
+
+  q->setModel(proxy);
+
   QObject::connect(q->header(), &QTreeView::customContextMenuRequested,
                    q, &qColadaH5TreeView::hdrMenuRequested);
 }
@@ -52,14 +58,6 @@ qColadaH5TreeView::qColadaH5TreeView(qColadaH5TreeViewPrivate *pimpl, QWidget *p
 qColadaH5TreeView::~qColadaH5TreeView() {}
 
 void qColadaH5TreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
-  QAction *addContainerAction = menu->addAction("Add container");
-  connect(addContainerAction, &QAction::triggered, this,
-          &qColadaH5TreeView::onAddContainer);
-}
-
-void qColadaH5TreeView::hdrMenuRequested(QPoint pos) {
-  QMenu *menu = new QMenu(header());
-
   QAction *checkedOnlyAct = menu->addAction("Show checked only");
   checkedOnlyAct->setCheckable(true);
 
@@ -69,10 +67,18 @@ void qColadaH5TreeView::hdrMenuRequested(QPoint pos) {
     checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
   else
     checkedOnlyAct->setDisabled(true);
+  menu->addSeparator();
 
   connect(checkedOnlyAct, &QAction::toggled, proxyModel,
           &qColadaH5ProxyModel::setShowCheckedItemsOnly);
-  menu->addSeparator();
+
+  QAction *addContainerAction = menu->addAction("Add container");
+  connect(addContainerAction, &QAction::triggered, this,
+          &qColadaH5TreeView::onAddContainer);
+}
+
+void qColadaH5TreeView::hdrMenuRequested(QPoint pos) {
+  QMenu *menu = new QMenu(header());
 
   /* for subclasses to add actions */
   fillHdrMenu(menu, pos);

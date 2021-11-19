@@ -213,22 +213,6 @@ void qColadaAppMainWindowPrivate::setupTreeViews(QMainWindow *mainWindow) {
   mapDockWidget->setWidget(mapTreeView);
   seisDockWidget->setWidget(seisTreeView);
   wellDockWidget->setWidget(wellTreeView);
-
-  qColadaH5MapModel *mapModel = new qColadaH5MapModel("Map tree model");
-  qColadaH5SeisModel *seisModel = new qColadaH5SeisModel("Seismic tree model");
-  qColadaH5WellModel *wellModel = new qColadaH5WellModel("Well tree model");
-
-  qColadaH5ProxyModel *mapProxy = new qColadaH5ProxyModel(mapTreeView);
-  qColadaH5ProxyModel *seisProxy = new qColadaH5ProxyModel(seisTreeView);
-  qColadaH5ProxyModel *wellProxy = new qColadaH5ProxyModel(wellTreeView);
-
-  mapProxy->setSourceModel(mapModel);
-  seisProxy->setSourceModel(seisModel);
-  wellProxy->setSourceModel(wellModel);
-
-  mapTreeView->setModel(mapProxy);
-  seisTreeView->setModel(seisProxy);
-  wellTreeView->setModel(wellProxy);
 }
 
 void qColadaAppMainWindowPrivate::setupStatusBar(QMainWindow* mainWindow) {

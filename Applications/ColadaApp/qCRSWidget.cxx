@@ -44,8 +44,15 @@ void qCRSWidgetPrivate::init() {
 void qCRSWidgetPrivate::setupUi(QWidget* q) {
   searchBox = new ctkSearchBox();
   unitsLineEdit = new QLineEdit();
+  unitsLineEdit->setObjectName("UnitsLineEdit");
   unitsLineEdit->setPlaceholderText("Units...");
   tableView = new QTableView();
+  tableView->setObjectName("TableView");
+  // set row height to match content
+  tableView->verticalHeader()->setDefaultSectionSize(
+        tableView->verticalHeader()->minimumSectionSize());
+  tableView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  tableView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
   tableView->setSortingEnabled(true);
   tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
   tableView->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -55,15 +62,18 @@ void qCRSWidgetPrivate::setupUi(QWidget* q) {
   proxy->setSourceModel(model);
   tableView->setModel(proxy);
   txtBrowser = new QTextBrowser();
+  txtBrowser->setObjectName("TextBrowser");
   txtBrowser->setReadOnly(true);
   txtBrowser->viewport()->setCursor(Qt::IBeamCursor); // set cursor type
 
   splitter = new QSplitter(Qt::Horizontal);
+  splitter->setObjectName("Splitter");
   splitter->setOpaqueResize(false);
   splitter->addWidget(tableView);
   splitter->addWidget(txtBrowser);
 
   mainLayout = new QVBoxLayout(q);
+  mainLayout->setObjectName("MainLayout");
   mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->addWidget(unitsLineEdit, 0, Qt::AlignLeft);
   mainLayout->addWidget(searchBox);

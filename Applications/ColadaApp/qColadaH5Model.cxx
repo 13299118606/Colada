@@ -321,12 +321,24 @@ void qColadaH5Model::updateCheckState(qColadaH5Item *topLevelItem) {
   }
 }
 
-void qColadaH5Model::sendAllChildDataChanged(qColadaH5Item *topLevelItem,
-                                             const QVector<int> &roles) {
+void qColadaH5Model::sendItemDataChanged(
+    qColadaH5Item* item, const QVector<int> &roles)
+{
+  int row = item->getRow();
+  if (row < 0) // if this is a root item
+    emit dataChanged(QModelIndex(), QModelIndex(), roles);
+  else {
+    QModelIndex index = createIndex(item->getRow(), 0, item);
+    emit dataChanged(index, index, roles);
+  }
+}
+
+void qColadaH5Model::sendAllChildDataChanged(
+    qColadaH5Item *topLevelItem, const QVector<int> &roles) {
   QList<QModelIndex> fullChildIndexList;
   getFullChildIndexList(topLevelItem, fullChildIndexList);
-  for (int i = 0; i < fullChildIndexList.count(); i++) {
-    emit dataChanged(fullChildIndexList[i], fullChildIndexList[i], roles);
+  for (const QModelIndex& index : fullChildIndexList){
+    emit dataChanged(index, index, roles);
   }
 }
 

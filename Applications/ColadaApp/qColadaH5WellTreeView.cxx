@@ -25,6 +25,18 @@ qColadaH5WellTreeViewPrivate::~qColadaH5WellTreeViewPrivate() {}
 void qColadaH5WellTreeViewPrivate::init() {
   Q_Q(qColadaH5WellTreeView);
   this->Superclass::init();
+
+  QSortFilterProxyModel* oldProxy =
+      qobject_cast<QSortFilterProxyModel*>(q->model());
+  if (oldProxy){
+    delete oldProxy->sourceModel();
+    delete oldProxy;
+  }
+
+  qColadaH5ProxyModel* proxy = new qColadaH5ProxyModel(q);
+  qColadaH5WellModel* sm = new qColadaH5WellModel("Well data", q);
+  proxy->setSourceModel(sm);
+  q->setModel(proxy);
 }
 
 qColadaH5WellTreeView::qColadaH5WellTreeView(QWidget *parent)
@@ -42,6 +54,8 @@ qColadaH5WellTreeView::qColadaH5WellTreeView(
 qColadaH5WellTreeView::~qColadaH5WellTreeView() {}
 
 void qColadaH5WellTreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
+  this->Superclass::fillHdrMenu(menu, pos);
+
   QAction *readDevAct = menu->addAction("Read DEV");
   connect(readDevAct, &QAction::triggered, this,
           &qColadaH5WellTreeView::onReadDev);
@@ -49,28 +63,10 @@ void qColadaH5WellTreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
   QAction *readLasAct = menu->addAction("Read LAS");
   connect(readLasAct, &QAction::triggered, this,
           &qColadaH5WellTreeView::onReadLas);
-
-  QAction *addContainerAction = menu->addAction("Add container");
-  connect(addContainerAction, &QAction::triggered, this,
-          &qColadaH5WellTreeView::onAddContainer);
 }
 
 void qColadaH5WellTreeView::hdrMenuRequested(QPoint pos) {
   QMenu *menu = new QMenu(header());
-
-  QAction *checkedOnlyAct = menu->addAction("Show checked only");
-  checkedOnlyAct->setCheckable(true);
-
-  qColadaH5ProxyModel *proxyModel =
-      qobject_cast<qColadaH5ProxyModel *>(model());
-  if (proxyModel)
-    checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
-  else
-    checkedOnlyAct->setDisabled(true);
-
-  connect(checkedOnlyAct, &QAction::toggled, proxyModel,
-          &qColadaH5ProxyModel::setShowCheckedItemsOnly);
-  menu->addSeparator();
 
   /* for subclasses to add actions */
   fillHdrMenu(menu, pos);
@@ -92,12 +88,4 @@ void qColadaH5WellTreeView::onReadDev() {
   PythonQtObjectPtr context =
       mainModule.evalScript(QString("reader = colada.qColadaDevReader();"
                                     "reader.show();"));
-}
-
-void qColadaH5WellTreeView::onAddContainer() {
-  QStringList h5FileNameList = ctkFileDialog::getOpenFileNames(
-      nullptr, QObject::tr("Open well container"), "",
-      QObject::tr("hdf5 file (*.h5 *.hdf5); all (*.*)"));
-
-  addContainer(h5FileNameList);
 }

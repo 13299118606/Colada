@@ -7,6 +7,7 @@
 #include <QClipboard>
 #include <QKeyEvent>
 #include <QThread>
+#include <QHeaderView>
 
 qCopyPasteTableViewPrivate::qCopyPasteTableViewPrivate(qCopyPasteTableView &q)
     : q_ptr(&q) {}
@@ -14,6 +15,11 @@ qCopyPasteTableViewPrivate::qCopyPasteTableViewPrivate(qCopyPasteTableView &q)
 qCopyPasteTableViewPrivate::~qCopyPasteTableViewPrivate() {}
 
 void qCopyPasteTableViewPrivate::init() {
+  Q_Q(qCopyPasteTableView);
+  // set row height to match content
+  q->verticalHeader()->setDefaultSectionSize(q->verticalHeader()->minimumSectionSize());
+  q->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  q->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 }
 
 qCopyPasteTableView::qCopyPasteTableView(QWidget *parent) 

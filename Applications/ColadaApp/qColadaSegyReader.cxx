@@ -190,6 +190,8 @@ void qColadaSegyReaderPrivate::initTxtHdrBrowser() {
 void qColadaSegyReaderPrivate::initTrcHdrBytesTable(){
   trcHdrBytesTableView = new qCopyPasteTableView();
   trcHdrBytesTableView->setObjectName("TrcHdrBytesTableView");
+  trcHdrBytesTableView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  trcHdrBytesTableView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
   trcHdrBytesTableView->setSelectionMode(QTableView::ExtendedSelection);
   trcHdrBytesTableView->setAlternatingRowColors(true);
   trcHdrBytesTableView->setAcceptDrops(true);
@@ -207,6 +209,8 @@ void qColadaSegyReaderPrivate::initTrcHdrBytesTable(){
   vertHeader->setSectionsClickable(true);
   vertHeader->setSectionsMovable(false);
   vertHeader->setHighlightSections(true);
+  // set row height to match content
+  vertHeader->setDefaultSectionSize(vertHeader->minimumSectionSize());
   trcHdrBytesTableView->setVerticalHeader(vertHeader);
 
   vSplitter->insertWidget(1, trcHdrBytesTableView);

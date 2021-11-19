@@ -21,11 +21,10 @@ public slots:
   bool isShowCheckedOnly();
 
 protected:
-  virtual bool
-  filterAcceptsRow(int source_row,
-                   const QModelIndex &source_parent) const override;
+  virtual bool filterAcceptsRow(
+      int source_row, const QModelIndex &source_parent) const override;
 
-  protected:
+protected:
   QScopedPointer<qColadaH5ProxyModelPrivate> d_ptr;
 
 private:

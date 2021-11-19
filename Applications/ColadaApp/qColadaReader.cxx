@@ -44,6 +44,8 @@ void qColadaReaderPrivate::initTable(){};
 void qColadaReaderPrivate::setupUi(QDialog *q) {
   tableView = new qCRSDropTableView();
   tableView->setObjectName("TableView");
+  tableView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  tableView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
   tableView->setSelectionMode(QTableView::ExtendedSelection);
   tableView->setAlternatingRowColors(true);
   tableView->setAcceptDrops(true);
@@ -60,6 +62,8 @@ void qColadaReaderPrivate::setupUi(QDialog *q) {
   vertHeader->setSectionsClickable(true);
   vertHeader->setSectionsMovable(false);
   vertHeader->setHighlightSections(true);
+  // set row height to match content
+  vertHeader->setDefaultSectionSize(vertHeader->minimumSectionSize());
   tableView->setVerticalHeader(vertHeader);
   tableView->setSortingEnabled(true);
   proxy = new QSortFilterProxyModel();

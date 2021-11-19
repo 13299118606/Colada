@@ -11,6 +11,7 @@ class Q_COLADA_APP_EXPORT qColadaH5SeisTreeView : public qColadaH5TreeView {
   Q_OBJECT
 
 public:
+  typedef qColadaH5TreeView Superclass;
   explicit qColadaH5SeisTreeView(QWidget *parent = nullptr);
   virtual ~qColadaH5SeisTreeView() override;
 
@@ -25,7 +26,6 @@ private:
   virtual void hdrMenuRequested(QPoint pos) override;
 
 public slots:
-  virtual void onAddContainer() override;
   void onReadSegy();
 
 protected:

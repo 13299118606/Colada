@@ -23,6 +23,18 @@ qColadaH5SeisTreeViewPrivate::~qColadaH5SeisTreeViewPrivate() {}
 void qColadaH5SeisTreeViewPrivate::init() {
   Q_Q(qColadaH5SeisTreeView);
   this->Superclass::init();
+
+  QSortFilterProxyModel* oldProxy =
+      qobject_cast<QSortFilterProxyModel*>(q->model());
+  if (oldProxy){
+    delete oldProxy->sourceModel();
+    delete oldProxy;
+  }
+
+  qColadaH5ProxyModel* proxy = new qColadaH5ProxyModel(q);
+  qColadaH5SeisModel* sm = new qColadaH5SeisModel("Seismic data", q);
+  proxy->setSourceModel(sm);
+  q->setModel(proxy);
 }
 
 qColadaH5SeisTreeView::qColadaH5SeisTreeView(QWidget *parent)
@@ -40,31 +52,15 @@ qColadaH5SeisTreeView::qColadaH5SeisTreeView(
 qColadaH5SeisTreeView::~qColadaH5SeisTreeView() {}
 
 void qColadaH5SeisTreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
+  this->Superclass::fillHdrMenu(menu, pos);
+
   QAction *readSegyAct = menu->addAction("Read SEGY");
   connect(readSegyAct, &QAction::triggered, this,
           &qColadaH5SeisTreeView::onReadSegy);
-
-  QAction *addContainerAction = menu->addAction("Add container");
-  connect(addContainerAction, &QAction::triggered, this,
-          &qColadaH5SeisTreeView::onAddContainer);
 }
 
 void qColadaH5SeisTreeView::hdrMenuRequested(QPoint pos) {
   QMenu *menu = new QMenu(header());
-
-  QAction *checkedOnlyAct = menu->addAction("Show checked only");
-  checkedOnlyAct->setCheckable(true);
-
-  qColadaH5ProxyModel *proxyModel =
-      qobject_cast<qColadaH5ProxyModel *>(model());
-  if (proxyModel)
-    checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
-  else
-    checkedOnlyAct->setDisabled(true);
-
-  connect(checkedOnlyAct, &QAction::toggled, proxyModel,
-          &qColadaH5ProxyModel::setShowCheckedItemsOnly);
-  menu->addSeparator();
 
   /* for subclasses to add actions */
   fillHdrMenu(menu, pos);
@@ -77,12 +73,4 @@ void qColadaH5SeisTreeView::hdrMenuRequested(QPoint pos) {
 void qColadaH5SeisTreeView::onReadSegy() {
   qColadaSegyReader *reader = new qColadaSegyReader();
   reader->show();
-}
-
-void qColadaH5SeisTreeView::onAddContainer() {
-  QStringList h5FileNameList = ctkFileDialog::getOpenFileNames(
-      nullptr, QObject::tr("Open seismic container"), "",
-      QObject::tr("hdf5 file (*.h5 *.hdf5); all (*.*)"));
-
-  addContainer(h5FileNameList);
 }

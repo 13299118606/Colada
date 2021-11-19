@@ -81,6 +81,9 @@ public slots:
   bool addH5File(h5gt::File file);
   void releaseCheckState(qColadaH5Item *topLevelItem);
   void updateCheckState(qColadaH5Item *topLevelItem);
+  void sendItemDataChanged(
+      qColadaH5Item* item,
+      const QVector<int> &roles = QVector<int>(Qt::CheckStateRole));
   void sendAllChildDataChanged(
       qColadaH5Item *topLevelItem,
       const QVector<int> &roles = QVector<int>(Qt::CheckStateRole));

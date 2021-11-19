@@ -263,6 +263,7 @@ class qColadaDevReader(qColadaReader):
         self.mainSplitter = slicer.util.findChild(self, 'MainSplitter')
         self.devTableView = qCopyPasteTableView()
         self.devTableView.setObjectName("DevTableView")
+        self.devTableView.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         self.mainSplitter.addWidget(self.devTableView)
         self.devHrzHeader = qCheckableHHeaderView(self.devTableView)
         self.devHrzHeader.setObjectName("DevHrzHeader")
@@ -277,6 +278,8 @@ class qColadaDevReader(qColadaReader):
         self.devVertHeader.setHighlightSections(True)
         self.devVertHeader.setToolTip("DEV to be: read - checked, skipped - unchecked")
         self.devVertHeader.setToolTipDuration(3000)
+        # set row height to match content
+        self.devVertHeader.setDefaultSectionSize(self.devVertHeader.minimumSectionSize)
         self.devTableView.setVerticalHeader(self.devVertHeader)
         self.devTableView.setSortingEnabled(True)
         self.devProxy = QtGui.QSortFilterProxyModel()

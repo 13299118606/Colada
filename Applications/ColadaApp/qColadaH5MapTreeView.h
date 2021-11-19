@@ -11,6 +11,7 @@ class Q_COLADA_APP_EXPORT qColadaH5MapTreeView : public qColadaH5TreeView {
   Q_OBJECT
 
 public:
+  typedef qColadaH5TreeView Superclass;
   explicit qColadaH5MapTreeView(QWidget *parent = nullptr);
   virtual ~qColadaH5MapTreeView() override;
 
@@ -25,7 +26,6 @@ private:
   virtual void hdrMenuRequested(QPoint pos) override;
 
 public slots:
-  virtual void onAddContainer() override;
   void onReadMap();
 
 protected:
