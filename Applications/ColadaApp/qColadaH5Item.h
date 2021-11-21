@@ -62,6 +62,7 @@ public:
   qColadaH5Item *getChildItem(int number) const;
   qColadaH5Item *getParentItem() const;
   int getRow() const;
+  int getColumn() const;
   QList<qColadaH5Item *> getItemListToRoot();
 
   H5Base *getItemData() const;
@@ -90,6 +91,9 @@ public:
 
   static QString fullName2ItemData(const QString &fullName);
 
+  // only write to stream is possible. We cant read from stream and set the data to item
+  void write(QDataStream &out) const;
+
   bool operator==(const qColadaH5Item &another) const;
 
 protected:
@@ -101,5 +105,7 @@ private:
 
   friend class qColadaH5Model;
 };
+
+Q_COLADA_APP_EXPORT QDataStream &operator<<(QDataStream &out, const qColadaH5Item &item);
 
 #endif

@@ -30,6 +30,8 @@ void qColadaH5TreeViewPrivate::init() {
   //q->setDragDropMode(QAbstractItemView::InternalMove); // items are moved within tree only
   q->setContextMenuPolicy(Qt::CustomContextMenu);
   q->header()->setContextMenuPolicy(Qt::CustomContextMenu);
+  q->setDragDropMode(QAbstractItemView::DragOnly);
+  q->setDragEnabled(true);
 
   qColadaH5ItemDelegate *itDelegate = new qColadaH5ItemDelegate(q);
   q->setItemDelegate(itDelegate);

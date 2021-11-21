@@ -62,6 +62,8 @@ set(APPLIB_SRCS
   qColadaLightStyle.h
   qColadaApplication.cxx
   qColadaApplication.h
+  qCRSDropLineEdit.h
+  qCRSDropLineEdit.cxx
   qCRSDropTableView.h
   qCRSDropTableView.cxx
   qCRSWidget.cxx
@@ -105,6 +107,8 @@ set(APPLIB_SRCS
   SegyRead.h
   SegyRead.cxx
 
+  qH5ItemDropLineEdit.h
+  qH5ItemDropLineEdit.cxx
   qCopyPasteTableView.h
   qCopyPasteTableView.cxx
   qComboBoxDelegate.h
@@ -132,6 +136,7 @@ set(APPLIB_MOC_SRCS
   qColadaLightStyle.h
 
   qColadaApplication.h
+  qCRSDropLineEdit.h
   qCRSDropTableView.h
   qCRSWidget.h
   qREValidator.h
@@ -152,6 +157,7 @@ set(APPLIB_MOC_SRCS
 
   qColadaGainWidget.h
 
+  qH5ItemDropLineEdit.h
   qCopyPasteTableView.h
   qScienceSpinBox.h
   qComboBoxDelegate.h

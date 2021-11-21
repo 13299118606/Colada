@@ -134,7 +134,7 @@ Qt::ItemFlags qColadaH5SeisModel::flags(const QModelIndex &index) const {
     return Qt::NoItemFlags;
 
   Qt::ItemFlags flags =
-      Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+      Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled;
 
   if (seisFromItem(itemFromIndex(index)))
     flags |= Qt::ItemIsUserCheckable;

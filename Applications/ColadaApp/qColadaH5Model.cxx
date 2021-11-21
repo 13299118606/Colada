@@ -14,6 +14,8 @@
 // Qt includes
 #include <QMimeData>
 #include <QDataStream>
+#include <QSet>
+#include <QStack>
 
 qColadaH5ModelPrivate::qColadaH5ModelPrivate(qColadaH5Model &q) : q_ptr(&q) {}
 
@@ -399,4 +401,68 @@ void qColadaH5Model::setCheckStateForItemStair(qColadaH5Item *item,
                        {Qt::CheckStateRole});
     }
   }
+}
+
+static inline QString qColadaH5ModelDataListMimeType()
+{
+  return QStringLiteral("application/x-qcoladah5modeldatalist");
+}
+
+QStringList qColadaH5Model::mimeTypes() const
+{
+  return QAbstractItemModel::mimeTypes() << qColadaH5ModelDataListMimeType();
+}
+
+QMimeData *qColadaH5Model::mimeData(const QModelIndexList &indexes) const
+{
+  QMimeData *data = QAbstractItemModel::mimeData(indexes);
+  if(!data)
+    return 0;
+  const QString format = qColadaH5ModelDataListMimeType();
+  if (!mimeTypes().contains(format))
+    return data;
+  QByteArray encoded;
+  QDataStream stream(&encoded, QIODevice::WriteOnly);
+  QSet<qColadaH5Item*> itemsSet;
+  QStack<qColadaH5Item*> stack;
+  itemsSet.reserve(indexes.count());
+  stack.reserve(indexes.count());
+  for (int i = 0; i < indexes.count(); ++i) {
+    if (qColadaH5Item *item = itemFromIndex(indexes.at(i))) {
+      itemsSet << item;
+      stack.push(item);
+    } else {
+      qWarning("qColadaH5ItemModel::mimeData: No item associated with invalid index");
+      return 0;
+    }
+  }
+  //remove duplicates childrens
+  {
+    QSet<qColadaH5Item *> seen;
+    while (!stack.isEmpty()) {
+      qColadaH5Item *itm = stack.pop();
+      if (seen.contains(itm))
+        continue;
+      seen.insert(itm);
+      const QVector<qColadaH5Item*> &childList = itm->getChildItems();
+      for (int i = 0; i < childList.count(); ++i) {
+        qColadaH5Item *chi = childList.at(i);
+        if (chi) {
+          itemsSet.erase(itemsSet.constFind(chi));
+          stack.push(chi);
+        }
+      }
+    }
+  }
+  stack.reserve(itemsSet.count());
+  for (qColadaH5Item *item : qAsConst(itemsSet))
+    stack.push(item);
+  //stream everything recursively
+  while (!stack.isEmpty()) {
+    qColadaH5Item *item = stack.pop();
+    stream << *item;
+    stack += item->getChildItems();
+  }
+  data->setData(format, encoded);
+  return data;
 }

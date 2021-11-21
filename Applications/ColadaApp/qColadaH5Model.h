@@ -93,6 +93,9 @@ public slots:
   void setCheckStateForItemStair(qColadaH5Item *item,
                                  Qt::CheckState checkState);
 
+  QStringList mimeTypes() const override;
+  QMimeData *mimeData(const QModelIndexList &indexes) const override;
+
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;
 

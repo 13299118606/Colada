@@ -172,7 +172,7 @@ Qt::ItemFlags qColadaH5WellModel::flags(const QModelIndex &index) const {
     return Qt::NoItemFlags;
 
   Qt::ItemFlags flags =
-      Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+      Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled;
 
   qColadaH5Item *item = itemFromIndex(index);
   if (wellFromItem(item) || logCurveFromItem(item))

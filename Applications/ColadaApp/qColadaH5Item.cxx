@@ -185,6 +185,10 @@ int qColadaH5Item::getRow() const {
   return -1;
 }
 
+int qColadaH5Item::getColumn() const {
+  return 0;
+}
+
 QList<qColadaH5Item *> qColadaH5Item::getItemListToRoot() {
   QList<qColadaH5Item *> itemListToRoot;
   if (isRoot())
@@ -282,6 +286,29 @@ bool qColadaH5Item::isMapped() const {
 
 QString qColadaH5Item::fullName2ItemData(const QString &fullName) {
   return fullName.mid(fullName.lastIndexOf("/") + 1);
+}
+
+#include <QDebug>
+#include <QDataStream>
+void qColadaH5Item::write(QDataStream &out) const
+{
+  Q_D(const qColadaH5Item);
+  if (isGeoContainer()) {
+    H5BaseContainer *obj = getGeoContainer();
+    QString fileName = QString::fromStdString(obj->getH5File().getFileName());
+    out << fileName << QString("");
+  } else if (isGeoObject()) {
+    H5BaseObject *obj = getGeoObject();
+    QString fileName = QString::fromStdString(obj->getH5File().getFileName());
+    QString objName = QString::fromStdString(obj->getFullName());
+    out << fileName << objName;
+  }
+}
+
+QDataStream &operator<<(QDataStream &out, const qColadaH5Item &item)
+{
+    item.write(out);
+    return out;
 }
 
 bool qColadaH5Item::operator==(const qColadaH5Item &another) const {

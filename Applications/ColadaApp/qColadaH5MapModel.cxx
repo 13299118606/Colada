@@ -133,8 +133,8 @@ Qt::ItemFlags qColadaH5MapModel::flags(const QModelIndex &index) const {
   if (!index.isValid())
     return Qt::NoItemFlags;
 
-  Qt::ItemFlags flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled |
-                        Qt::ItemIsEditable;
+  Qt::ItemFlags flags =
+      Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled;
   
   if (mapFromItem(itemFromIndex(index)))
     flags |= Qt::ItemIsUserCheckable;
