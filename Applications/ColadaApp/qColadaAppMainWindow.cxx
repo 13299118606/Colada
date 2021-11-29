@@ -37,6 +37,7 @@
 #include <QSettings>
 #include <QShowEvent>
 #include <QFormLayout>
+#include <QLabel>
 
 // CTK includes
 #include <ctkFileDialog.h>
@@ -141,9 +142,9 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   //----------------------------------------------------------------------------
   mainWindow->setWindowIcon(QIcon(":/Icons/Medium/DesktopIcon.png"));
 
-  QPixmap logo(":/LogoFull.png");
-  this->LogoLabel->setPixmap(logo);
-  this->LogoLabel->hide();
+//  QPixmap logo(":/LogoFull.png");
+//  this->LogoLabel->setPixmap(logo);
+//  this->LogoLabel->hide();
 
   // Hide the toolbars
   this->MainToolBar->setVisible(false);

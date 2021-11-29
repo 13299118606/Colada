@@ -73,7 +73,7 @@ void qColadaSegyReaderPrivate::init() {
 
 void qColadaSegyReaderPrivate::initVars() {
   tableHdrNames = QStringList(
-      {"plot", "read file", "save to", "CRS", "seis name", "chunk size",
+      {"plot", "read file", "save to", "spatial reference", "seis name", "chunk size",
        "N threads", "creation type", "survey type", "data type", "domain",
        "text encoding", "endianness", "format", "spatial units",
        "temporal units", "data units", "SRD"});
@@ -334,7 +334,7 @@ void qColadaSegyReader::resetRow(int proxy_row) {
                       util::defaultSeisDir() + "/" + seisName + ".h5");
   }
 
-  d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("CRS")),
+  d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("spatial reference")),
                     util::CRSAuthName() + ":" + QString::number(util::CRSCode()));
 
   d->proxy->setData(
@@ -365,8 +365,8 @@ qColadaSegyReader::getReadOnlyParamFromTable(int proxy_row, QString &errMsg) {
       d->proxy
           ->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("read file")))
           .toString();
-  p.crs = d->proxy->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("CRS")))
-              .toString();
+  p.spatialReference = d->proxy->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("spatial reference")))
+              .toString().toStdString();
 
   std::string str;
   str = d->proxy
@@ -446,8 +446,8 @@ qColadaSegyReader::getReadWriteParamFromTable(int proxy_row, QString &errMsg) {
   p.saveFile =
       d->proxy->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("save to")))
           .toString();
-  p.crs = d->proxy->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("CRS")))
-              .toString();
+  p.spatialReference = d->proxy->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("spatial reference")))
+              .toString().toStdString();
 
   std::string str;
   str = d->proxy
@@ -545,12 +545,8 @@ qColadaSegyReader::getReadWriteParamFromTable(int proxy_row, QString &errMsg) {
           .toString()
           .toStdString();
 
-  var = d->proxy->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("SRD")))
-            .toString();
-  if (var.isNull())
-    p.srd = 0;
-  else
-    p.srd = var.toDouble();
+  p.srd = d->proxy->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("SRD")))
+            .toDouble();
 
   std::vector<std::string> fullHeaderNameList, shortHeaderNameList;
   h5geo::getBinHeaderNames(fullHeaderNameList, shortHeaderNameList);

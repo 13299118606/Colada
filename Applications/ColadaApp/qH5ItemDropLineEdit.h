@@ -23,10 +23,10 @@ public slots:
   /// \param orientation
   void setOrientation(Qt::Orientation orientation);
 
-  void setH5Container(QString name);
-  void setH5Object(QString name);
+  void setH5Container(const QString& name);
+  void setH5Object(const QString& name);
   /// emits only one signal `h5ItemChanged` instead of two
-  void setH5Data(QString container, QString object);
+  void setH5Data(const QString& container, const QString& object);
 
   QString h5Container();
   QString h5Object();
@@ -35,7 +35,7 @@ public slots:
   QLineEdit* getH5ObjectLineEdit();
 
 signals:
-  void h5ItemChanged(QString containerName, QString objectName);
+  void h5ItemChanged(const QString& containerName, const QString& objectName);
 
 protected:
   QScopedPointer<qH5ItemDropLineEditPrivate> d_ptr;
@@ -47,8 +47,8 @@ protected:
   virtual void dropEvent(QDropEvent *event) override;
 
 protected slots:
-  void onH5ContainerLineEditChanged(QString name);
-  void onH5ObjectLineEditChanged(QString name);
+  void onH5ContainerLineEditChanged(const QString& name);
+  void onH5ObjectLineEditChanged(const QString& name);
 
 private:
   Q_DECLARE_PRIVATE(qH5ItemDropLineEdit);

@@ -16,7 +16,7 @@ if(NOT DEFINED slicersources_SOURCE_DIR)
   # Download Slicer sources and set variables slicersources_SOURCE_DIR and slicersources_BINARY_DIR
   FetchContent_Populate(slicersources
     GIT_REPOSITORY git://github.com/Slicer/Slicer	# git://github.com/Slicer/Slicer
-    GIT_TAG        "1d0816b9c254e1fbf61901d6ec6a238b8e1b5c19"		# ab9c4fb9bb7b47f63aec70b7d919b063fdd3b558
+    GIT_TAG        "c72d890515ccca70e4173dfcedd370e197c44ae9"   # "1d0816b9c254e1fbf61901d6ec6a238b8e1b5c19"
     GIT_PROGRESS   1
     )
 else()
@@ -179,6 +179,9 @@ message("Slicer_BUILD_SurfaceToolbox: ${Slicer_BUILD_SurfaceToolbox}")
 
 # Force Slicer to use VTK 9 (this must be CACHE var with FORCE parameter)
 set(Slicer_VTK_VERSION_MAJOR 9 CACHE STRING "VTK major version (8 or 9)" FORCE)
+
+# Force Slicer to build with TBB support
+set(Slicer_VTK_SMP_IMPLEMENTATION_TYPE TBB  CACHE STRING "Which multi-threaded parallelism implementation to use in VTK. Options are Sequential or TBB." FORCE)
 
 # Enable Slicer built-in modules
 set(Slicer_CLIMODULES_ENABLED

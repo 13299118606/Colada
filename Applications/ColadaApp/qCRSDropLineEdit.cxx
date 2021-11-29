@@ -36,6 +36,13 @@ void qCRSDropLineEditPrivate::init() {
   this->CodeLineEdit->setReadOnly(true);
 
   q->setAcceptDrops(true);
+
+  q->connect(NameLineEdit, &QLineEdit::textChanged,
+             q, &qCRSDropLineEdit::onNameLineEditChanged);
+  q->connect(AuthNameLineEdit, &QLineEdit::textChanged,
+             q, &qCRSDropLineEdit::onAuthNameLineEditChanged);
+  q->connect(CodeLineEdit, &QLineEdit::textChanged,
+             q, &qCRSDropLineEdit::onCodeLineEditChanged);
 }
 
 qCRSDropLineEdit::qCRSDropLineEdit(QWidget *parent)
@@ -92,27 +99,43 @@ void qCRSDropLineEdit::dropEvent(QDropEvent *event) {
   QString code = sourceTableView->model()->
       data(sourceTableView->model()->index(sourceRow, 2)).toString();
 
-  this->setCRSName(name);
-  this->setCRSAuthName(authName);
-  this->setCRSCode(code.toInt());
+  this->setCRS(name, authName, code);
 }
 
-void qCRSDropLineEdit::setCRSName(QString name){
+void qCRSDropLineEdit::setCRS(
+    const QString& name,
+    const QString& authName,
+    const QString& code)
+{
+  Q_D(qCRSDropLineEdit);
+  d->NameLineEdit->blockSignals(true);
+  d->AuthNameLineEdit->blockSignals(true);
+  d->CodeLineEdit->blockSignals(true);
+
+  d->NameLineEdit->setText(name);
+  d->AuthNameLineEdit->setText(authName);
+  d->CodeLineEdit->setText(code);
+
+  d->NameLineEdit->blockSignals(false);
+  d->AuthNameLineEdit->blockSignals(false);
+  d->CodeLineEdit->blockSignals(false);
+
+  emit CRSChanged(name, authName, code);
+}
+
+void qCRSDropLineEdit::setCRSName(const QString& name){
   Q_D(qCRSDropLineEdit);
   d->NameLineEdit->setText(name);
-  emit CRSNameChanged(name);
 }
 
-void qCRSDropLineEdit::setCRSAuthName(QString authName){
+void qCRSDropLineEdit::setCRSAuthName(const QString& authName){
   Q_D(qCRSDropLineEdit);
   d->AuthNameLineEdit->setText(authName);
-  emit CRSAuthNameChanged(authName);
 }
 
-void qCRSDropLineEdit::setCRSCode(int code){
+void qCRSDropLineEdit::setCRSCode(const QString& code){
   Q_D(qCRSDropLineEdit);
-  d->CodeLineEdit->setText(QString::number(code));
-  emit CRSCodeChanged(code);
+  d->CodeLineEdit->setText(code);
 }
 
 QString qCRSDropLineEdit::CRSName(){
@@ -125,9 +148,9 @@ QString qCRSDropLineEdit::CRSAuthName(){
   return d->AuthNameLineEdit->text();
 }
 
-int qCRSDropLineEdit::CRSCode(){
+QString qCRSDropLineEdit::CRSCode(){
   Q_D(qCRSDropLineEdit);
-  return d->CodeLineEdit->text().toInt();
+  return d->CodeLineEdit->text();
 }
 
 QLineEdit* qCRSDropLineEdit::getCRSNameLineEdit(){
@@ -143,4 +166,37 @@ QLineEdit* qCRSDropLineEdit::getCRSAuthNameLineEdit(){
 QLineEdit* qCRSDropLineEdit::getCRSCodeLineEdit(){
   Q_D(qCRSDropLineEdit);
   return d->CodeLineEdit;
+}
+
+void qCRSDropLineEdit::onNameLineEditChanged(
+    const QString& name)
+{
+  Q_D(qCRSDropLineEdit);
+  emit CRSChanged(
+        name,
+        d->AuthNameLineEdit->text(),
+        d->CodeLineEdit->text());
+  emit CRSNameChanged(name);
+}
+
+void qCRSDropLineEdit::onAuthNameLineEditChanged(
+    const QString& authName)
+{
+  Q_D(qCRSDropLineEdit);
+  emit CRSChanged(
+        d->NameLineEdit->text(),
+        authName,
+        d->CodeLineEdit->text());
+  emit CRSAuthNameChanged(authName);
+}
+
+void qCRSDropLineEdit::onCodeLineEditChanged(
+    const QString& code)
+{
+  Q_D(qCRSDropLineEdit);
+  emit CRSChanged(
+        d->NameLineEdit->text(),
+        d->AuthNameLineEdit->text(),
+        code);
+  emit CRSCodeChanged(code);
 }

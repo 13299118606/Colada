@@ -17,23 +17,22 @@ class OGRCoordinateTransformation;
 class SegyRead {
 public:
   struct ReadOnlyParam {
-    QString readFile, crs;
+    QString readFile;
     h5geo::SegyEndian endian;
     h5geo::SegyFormat format;
-    std::string spatialUnits, temporalUnits, dataUnits;
+    std::string spatialReference, spatialUnits, temporalUnits, dataUnits;
     double binHdr[30]; // 30 is the number of binary headers
     size_t minTrc, maxTrc;
   };
 
   struct ReadWriteParam : SeisParam {
-    QString readFile, saveFile, crs, seisName;
+    QString readFile, saveFile, seisName;
     h5geo::TxtEncoding encoding;
     h5geo::SegyEndian endian;
     h5geo::SegyFormat format;
     char txtHdr[40][80];
     double binHdr[30]; // 30 is the number of binary headers
     h5geo::CreationType seisCreateType;
-    double srd;
     size_t traceHeapSize = 10000, nThread2use = 4;
   };
 

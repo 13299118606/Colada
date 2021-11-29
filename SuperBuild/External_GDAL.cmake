@@ -50,9 +50,9 @@ if(NOT Slicer_USE_SYSTEM_${proj})
     set(GDAL_LIBRARY "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/lib/gdal_i.lib")
   elseif(UNIX)
     set(GDAL_LIBRARY "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/lib/libgdal.so")
-
+    set(GDAL_LIBS_DIR "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/GDAL.libs")
     file(GLOB GDAL_LIBS
-      "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/GDAL.libs/lib*"
+      "${GDAL_LIBS_DIR}/lib*"
     )
     mark_as_superbuild(
       VARS
@@ -75,6 +75,8 @@ mark_as_superbuild(
     GDAL_LIBRARY:FILEPATH  
     GDAL_ROOT:PATH
     GDAL_DIR:PATH
+    GDAL_LIBS:PATH
+    GDAL_LIBS_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
 
@@ -82,6 +84,7 @@ ExternalProject_Message(${proj} "GDAL_INCLUDE_DIR: ${GDAL_INCLUDE_DIR}")
 ExternalProject_Message(${proj} "GDAL_LIBRARY: ${GDAL_LIBRARY}")
 ExternalProject_Message(${proj} "GDAL_ROOT: ${GDAL_ROOT}")
 ExternalProject_Message(${proj} "GDAL_DIR: ${GDAL_DIR}")
+ExternalProject_Message(${proj} "GDAL_LIBS_DIR: ${GDAL_LIBS_DIR}")
 
 #-----------------------------------------------------------------------------
 # Launcher setting specific to build tree
@@ -90,6 +93,7 @@ ExternalProject_Message(${proj} "GDAL_DIR: ${GDAL_DIR}")
 set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
   ${GDAL_ROOT}
   ${GDAL_ROOT}/data/proj
+  ${GDAL_LIBS_DIR}
   )
 mark_as_superbuild(
   VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
@@ -112,6 +116,7 @@ mark_as_superbuild(
 set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED 
   <APPLAUNCHER_SETTINGS_DIR>/../lib/Python/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo
   <APPLAUNCHER_SETTINGS_DIR>/../lib/Python/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/data/proj
+  <APPLAUNCHER_SETTINGS_DIR>/../lib/Python/${PYTHON_SITE_PACKAGES_SUBDIR}/GDAL.libs
   )
 mark_as_superbuild(
   VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED

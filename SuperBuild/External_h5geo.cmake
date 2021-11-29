@@ -2,7 +2,7 @@
 set(proj h5geo)
 
 # Set dependency list
-set(${proj}_DEPENDENCIES tbb Eigen3 zlib HDF5 h5gt magic_enum python units)
+set(${proj}_DEPENDENCIES GDAL tbb Eigen3 zlib HDF5 h5gt magic_enum python units)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
@@ -55,7 +55,8 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
       # Lib settings
       -DH5GEO_SUPERBUILD:BOOL=OFF
-      -DH5GEO_USE_THREADS:BOOL=OFF
+      -DH5GEO_USE_THREADS:BOOL=ON
+      -DH5GEO_USE_GDAL:BOOL=ON
       -DH5GEO_BUILD_SHARED_LIBS:BOOL=ON
       -DH5GEO_BUILD_TESTS:BOOL=OFF
       -DH5GEO_USE_THREADS:BOOL=OFF
@@ -65,7 +66,11 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DCOPY_H5GEOPY_RUNTIME_DEPS:BOOL=OFF
       -DHDF5_USE_STATIC_LIBRARIES:BOOL=OFF  
       # find package dirs
-      -DTBB_DIR:PATH="${TBB_LIB_DIR}/../../../cmake"
+      -DTBB_INCLUDE_DIR:PATH=${TBB_INCLUDE_DIR}
+      -DTBB_ROOT_DIR:PATH=${TBB_LIB_DIR}
+      -DGDAL_ROOT:PATH=${GDAL_ROOT}
+      -DGDAL_INCLUDE_DIRS:PATH=${GDAL_INCLUDE_DIR}
+      -DGDAL_LIBS:FILEPATH=${GDAL_LIBS}
       -DEIGEN3_INCLUDE_DIRS:PATH=${Eigen3_INCLUDE_DIR}
       -DZLIB_ROOT:PATH=${ZLIB_ROOT}
       -DHDF5_ROOT:PATH=${HDF5_ROOT}

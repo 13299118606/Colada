@@ -17,29 +17,36 @@ class Q_COLADA_APP_EXPORT qCRSDropLineEdit : public QWidget {
   /// Holds the current CRS auth name for the settings.
   Q_PROPERTY(QString CRSAuthName READ CRSAuthName WRITE setCRSAuthName NOTIFY CRSAuthNameChanged)
   /// Holds the current CRS code for the settings.
-  Q_PROPERTY(int CRSCode READ CRSCode WRITE setCRSCode NOTIFY CRSCodeChanged)
+  Q_PROPERTY(QString CRSCode READ CRSCode WRITE setCRSCode NOTIFY CRSCodeChanged)
 public:
   explicit qCRSDropLineEdit(QWidget *parent = nullptr);
   virtual ~qCRSDropLineEdit() override;
 
-  void setCRSName(QString name);
-  void setCRSAuthName(QString authName);
-  void setCRSCode(int code);
+  void setCRS(const QString& name, const QString& authName, const QString& code);
+  void setCRSName(const QString& name);
+  void setCRSAuthName(const QString& authName);
+  void setCRSCode(const QString& code);
 
   QString CRSName();
   QString CRSAuthName();
-  int CRSCode();
+  QString CRSCode();
 
   QLineEdit* getCRSNameLineEdit();
   QLineEdit* getCRSAuthNameLineEdit();
   QLineEdit* getCRSCodeLineEdit();
 
 signals:
-  void CRSNameChanged(QString name);
-  void CRSAuthNameChanged(QString authName);
-  void CRSCodeChanged(int code);
+  void CRSChanged(const QString& name, const QString& authName, const QString& code);
+  void CRSNameChanged(const QString& name);
+  void CRSAuthNameChanged(const QString& authName);
+  void CRSCodeChanged(const QString& code);
 
 public slots:
+
+protected slots:
+  void onNameLineEditChanged(const QString& name);
+  void onAuthNameLineEditChanged(const QString& authName);
+  void onCodeLineEditChanged(const QString& code);
 
 protected:
   QScopedPointer<qCRSDropLineEditPrivate> d_ptr;

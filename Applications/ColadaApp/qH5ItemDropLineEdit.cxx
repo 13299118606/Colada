@@ -97,17 +97,17 @@ void qH5ItemDropLineEdit::dropEvent(QDropEvent *event) {
   this->setH5Data(fileName, objectName);
 }
 
-void qH5ItemDropLineEdit::setH5Container(QString name){
+void qH5ItemDropLineEdit::setH5Container(const QString &name){
   Q_D(qH5ItemDropLineEdit);
   d->containerLineEdit->setText(name);
 }
 
-void qH5ItemDropLineEdit::setH5Object(QString name){
+void qH5ItemDropLineEdit::setH5Object(const QString& name){
   Q_D(qH5ItemDropLineEdit);
   d->objectLineEdit->setText(name);
 }
 
-void qH5ItemDropLineEdit::setH5Data(QString container, QString object){
+void qH5ItemDropLineEdit::setH5Data(const QString& container, const QString& object){
   Q_D(qH5ItemDropLineEdit);
   d->containerLineEdit->blockSignals(true);
   d->objectLineEdit->blockSignals(true);
@@ -141,12 +141,16 @@ QLineEdit* qH5ItemDropLineEdit::getH5ObjectLineEdit(){
   return d->objectLineEdit;
 }
 
-void qH5ItemDropLineEdit::onH5ContainerLineEditChanged(QString name){
+void qH5ItemDropLineEdit::onH5ContainerLineEditChanged(
+    const QString& name)
+{
   Q_D(qH5ItemDropLineEdit);
   emit h5ItemChanged(name, d->objectLineEdit->text());
 }
 
-void qH5ItemDropLineEdit::onH5ObjectLineEditChanged(QString name){
+void qH5ItemDropLineEdit::onH5ObjectLineEditChanged(
+    const QString& name)
+{
   Q_D(qH5ItemDropLineEdit);
   emit h5ItemChanged(d->containerLineEdit->text(), name);
 }
