@@ -75,7 +75,7 @@ void qColadaSegyReaderPrivate::initVars() {
   tableHdrNames = QStringList(
       {"plot", "read file", "save to", "spatial reference", "seis name", "chunk size",
        "N threads", "creation type", "survey type", "data type", "domain",
-       "text encoding", "endianness", "format", "spatial units",
+       "text encoding", "endianness", "format", "length units",
        "temporal units", "data units", "SRD"});
 
   tableHdrTips = QStringList(
@@ -87,7 +87,7 @@ void qColadaSegyReaderPrivate::initVars() {
        "Creation type for seismic", "2D/3D",
        "STACK, PRESTACK",
        "May be time or depth", "Textual header encoding", "SEGY endianness",
-       "SEGY format", "Spatial units", "Temporal units", "Data units (probably pressure: pascal, psi, atmosphere)",
+       "SEGY format", "Length units", "Temporal units", "Data units (probably pressure: pascal, psi, atmosphere)",
        "Seismic Reference Datum"});
 
   std::vector<std::string> fullHeaderNameList, shortHeaderNameList;
@@ -348,7 +348,7 @@ void qColadaSegyReader::resetRow(int proxy_row) {
   d->proxy->setData(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("domain")),
                     "TWT");
   d->proxy->setData(
-      d->proxy->index(proxy_row, d->tableHdrNames.indexOf("spatial units")), "meter");
+      d->proxy->index(proxy_row, d->tableHdrNames.indexOf("length units")), "meter");
   d->proxy->setData(
       d->proxy->index(proxy_row, d->tableHdrNames.indexOf("temporal units")), "ms");
   d->proxy->setData(
@@ -390,9 +390,9 @@ qColadaSegyReader::getReadOnlyParamFromTable(int proxy_row, QString &errMsg) {
   }
   p.format = format_opt.value();
 
-  p.spatialUnits = d->proxy
+  p.lengthUnits = d->proxy
                        ->data(d->proxy->index(
-                           proxy_row, d->tableHdrNames.indexOf("spatial units")))
+                           proxy_row, d->tableHdrNames.indexOf("length units")))
                        .toString()
                        .toStdString();
 
@@ -527,9 +527,9 @@ qColadaSegyReader::getReadWriteParamFromTable(int proxy_row, QString &errMsg) {
   }
   p.format = format_opt.value();
 
-  p.spatialUnits = d->proxy
+  p.lengthUnits = d->proxy
                        ->data(d->proxy->index(
-                           proxy_row, d->tableHdrNames.indexOf("spatial units")))
+                           proxy_row, d->tableHdrNames.indexOf("length units")))
                        .toString()
                        .toStdString();
 

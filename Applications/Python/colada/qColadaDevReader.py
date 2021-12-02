@@ -207,14 +207,14 @@ class qColadaDevReader(qColadaReader):
     wellTableHdrNames = [
         "read file", "save to", "CRS",
         "well name", "UWI", "well create", 
-        "spatial units",
+        "length units",
         "head x", "head y", "KB", 
         "XNorth"]
 
     wellTableHdrTips = [
         "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). . Must be set if new well is going to be created",
         "Well name", "Unique Well Identifier", "Creation type for well", 
-        "Spatial units",
+        "Length units",
         "Header X coordinate. Must be set if new well is going to be created", "Header Y coordinate. Must be set if new well is going to be created", "Kelly Bushing",
         "`X` axis points to the North? checked - True, unchecked - False"]
 
@@ -413,8 +413,8 @@ class qColadaDevReader(qColadaReader):
         p.wellCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
 
         tmp = self.wellProxy.data(
-            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")))
-        p.spatialUnits = tmp if tmp else ''
+            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")))
+        p.lengthUnits = tmp if tmp else ''
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("head x")))
@@ -512,8 +512,8 @@ class qColadaDevReader(qColadaReader):
         p.crs = tmp if tmp else ''
         
         tmp = self.wellProxy.data(
-            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")))
-        p.spatialUnits = tmp if tmp else ''
+            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")))
+        p.lengthUnits = tmp if tmp else ''
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well name")))
@@ -557,7 +557,7 @@ class qColadaDevReader(qColadaReader):
 
         well_name = d.getWellName() if d.getWellName() else os.path.splitext(os.path.basename(readFile))[0]
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well name")), well_name)
-        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")), 'meter')
+        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")), 'meter')
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("head x")), d.getHeadXCoord())
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("head y")), d.getHeadYCoord())
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("KB")), d.getKB())
@@ -748,14 +748,14 @@ class qColadaDevReader(qColadaReader):
                         continue
                     
                     if p_w.xNorth:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.lengthUnits)
                     else:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.lengthUnits)
 
-                    # if new well will be created then the units will be `p_w.spatialUnits`
+                    # if new well will be created then the units will be `p_w.lengthUnits`
                     coef_w = Util.convertUnits(
                         currentProjectUnits,
-                        p_w.spatialUnits)
+                        p_w.lengthUnits)
                     
                     p_w.headX *= coef_w
                     p_w.headY *= coef_w
@@ -814,21 +814,21 @@ class qColadaDevReader(qColadaReader):
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
                         
-                        headXY = h5well.getHeadCoord(p_d.spatialUnits)
-                        kb = h5well.getKB(p_d.spatialUnits)
+                        headXY = h5well.getHeadCoord(p_d.lengthUnits)
+                        kb = h5well.getKB(p_d.lengthUnits)
                         
                         # `traj2ALL` claims that all the spatial vars are of the same units
                         A_ALL = h5geo.traj2ALL(A[:, [p_d.coord_1_col, p_d.coord_2_col, p_d.coord_3_col]], headXY[0], headXY[1], kb, p_d.angleUnits, h5geo.TrajectoryFormat.__members__[p_d.trajFormat], p_w.xNorth)
                         
                         if p_w.xNorth:
-                            x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,2], A_ALL[:,1], p_w.crs, p_d.spatialUnits)
+                            x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,2], A_ALL[:,1], p_w.crs, p_d.lengthUnits)
                         else:
-                            x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,1], A_ALL[:,2], p_w.crs, p_d.spatialUnits)
+                            x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,1], A_ALL[:,2], p_w.crs, p_d.lengthUnits)
                         
-                        val &= h5devCurve.writeCurve(h5geo.DevDataType.MD, A_ALL[:,0], p_d.spatialUnits)
+                        val &= h5devCurve.writeCurve(h5geo.DevDataType.MD, A_ALL[:,0], p_d.lengthUnits)
                         val &= h5devCurve.writeCurve(h5geo.DevDataType.X, x, currentProjectUnits)
                         val &= h5devCurve.writeCurve(h5geo.DevDataType.Y, y, currentProjectUnits)
-                        val &= h5devCurve.writeCurve(h5geo.DevDataType.TVD, A_ALL[:,4] * p_d.depthMult, p_d.spatialUnits)
+                        val &= h5devCurve.writeCurve(h5geo.DevDataType.TVD, A_ALL[:,4] * p_d.depthMult, p_d.lengthUnits)
                         
                         if not val:
                             errMsg = 'Can`t write data to dev curve: ' + p_d.devName + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 

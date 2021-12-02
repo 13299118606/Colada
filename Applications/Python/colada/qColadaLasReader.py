@@ -57,7 +57,7 @@ class qColadaLasReader(qColadaReader):
     # delegates must exist during object's lifetime or application will be break down!
     well_save_to_pathEditDelegate = qPathEditDelegate() 
     well_create_comboDelegate = qComboBoxDelegate()
-    well_spatial_units_comboDelegate = qComboBoxDelegate()
+    well_length_units_comboDelegate = qComboBoxDelegate()
     well_headX_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
     well_headY_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
     well_KB_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
@@ -75,14 +75,14 @@ class qColadaLasReader(qColadaReader):
     wellTableHdrNames = [
         "read file", "save to", "CRS",
         "well name", "UWI", "well create",
-        "spatial units",
+        "length units",
         "head x", "head y", "KB",
         "XNorth"]
 
     wellTableHdrTips = [
         "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). Must be set if new well is going to be created",
         "Well name", "Unique Well Identifier", "Creation type for well", 
-        "Spatial units",
+        "Length units",
         "Header X coordinate. Must be set if new well is going to be created", "Header Y coordinate. Must be set if new well is going to be created", "Kelly Bushing",
         "`X` axis points to the North? checked - True, unchecked - False"]
 
@@ -151,7 +151,7 @@ class qColadaLasReader(qColadaReader):
 
         self.well_save_to_pathEditDelegate.setParent(self.wellTableView)
         self.well_create_comboDelegate.setParent(self.wellTableView)
-        self.well_spatial_units_comboDelegate.setParent(self.wellTableView)
+        self.well_length_units_comboDelegate.setParent(self.wellTableView)
         self.well_headX_scienceSpinBoxDelegate.setParent(self.wellTableView)
         self.well_headY_scienceSpinBoxDelegate.setParent(self.wellTableView)
         self.well_KB_scienceSpinBoxDelegate.setParent(self.wellTableView)
@@ -170,11 +170,11 @@ class qColadaLasReader(qColadaReader):
             self.wellTableHdrNames.index("save to"), self.well_save_to_pathEditDelegate)
 
         self.well_create_comboDelegate.setTexts(list(h5geo.CreationType.__members__.keys()))
-        self.well_spatial_units_comboDelegate.setTexts(['meter', 'foot'])
+        self.well_length_units_comboDelegate.setTexts(['meter', 'foot'])
         self.wellTableView.setItemDelegateForColumn(
             self.wellTableHdrNames.index("well create"), self.well_create_comboDelegate)
         self.wellTableView.setItemDelegateForColumn(
-            self.wellTableHdrNames.index("spatial units"), self.well_spatial_units_comboDelegate)
+            self.wellTableHdrNames.index("length units"), self.well_length_units_comboDelegate)
         self.wellTableView.setItemDelegateForColumn(
             self.wellTableHdrNames.index("head x"), self.well_headX_scienceSpinBoxDelegate)
         self.wellTableView.setItemDelegateForColumn(
@@ -252,8 +252,8 @@ class qColadaLasReader(qColadaReader):
         p.wellCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
 
         tmp = self.wellProxy.data(
-            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")))
-        p.spatialUnits = tmp if tmp else ''
+            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")))
+        p.lengthUnits = tmp if tmp else ''
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("head x")))
@@ -335,8 +335,8 @@ class qColadaLasReader(qColadaReader):
         p.wellCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
         
         tmp = self.wellProxy.data(
-            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")))
-        p.spatialUnits = tmp if tmp else ''
+            self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")))
+        p.lengthUnits = tmp if tmp else ''
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("head x")))
@@ -365,7 +365,7 @@ class qColadaLasReader(qColadaReader):
 
         readFile = self.wellProxy.data(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("read file")))
 
-        w = Well.from_las(readFile, index=p_w.spatialUnits)
+        w = Well.from_las(readFile, index=p_w.lengthUnits)
 
         well_name = w.name if w.name else os.path.splitext(os.path.basename(readFile))[0]
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well name")), well_name)
@@ -422,7 +422,7 @@ class qColadaLasReader(qColadaReader):
                     Util.CRSAuthName() + ":" + str(Util.CRSCode()))
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")), 
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
-        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("spatial units")), 'meter')
+        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")), 'meter')
         
         self.wellTableView.setIndexWidget(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("XNorth")), QtGui.QCheckBox())        
 
@@ -522,14 +522,14 @@ class qColadaLasReader(qColadaReader):
                         continue
                     
                     if p_w.xNorth:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.lengthUnits)
                     else:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.spatialUnits)
+                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.lengthUnits)
                         
-                    # if new well will be created then the units will be `p_w.spatialUnits`
+                    # if new well will be created then the units will be `p_w.lengthUnits`
                     coef_w = Util.convertUnits(
                         currentProjectUnits,
-                        p_w.spatialUnits)
+                        p_w.lengthUnits)
                     
                     p_w.headX *= coef_w
                     p_w.headY *= coef_w
@@ -577,12 +577,12 @@ class qColadaLasReader(qColadaReader):
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
 
-                        w = Well.from_las(p_l.readFile, index=p_l.spatialUnits)
-                        if not h5logCurve.writeCurve(h5geo.LogDataType.MD, w.survey_basis(), p_l.spatialUnits):
+                        w = Well.from_las(p_l.readFile, index=p_l.lengthUnits)
+                        if not h5logCurve.writeCurve(h5geo.LogDataType.MD, w.survey_basis(), p_l.lengthUnits):
                             errMsg = 'Can`t write depth curve (MD) to log name: ' + p_l.logName + 'from log type: ' + p_l.logType + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
                             Possible reasons:
                             - `log_data` dataset is broken (some attributes are missing or dataset is not resizable);
-                            - incorrect `spatial units`;
+                            - incorrect `length units`;
                             - you don't have write permissions inside specified container (maybe 3rd party app is blocking this container);
                             '''
                             QtGui.QMessageBox.critical(self, "Error", errMsg)

@@ -20,7 +20,7 @@ public:
     QString readFile;
     h5geo::SegyEndian endian;
     h5geo::SegyFormat format;
-    std::string spatialReference, spatialUnits, temporalUnits, dataUnits;
+    std::string spatialReference, lengthUnits, temporalUnits, dataUnits;
     double binHdr[30]; // 30 is the number of binary headers
     size_t minTrc, maxTrc;
   };

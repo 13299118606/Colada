@@ -59,7 +59,7 @@ class qColadaMapReader(qColadaReader):
     mapTableHdrNames = [
         "read file", "save to", "CRS",
         "map name", "map create", 
-        "domain", "spatial units", "data units",
+        "domain", "length units", "data units",
         "x0", "y0", "dx", "dy", "nx", "ny", 
         "depth mult",
         "XNorth"]
@@ -67,7 +67,7 @@ class qColadaMapReader(qColadaReader):
     mapTableHdrTips = [
         "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). . Must be set if new map is going to be created",
         "Map name", "Creation type for map", 
-        "Domain", "Spatial units", "Data units",
+        "Domain", "Length units", "Data units",
         "Starting point - x0", "Starting point - y0", "Spacing dx", "Spacing dy", "Number of x points", "Number of y points",
         "Depth multiplier: downwards is negative (usually -1)",
         "`X` axis points to the North? checked - True, unchecked - False"]
@@ -177,8 +177,8 @@ class qColadaMapReader(qColadaReader):
         p.domain = h5geo.Domain.__members__[tmp] if tmp in h5geo.Domain.__members__ else h5geo.Domain(0)
         
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("spatial units")))
-        p.spatialUnits = tmp if tmp else ''
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("length units")))
+        p.lengthUnits = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("data units")))
@@ -276,7 +276,7 @@ class qColadaMapReader(qColadaReader):
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")), 
             str(h5geo.Domain.TVDSS).rsplit('.', 1)[-1])
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("spatial units")), 'meter')
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("length units")), 'meter')
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("depth mult")), str(-1))
         self.mapTableView.setIndexWidget(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("XNorth")), QtGui.QCheckBox())
 
@@ -370,12 +370,12 @@ class qColadaMapReader(qColadaReader):
                         p_s.dX, p_s.dY = p_s.dY, p_s.dX
                         p_s.nX, p_s.nY = p_s.nY, p_s.nX
                         
-                    p_s.X0, p_s.Y0, val = Units.convCoord2CurrentProjection(p_s.X0, p_s.Y0, p_s.crs, p_s.spatialUnits)
+                    p_s.X0, p_s.Y0, val = Units.convCoord2CurrentProjection(p_s.X0, p_s.Y0, p_s.crs, p_s.lengthUnits)
                     
-                    # if new map will be created then the units will be `p_s.spatialUnits`
+                    # if new map will be created then the units will be `p_s.lengthUnits`
                     coef = Util.convertUnits(
                         currentProjectUnits,
-                        p_s.spatialUnits)
+                        p_s.lengthUnits)
                     
                     p_s.X0 *= coef
                     p_s.Y0 *= coef

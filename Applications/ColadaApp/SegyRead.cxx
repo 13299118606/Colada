@@ -297,12 +297,12 @@ void SegyRead::readOnlyTraces(
   }
 
 //  double coef = units::convert(
-//      units::unit_from_string(p.spatialUnits),
+//      units::unit_from_string(p.lengthUnits),
 //      units::unit_from_string(util::lengthUnits().toStdString()));
 
 //  OGRSpatialReference srFrom;
 //  srFrom.SetFromUserInput(p.crs.toUtf8());
-//  srFrom.SetLinearUnitsAndUpdateParameters(p.spatialUnits.c_str(), coef);
+//  srFrom.SetLinearUnitsAndUpdateParameters(p.lengthUnits.c_str(), coef);
 
 //  OGRSpatialReference srTo = util::getCurrentProjection();
 //  OGRCoordinateTransformation *coordTrans =
@@ -409,12 +409,12 @@ H5Seis *SegyRead::readTracesInHeap(
   size_t N = nTrc / p.traceHeapSize;
 
 //  double coef = units::convert(
-//      units::unit_from_string(p.spatialUnits),
+//      units::unit_from_string(p.lengthUnits),
 //      units::unit_from_string(util::lengthUnits().toStdString()));
 
 //  OGRSpatialReference srFrom;
 //  srFrom.SetFromUserInput(p.crs.toUtf8());
-//  srFrom.SetLinearUnitsAndUpdateParameters(p.spatialUnits.c_str(), coef);
+//  srFrom.SetLinearUnitsAndUpdateParameters(p.lengthUnits.c_str(), coef);
 
 //  OGRSpatialReference srTo = util::getCurrentProjection();
 //  OGRCoordinateTransformation *coordTrans =
