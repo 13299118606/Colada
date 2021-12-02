@@ -6,33 +6,20 @@
 }
 
 /* color any selected item (icluding menu) */
-QWidget:item:selected
+QAbstractItemView:item:selected
 {
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);
 }
 
 QWidget:item:hover
 {
-  border-style: solid;
-  border-width: 1px;
-  border-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);
-  padding: -1px;
-  background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #99ffa02f, stop: 1 #99d7801a);
-}
-
-QWidget:item:hover
-{
-  border-style: solid;
-  border-width: 1px;
-  border-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);
-  padding: -1px;
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #99ffa02f, stop: 1 #99d7801a);
 }
 
 QWidget:focus
 {
 /*
-  border-width: 1px;
+  border-width: 0px;
   border-style: solid;
   border-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);
 */
@@ -73,36 +60,35 @@ QMenu:disabled {
 }
 
 QMenu::item {
-  spacing: 3px; 
-  padding: 3px 15px;
+  padding: 2px 15px;
+  border: 1px solid transparent; /* reserve space for selection border */
 }
 
 QMenu::item:selected {
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #ca0619);
   color:rgb(255, 255, 255);
-  border-width: 0px; 
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-width: 1px; 
+  border-radius: 10px;
   border-color: rgb(58, 58, 58);
   border-style: inset;
 }
 
 QMenu::icon {
-    position: absolute;
-    top: 1px;
-    right: 1px;
-    bottom: 1px;
-    left: 3px;
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  left: 3px;
 }
 
 QMenu::icon:checked { 
-    background: gray;
-    border: 1px inset gray;
-    position: absolute;
-    top: 1px;
-    right: 1px;
-    bottom: 1px;
-    left: 3px;
+  background: gray;
+  border: 1px inset gray;
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  left: 3px;
 }
 
 QMenu::indicator
@@ -110,12 +96,12 @@ QMenu::indicator
   color: #b1b1b1;
   background-color: #323232;
   border: 1px solid #b1b1b1;
-  width: 13px;
-  height: 13px;
+  width: 9px;
+  height: 9px;
   top: 1px;
   right: 1px;
   bottom: 1px;
-  left: 3px;
+  left: 5px;
 }
 
 QMenu::indicator:checked
@@ -450,7 +436,8 @@ QTabBar::tab:disabled {
 }
 
 QCheckBox:focus, 
-QSlider:focus
+QSlider:focus,
+QLineEdit:focus
 {
   border-width: 0px;
 }
@@ -631,12 +618,6 @@ QAbstractSpinBox::down-button:off {
   border-color: #1e1e1e;
   border-radius: 5px;
   width: 16px;
-}
-
-QAbstractItemView {
-/* Select only item and don't select the extent */
-  show-decoration-selected: 0;
-  background-color: #1e1e1e;
 }
 
 QAbstractItemView {
