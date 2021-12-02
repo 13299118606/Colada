@@ -39,7 +39,7 @@ vtkRaisedGrid::vtkRaisedGrid()
 
   this->DataDescription = VTK_EMPTY;
 
-  this->SurfaceDelaunay2D = vtkDelaunay2D::New();
+  this->SurfaceDelaunay2D = vtkSmartPointer<vtkDelaunay2D>::New();
 
   this->SetDataDescription(VTK_XYZ_GRID);
 }
@@ -47,7 +47,6 @@ vtkRaisedGrid::vtkRaisedGrid()
 //------------------------------------------------------------------------------
 vtkRaisedGrid::~vtkRaisedGrid()
 {
-  this->SurfaceDelaunay2D->Delete();
   this->Wedge->Delete();
 }
 
@@ -445,8 +444,7 @@ vtkCell* vtkRaisedGrid::GetCellTemplateForDataDescription()
   switch (this->DataDescription)
   {
   case VTK_XYZ_GRID:
-//    cell = this->Wedge;
-    cell = vtkWedge::New();
+    cell = this->Wedge;
     break;
 
   default:
@@ -491,7 +489,7 @@ void vtkRaisedGrid::AddPointsToCellTemplate(vtkCell* cell, vtkIdType cellId)
     return;
 
   vtkIdType I = 3;
-  vtkIdType surfPointId, pid0, pid1, ploc0, ploc1;
+  vtkIdType pid0, pid1, ploc0, ploc1;
   ploc0 = 0;
   ploc1 = I;
 

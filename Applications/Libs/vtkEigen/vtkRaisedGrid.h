@@ -129,7 +129,7 @@ protected:
 
 
 public:
-  vtkDelaunay2D* SurfaceDelaunay2D;
+  vtkSmartPointer<vtkDelaunay2D> SurfaceDelaunay2D;
   std::vector<double> ZSpacings;
   bool VerticalEnumerationOrder;
 
