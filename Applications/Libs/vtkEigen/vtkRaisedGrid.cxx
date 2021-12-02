@@ -249,8 +249,11 @@ double pcoords[3], double* weights)
 //------------------------------------------------------------------------------
 void calculateCellCenter(vtkCell* cell, double c[3])
 {
-  int nPts = cell->GetNumberOfPoints();
+  c[0] = 0;
+  c[1] = 0;
+  c[2] = 0;
   double p[3];
+  int nPts = cell->GetNumberOfPoints();
   for (vtkIdType i = 0; i < nPts; i++){
     cell->Points->GetPoint(i, p);
     for (int ii = 0; ii < 3; ii++){
@@ -274,7 +277,8 @@ vtkIdType vtkNotUsed(cellId), double tol2, int& subId, double pcoords[3], double
   vtkIdType surfCellId = -1;
   vtkPolyData* surfPolyData = this->SurfaceDelaunay2D->GetOutput();
   // find nearest cell in XY plane and then look only for nearest Z point
-  for (vtkIdType i = 0; i < this->SurfaceDelaunay2D->GetOutput()->GetNumberOfCells(); i++){
+  vtkIdType nCell = this->SurfaceDelaunay2D->GetOutput()->GetNumberOfCells();
+  for (vtkIdType i = 0; i < nCell; i++){
     vtkCell* cell = surfPolyData->GetCell(i);
     calculateCellCenter(cell, c);
     dist2 = (x[0]-c[0])*(x[0]-c[0]) + (x[1]-c[1])*(x[1]-c[1]) + (x[2]-c[2])*(x[2]-c[2]);
@@ -441,7 +445,8 @@ vtkCell* vtkRaisedGrid::GetCellTemplateForDataDescription()
   switch (this->DataDescription)
   {
   case VTK_XYZ_GRID:
-    cell = this->Wedge;
+//    cell = this->Wedge;
+    cell = vtkWedge::New();
     break;
 
   default:
@@ -470,35 +475,41 @@ bool vtkRaisedGrid::GetCellTemplateForDataDescription(vtkGenericCell* cell)
 //------------------------------------------------------------------------------
 void vtkRaisedGrid::AddPointsToCellTemplate(vtkCell* cell, vtkIdType cellId)
 {
+  // THIS METHOD MUST BE THREAD SAFE!!!
   vtkIdType nSurfPoints = this->SurfaceDelaunay2D->GetOutput()->GetNumberOfPoints();
   vtkIdType nZPoints = ZSpacings.size()+1;
 
   vtkIdType surfCellId, zCellId;
   this->GetSurfCellIdAndZCellIdFromCellId(cellId, surfCellId, zCellId);
 
-  vtkCell* surfCell =
-      this->SurfaceDelaunay2D->GetOutput()->GetCell(surfCellId);
-  vtkPoints* surfCellPoints = surfCell->GetPoints();
-
   double z = 0;
   for (int i = 0; i < zCellId; i++)
     z += this->ZSpacings[i];
 
-  vtkIdType I = surfCellPoints->GetNumberOfPoints();
+  int surfCellType = this->SurfaceDelaunay2D->GetOutput()->GetCellType(surfCellId);
+  if (surfCellType != VTK_TRIANGLE)
+    return;
+
+  vtkIdType I = 3;
   vtkIdType surfPointId, pid0, pid1, ploc0, ploc1;
   ploc0 = 0;
   ploc1 = I;
 
   cell->GetPointIds()->SetNumberOfIds(2*I); // Very important for filters (vtkProbeFilter for example)
+  this->SurfaceDelaunay2D->GetOutput()->GetCellPoints(surfCellId, cell->PointIds);
+  vtkIdType surfCellPointIds[I];
+  for (vtkIdType i = 0; i < I; i++){
+    surfCellPointIds[i] = cell->PointIds->GetId(i); // I need to copy ids for thread safety
+  }
+
   if (VerticalEnumerationOrder){
     for (vtkIdType i = 0; i < I; i++){
       double p[3];
-      surfCellPoints->GetPoint(i, p); // here id is not a global id but a number [0, N]
+      this->SurfaceDelaunay2D->GetOutput()->GetPoint(surfCellPointIds[i], p);
       double z0 = z+p[2];
       double z1 = z0+this->ZSpacings[zCellId];
 
-      surfPointId = surfCell->GetPointId(i);
-      pid0 = surfPointId * nZPoints + zCellId;
+      pid0 = surfCellPointIds[i] * nZPoints + zCellId;
       pid1 = pid0 + 1;
 
       cell->PointIds->SetId(ploc0, pid0);
@@ -517,12 +528,11 @@ void vtkRaisedGrid::AddPointsToCellTemplate(vtkCell* cell, vtkIdType cellId)
   } else {
     for (vtkIdType i = 0; i < I; i++){
       double p[3];
-      surfCellPoints->GetPoint(i, p); // here id is not a global id but a number [0, N]
+      this->SurfaceDelaunay2D->GetOutput()->GetPoint(surfCellPointIds[i], p);
       double z0 = z+p[2];
       double z1 = z0+this->ZSpacings[zCellId];
 
-      surfPointId = surfCell->GetPointId(i);
-      pid0 = surfPointId + nSurfPoints * zCellId;
+      pid0 = surfCellPointIds[i] + nSurfPoints * zCellId;
       pid1 = pid0 + nSurfPoints;
 
       cell->PointIds->SetId(ploc0, pid0);

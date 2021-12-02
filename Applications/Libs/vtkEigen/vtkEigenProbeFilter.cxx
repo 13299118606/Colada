@@ -346,12 +346,12 @@ void vtkEigenProbeFilter::DoProbing(
     vtkImageData* sourceImage = vtkImageData::SafeDownCast(source);
     this->ProbeImageDataPoints(input, srcIdx, sourceImage, output);
   }
-//  else if (vtkImageData::SafeDownCast(input))
-//  {
-//    vtkImageData* inImage = vtkImageData::SafeDownCast(input);
-//    vtkImageData* outImage = vtkImageData::SafeDownCast(output);
-//    this->ProbePointsImageData(inImage, srcIdx, source, outImage);
-//  }
+  else if (vtkImageData::SafeDownCast(input))
+  {
+    vtkImageData* inImage = vtkImageData::SafeDownCast(input);
+    vtkImageData* outImage = vtkImageData::SafeDownCast(output);
+    this->ProbePointsImageData(inImage, srcIdx, source, outImage);
+  }
   else
   {
     this->ProbeEmptyPoints(input, srcIdx, source, output);
@@ -781,7 +781,14 @@ void vtkEigenProbeFilter::ProbePointsImageData(
   static_cast<void>(source->GetCellType(0));
   ProbeImageDataWorklet worklet(
     this, source, srcIdx, start, spacing, dim, outPD, maskArray, source->GetMaxCellSize());
-  vtkSMPTools::For(0, numSrcCells, worklet);
+
+  worklet(0, numSrcCells);
+
+//  for (size_t i = 0; i < numSrcCells; i++){
+//    worklet()
+//  }
+
+//  vtkSMPTools::For(0, numSrcCells, worklet);
 
   this->MaskPoints->Modified();
 }
