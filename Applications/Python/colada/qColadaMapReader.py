@@ -10,8 +10,7 @@ from osgeo import gdal
 class ReadWriteMapParam(h5geo.MapParam):
     """Contains data needed to create new `h5geo.H5Map` object. Inherits from `h5geo.MapParam`"""
     readFile = ''
-    saveFile = '' 
-    crs = '' 
+    saveFile = ''
     mapName = ''
     mapCreateType = ''
     depthMult = -1
@@ -45,8 +44,10 @@ class qColadaMapReader(qColadaReader):
     map_create_comboDelegate = qComboBoxDelegate()
     map_x0_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
     map_y0_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
-    map_dx_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
-    map_dy_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_x1_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_y1_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_x2_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
+    map_y2_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
     map_nx_spinBoxDelegate = qSpinBoxDelegate()
     map_ny_spinBoxDelegate = qSpinBoxDelegate()
     map_name_lineEditDelegate = qLineEditDelegate()
@@ -58,17 +59,21 @@ class qColadaMapReader(qColadaReader):
 
     mapTableHdrNames = [
         "read file", "save to", "CRS",
-        "map name", "map create", 
+        "map name", "map create",
         "domain", "length units", "data units",
-        "x0", "y0", "dx", "dy", "nx", "ny", 
+        "x0", "y0", "x1", "y1", "x2", "y2", "nx", "ny",
         "depth mult",
         "XNorth"]
 
     mapTableHdrTips = [
-        "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). . Must be set if new map is going to be created",
-        "Map name", "Creation type for map", 
+        "Read file", "Container where to save data", "Coordinate reference system",
+        "Map name", "Creation type for map",
         "Domain", "Length units", "Data units",
-        "Starting point - x0", "Starting point - y0", "Spacing dx", "Spacing dy", "Number of x points", "Number of y points",
+        "Top left point: x", "Top left point: y",
+        "Top right point: x", "Top right point: y",
+        "Bottom left point: x", "Bottom left point: y",
+        "Number of x points",
+        "Number of y points",
         "Depth multiplier: downwards is negative (usually -1)",
         "`X` axis points to the North? checked - True, unchecked - False"]
 
@@ -103,19 +108,21 @@ class qColadaMapReader(qColadaReader):
         self.map_save_to_pathEditDelegate.setParent(self.mapTableView)
         self.map_create_comboDelegate.setParent(self.mapTableView)
         self.map_domain_comboDelegate.setParent(self.mapTableView)
-        
+
         self.map_x0_scienceSpinBoxDelegate.setParent(self.mapTableView)
         self.map_y0_scienceSpinBoxDelegate.setParent(self.mapTableView)
-        self.map_dx_scienceSpinBoxDelegate.setParent(self.mapTableView)
-        self.map_dy_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_x1_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_y1_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_x2_scienceSpinBoxDelegate.setParent(self.mapTableView)
+        self.map_y2_scienceSpinBoxDelegate.setParent(self.mapTableView)
         self.map_nx_spinBoxDelegate.setParent(self.mapTableView)
         self.map_ny_spinBoxDelegate.setParent(self.mapTableView)
-        
+
         self.map_depthMult_spinBoxDelegate.setParent(self.mapTableView)
         self.map_depthMult_spinBoxDelegate.setStep(2)
         self.map_depthMult_spinBoxDelegate.setMinValue(-1)
         self.map_depthMult_spinBoxDelegate.setMaxValue(1)
-        
+
         self.map_name_lineEditDelegate.setParent(self.mapTableView)
 
         self.validator.setParent(self.mapTableView)
@@ -134,15 +141,28 @@ class qColadaMapReader(qColadaReader):
         self.map_domain_comboDelegate.setTexts(list(h5geo.Domain.__members__.keys()))
         self.mapTableView.setItemDelegateForColumn(
             self.mapTableHdrNames.index("domain"), self.map_domain_comboDelegate)
-        
+
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("x0"), self.map_x0_scienceSpinBoxDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("y0"), self.map_y0_scienceSpinBoxDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("x1"), self.map_x1_scienceSpinBoxDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("y1"), self.map_y1_scienceSpinBoxDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("x2"), self.map_x2_scienceSpinBoxDelegate)
+        self.mapTableView.setItemDelegateForColumn(
+            self.mapTableHdrNames.index("y2"), self.map_y2_scienceSpinBoxDelegate)
+
         self.mapTableView.setItemDelegateForColumn(
             self.mapTableHdrNames.index("depth mult"), self.map_depthMult_spinBoxDelegate)
-        
+
         self.mapTableView.setItemDelegateForColumn(
             self.mapTableHdrNames.index("map name"), self.map_name_lineEditDelegate)
 
     def getReadWriteMapParamFromTable(self, s_proxy_row: int) -> ReadWriteMapParam:
-        """Read data needed to open/create `h5geo.H5Map` object. 
+        """Read data needed to open/create `h5geo.H5Map` object.
 
         Args:
             s_proxy_row (int): map table's proxy model row number
@@ -162,7 +182,7 @@ class qColadaMapReader(qColadaReader):
 
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")))
-        p.crs = tmp if tmp else ''
+        p.spatialReference = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map name")))
@@ -171,11 +191,11 @@ class qColadaMapReader(qColadaReader):
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")))
         p.mapCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
-        
+
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")))
         p.domain = h5geo.Domain.__members__[tmp] if tmp in h5geo.Domain.__members__ else h5geo.Domain(0)
-        
+
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("length units")))
         p.lengthUnits = tmp if tmp else ''
@@ -191,15 +211,23 @@ class qColadaMapReader(qColadaReader):
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y0")))
         p.Y0 = float(tmp) if tmp else np.nan
-        
-        tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dx")))
-        p.dX = float(tmp) if tmp else np.nan
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dy")))
-        p.dY = float(tmp) if tmp else np.nan
-        
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x1")))
+        p.X1 = float(tmp) if tmp else np.nan
+
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y1")))
+        p.Y1 = float(tmp) if tmp else np.nan
+
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x2")))
+        p.X2 = float(tmp) if tmp else np.nan
+
+        tmp = self.mapProxy.data(
+            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y2")))
+        p.Y2 = float(tmp) if tmp else np.nan
+
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("nx")))
         p.nX = int(tmp) if tmp else 0
@@ -207,52 +235,65 @@ class qColadaMapReader(qColadaReader):
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("ny")))
         p.nY = int(tmp) if tmp else 0
-        
+
         tmp = self.mapProxy.data(
             self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("depth mult")))
         p.depthMult = int(tmp) if tmp else 1
-        
+
         tmp = self.mapTableView.indexWidget(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("XNorth"))).checkState()
         p.xNorth = True if tmp == Qt.Qt.Checked else False
 
         return p
 
     def updateMapTableRow(self, s_proxy_row: int):
-        """Resets map table's row and then updates map table. 
+        """Resets map table's row and then updates map table.
         Fills map table as much as it can.
 
         Args:
             s_proxy_row (int): map table's proxy model row number
         """
         s_model_row = self.mapProxy.mapToSource(self.mapProxy.index(s_proxy_row, 0)).row()
-        
+
         self.resetMapTableRow(s_proxy_row)
 
         readFile = self.mapProxy.data(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("read file")))
 
         map_name = os.path.splitext(os.path.basename(readFile))[0]
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map name")), map_name)
-        
+
         ds = gdal.Open(readFile, gdal.GA_ReadOnly)
         if not ds:
             return
-            
-        # from here:  
+
+        # from here:
         # https://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-coordinates-using-python-gdal-bindings#:~:text=This%20can%20be%20done%20in%20far%20fewer%20lines%20of%20code
-        ulx, xres, xskew, uly, yskew, yres  = ds.GetGeoTransform()
-        lrx = ulx + (ds.RasterXSize * xres)
-        lry = uly + (ds.RasterYSize * yres)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x0")), ulx)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y0")), uly)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dx")), xres)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("dy")), yres)
-        # self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("nx")), ds.RasterXSize)
-        # self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("ny")), ds.RasterYSize)
-        
+#        ulx, xres, xskew, uly, yskew, yres = ds.GetGeoTransform()
+#        lrx = ulx + (ds.RasterXSize * xres)
+#        lry = uly + (ds.RasterYSize * yres)
+
+        # from here:
+        # https://gdal.org/tutorials/geotransforms_tut.html
+        GT = ds.GetGeoTransform()
+        x0 = GT[0]
+        y0 = GT[3]
+        x1 = GT[0] + 0*GT[1] + ds.RasterYSize*GT[2]
+        y1 = GT[3] + 0*GT[4] + ds.RasterYSize*GT[5]
+        x2 = GT[0] + ds.RasterXSize*GT[1] + 0*GT[2]
+        y2 = GT[3] + ds.RasterXSize*GT[4] + 0*GT[5]
+
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x0")), x0)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y0")), y0)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x1")), x1)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y1")), y1)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x2")), x2)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y2")), y2)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("nx")), ds.RasterXSize)
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("ny")), ds.RasterYSize)
+
         nx_item = QtGui.QStandardItem(str(ds.RasterXSize))
         nx_item.setFlags(nx_item.flags() & ~Qt.Qt.ItemIsEditable)
         self.mapModel.setItem(s_model_row, self.mapTableHdrNames.index("nx"), nx_item)
-        
+
         ny_item = QtGui.QStandardItem(str(ds.RasterYSize))
         ny_item.setFlags(ny_item.flags() & ~Qt.Qt.ItemIsEditable)
         self.mapModel.setItem(s_model_row, self.mapTableHdrNames.index("ny"), ny_item)
@@ -272,9 +313,9 @@ class qColadaMapReader(qColadaReader):
                     Util.defaultMapDir() + "/" + fi.baseName() + ".h5")
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")),
                     Util.CRSAuthName() + ":" + str(Util.CRSCode()))
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")), 
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")),
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")), 
+        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")),
             str(h5geo.Domain.TVDSS).rsplit('.', 1)[-1])
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("length units")), 'meter')
         self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("depth mult")), str(-1))
@@ -288,7 +329,7 @@ class qColadaMapReader(qColadaReader):
             if drv.GetMetadataItem(gdal.DCAP_RASTER):
                 long_name_list.append(drv.GetMetadataItem(gdal.DMD_LONGNAME))
                 extension_list.append(drv.GetMetadataItem(gdal.DMD_EXTENSIONS))
-        
+
         qt_styled_extension_filter = ''
         for i in range(len(long_name_list)):
             qt_styled_extension_filter += long_name_list[i] + ' ('
@@ -298,11 +339,12 @@ class qColadaMapReader(qColadaReader):
             else:
                 qt_styled_extension_filter += '*.*'
             qt_styled_extension_filter += ');; '
-            
+
         qt_styled_extension_filter += 'all (*.*)'
-        
+
         fileNames = ctk.ctkFileDialog.getOpenFileNames(None, 'Select one or more map files to open', '', qt_styled_extension_filter)
 
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
         for name in fileNames:
             if self.mapModel.findItems(name, Qt.Qt.MatchFixedString, self.mapTableHdrNames.index("read file")):
                 QtGui.QMessageBox.warning(self, "Warning", name+": is already in table!");
@@ -318,7 +360,8 @@ class qColadaMapReader(qColadaReader):
             for row in range(self.mapModel.rowCount()):
                 self.mapModel.verticalHeaderItem(row).setText(str(row + 1))
 
-            self.updateMapTableRow(row);
+            self.updateMapTableRow(row)
+        QtGui.QApplication.restoreOverrideCursor()
 
     def onRemoveToolBtnClicked(self):
         """Removes selected rows from map model."""
@@ -336,16 +379,18 @@ class qColadaMapReader(qColadaReader):
 
         for row in range(self.mapModel.rowCount()):
             self.mapModel.verticalHeaderItem(row).setText(str(row + 1))
-            
+
     def onAutoDefineToolBtnClicked(self):
         """Calls `updateMapTableRow` for selected map table's rows."""
         indexList = self.mapTableView.selectionModel().selectedRows()
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
         for index in indexList:
             self.updateMapTableRow(index.row())
+        QtGui.QApplication.restoreOverrideCursor()
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
-            currentProjectUnits = Util.LengthUnits()
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.mapModel.rowCount())
             for row in range(self.mapModel.rowCount()):
@@ -356,7 +401,7 @@ class qColadaMapReader(qColadaReader):
                     h5mapCnt = h5geo.createMapContainerByName(p_s.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
 
                     if not h5mapCnt:
-                        errMsg = 'Can`t open or create: ' + p_s.saveFile + ''' 
+                        errMsg = 'Can`t open or create: ' + p_s.saveFile + '''
                         Possible reasons:
                         - `save to` is incorrect;
                         - `save to` points to an existing NON MAP CONTAINER file;
@@ -364,36 +409,16 @@ class qColadaMapReader(qColadaReader):
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
-                    
+
                     if p_s.xNorth:
                         p_s.X0, p_s.Y0 = p_s.Y0, p_s.X0
-                        p_s.dX, p_s.dY = p_s.dY, p_s.dX
+                        p_s.X1, p_s.Y1 = p_s.Y1, p_s.X1
+                        p_s.X2, p_s.Y2 = p_s.Y2, p_s.X2
                         p_s.nX, p_s.nY = p_s.nY, p_s.nX
-                        
-                    p_s.X0, p_s.Y0, val = Units.convCoord2CurrentProjection(p_s.X0, p_s.Y0, p_s.crs, p_s.lengthUnits)
-                    
-                    # if new map will be created then the units will be `p_s.lengthUnits`
-                    coef = Util.convertUnits(
-                        currentProjectUnits,
-                        p_s.lengthUnits)
-                    
-                    p_s.X0 *= coef
-                    p_s.Y0 *= coef
-                    p_s.dX *= coef
-                    p_s.dY *= coef
-                    
-                    if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_s.crs + ' to: ' + Util.CRSAuthName() + ":" + str(Util.CRSCode()) + ''' 
-                        Possible reasons:
-                        - project is not set or contains incorrect CRS;
-                        - `CRS` is incorrect;
-                        '''
-                        QtGui.QMessageBox.critical(self, "Error", errMsg)
-                        continue
-                    
+
                     h5map = h5mapCnt.createMap(p_s.mapName, p_s, p_s.mapCreateType)
                     if not h5map:
-                        errMsg = 'Can`t open, create or overwrite map: ' + p_s.mapName + ' from container: ' + p_s.saveFile + ''' 
+                        errMsg = 'Can`t open, create or overwrite map: ' + p_s.mapName + ' from container: ' + p_s.saveFile + '''
                         Possible reasons:
                         - `map name` is incorrect;
                         - `map create` is incorrect;
@@ -405,17 +430,17 @@ class qColadaMapReader(qColadaReader):
 
                     ds = gdal.Open(p_s.readFile, gdal.GA_ReadOnly)
                     if not ds:
-                        errMsg = 'GDAL library can`t open `read file`: ' + p_s.readFile + ''' 
+                        errMsg = 'GDAL library can`t open `read file`: ' + p_s.readFile + '''
                         Possible reasons:
                         - file format is not supported by current GDAL version;
                         - file is broken;
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
-                    
+
                     arr = np.asfortranarray(ds.ReadAsArray(), dtype=float)
                     if arr.ndim > 2:
-                        errMsg = 'Multidimensional data: ' + p_s.readFile + ''' 
+                        errMsg = 'Multidimensional data: ' + p_s.readFile + '''
                         Currently ndims > 2 is not supported
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
@@ -425,9 +450,9 @@ class qColadaMapReader(qColadaReader):
                         val = h5map.writeData(np.transpose(arr) * p_s.depthMult, p_s.dataUnits)
                     else:
                         val = h5map.writeData(arr * p_s.depthMult, p_s.dataUnits)
-                        
+
                     if not val:
-                        errMsg = 'Can`t write data to map: ' + p_s.mapName + ' from container: ' + p_s.saveFile + ''' 
+                        errMsg = 'Can`t write data to map: ' + p_s.mapName + ' from container: ' + p_s.saveFile + '''
                         Possible reasons:
                         - `map_data` dataset is broken (some attributes are missing);
                         - you don't have write permissions inside specified container (maybe 3rd party app is blocking this container);
@@ -437,7 +462,7 @@ class qColadaMapReader(qColadaReader):
 
                     if progressDialog.wasCanceled:
                         break
-                        
+
                     h5mapCnt.getH5File().flush()
 
                 except h5gt.Exception as ex:
@@ -446,6 +471,7 @@ class qColadaMapReader(qColadaReader):
                     continue
 
             progressDialog.setValue(self.mapModel.rowCount())
+            QtGui.QApplication.restoreOverrideCursor()
 
         elif button == self.buttonBox.button(QtGui.QDialogButtonBox.Cancel):
             self.close()

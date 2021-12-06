@@ -31,7 +31,7 @@ class DevRead():
         "DY",
         "AZIM",
         "INCL"]
-    
+
     _val = True # read/write
     __foo = True # private
 
@@ -44,30 +44,30 @@ class DevRead():
         """
         self.setReadFile(readFile)
         self.setDelimiter(delimiter)
-        
+
     def __getWellInfo(self, separator: str):
         for line in self.getHeaderLines():
             strList = line.split(separator)
             if len(strList) > 1:
                 return strList[1].replace(self.delimiter, '')
         return str()
-        
+
     def setReadFile(self, readFile: str):
-        self.readFile = readFile    
-    
+        self.readFile = readFile
+
     def setDelimiter(self, delimiter: str):
         self.delimiter = delimiter
-        
+
     def getDelimiter(self) -> str:
         return self.delimiter
-        
-    
+
+
     def getHeaderLines(self) -> list:
         """[summary]
 
         Returns:
             list: [description]
-        """        
+        """
         qFile = QtCore.QFile(self.readFile)
         if not qFile.open(QtCore.QIODevice.ReadOnly | QtCore.QIODevice.Text):
             return
@@ -87,13 +87,13 @@ class DevRead():
                 break
 
             headerLines.append(line)
-            
+
         qFile.close()
         return headerLines
-    
+
     def getSkipLines(self):
         return len(self.getHeaderLines())
-    
+
     def getColNames(self, commentSymbol = '#') -> list:
         """Return automatically defined column names"""
         hdrLines = self.getHeaderLines()
@@ -101,27 +101,27 @@ class DevRead():
             strList = hdr.split(commentSymbol, 1)
             if strList[0] and not strList[0].isspace():  # check if str before first comment symbol contains only spaces or not
                 return list(filter(None, hdr.split(self.delimiter)))
-    
+
         return list()
-    
+
     def getWellName(self) -> str:
         return self.__getWellInfo(self.wellNameSep)
-    
+
     def getUWI(self) -> str:
         return self.__getWellInfo(self.uwiSep)
-    
+
     def getWellType(self) -> str:
         return self.__getWellInfo(self.wellTypeSep)
-    
+
     def getKB(self) -> float:
         return float(self.__getWellInfo(self.kbSep))
-    
+
     def getHeadXCoord(self) -> float:
         return float(self.__getWellInfo(self.headXSep))
-    
+
     def getHeadYCoord(self) -> float:
         return float(self.__getWellInfo(self.headYSep))
-    
+
     def getDATA(self, colNames: list, useCols: list, nHdr: int, nFooter: int = 0) -> np.ndarray:
         return np.genfromtxt(self.readFile, skip_header = nHdr, names = colNames, usecols = useCols)
 
@@ -129,8 +129,8 @@ class DevRead():
 class ReadWriteWellParam(h5geo.WellParam):
     """Contains data needed to create new `h5geo.H5Well` object. Inherits from `h5geo.WellParam`"""
     readFile = ''
-    saveFile = '' 
-    crs = '' 
+    saveFile = ''
+    crs = ''
     wellName = ''
     wellCreateType = ''
     xNorth = False
@@ -139,8 +139,8 @@ class ReadWriteWellParam(h5geo.WellParam):
 class ReadWriteDevParam(h5geo.DevCurveParam):
     """Contains data needed to create new `h5geo.H5DevCurve` object. Inherits from `h5geo.DevCurveParam`"""
     readFile = ''
-    saveFile = '' 
-    crs = '' 
+    saveFile = ''
+    crs = ''
     wellName = ''
     wellCreateType = ''
     devName = ''
@@ -152,7 +152,7 @@ class ReadWriteDevParam(h5geo.DevCurveParam):
     coord_2_col = 0
     coord_3_col = 0
     depthMult = -1
-    
+
 
 class qColadaDevReader(qColadaReader):
     """Class designated to read DEV files (dev curves)
@@ -183,7 +183,7 @@ class qColadaDevReader(qColadaReader):
     mainSplitter = None
 
     # delegates must exist during object's lifetime or application will be break down!
-    well_save_to_pathEditDelegate = qPathEditDelegate() 
+    well_save_to_pathEditDelegate = qPathEditDelegate()
     well_create_comboDelegate = qComboBoxDelegate()
     well_headX_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
     well_headY_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
@@ -206,34 +206,34 @@ class qColadaDevReader(qColadaReader):
 
     wellTableHdrNames = [
         "read file", "save to", "CRS",
-        "well name", "UWI", "well create", 
+        "well name", "UWI", "well create",
         "length units",
-        "head x", "head y", "KB", 
+        "head x", "head y", "KB",
         "XNorth"]
 
     wellTableHdrTips = [
         "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). . Must be set if new well is going to be created",
-        "Well name", "Unique Well Identifier", "Creation type for well", 
+        "Well name", "Unique Well Identifier", "Creation type for well",
         "Length units",
         "Header X coordinate. Must be set if new well is going to be created", "Header Y coordinate. Must be set if new well is going to be created", "Kelly Bushing",
         "`X` axis points to the North? checked - True, unchecked - False"]
 
     devTableHdrNames = [
-        "plot", "read file", "dev name", "dev create", 
-        "skip lines", "delimiter", 
+        "plot", "read file", "dev name", "dev create",
+        "skip lines", "delimiter",
         "temporal units", "angle units",
-        "trajectory format", 
+        "trajectory format",
         "coord_1 col", "coord_2 col", "coord_3 col",
-        "depth mult", 
+        "depth mult",
         "chunk size"]
 
     devTableHdrTips = [
-        "Plot data", "Read file", "Dev name", "Creation type for dev", 
-        "Number of lines to skip", "Delimiter", 
+        "Plot data", "Read file", "Dev name", "Creation type for dev",
+        "Number of lines to skip", "Delimiter",
         "Temporal units", "Angle units",
-        "Trajectory format", 
+        "Trajectory format",
         "First coordinate column", "Second coordinate column", "Third coordinate column",
-        "Depth multiplier: downwards is negative (usually -1)", 
+        "Depth multiplier: downwards is negative (usually -1)",
         "Chunk size (hdf5 feature aimed to increase perfomance of IO operations)"]
 
     devDict = dict()
@@ -359,7 +359,7 @@ class qColadaDevReader(qColadaReader):
 
         self.dev_create_comboDelegate.setTexts(list(h5geo.CreationType.__members__.keys()))
         self.dev_trajFormat_comboDelegate.setTexts(list(h5geo.TrajectoryFormat.__members__.keys()))
-        
+
         self.devTableView.setItemDelegateForColumn(
             self.devTableHdrNames.index("dev create"), self.dev_create_comboDelegate)
         self.devTableView.setItemDelegateForColumn(
@@ -378,7 +378,7 @@ class qColadaDevReader(qColadaReader):
             self.devTableHdrNames.index("dev name"), self.dev_name_lineEditDelegate)
 
     def getReadWriteWellParamFromTable(self, w_proxy_row: int) -> ReadWriteWellParam:
-        """Read data needed to open/create `h5geo.H5Well` object. 
+        """Read data needed to open/create `h5geo.H5Well` object.
 
         Args:
             w_proxy_row (int): well table's proxy model row number
@@ -427,17 +427,17 @@ class qColadaDevReader(qColadaReader):
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("KB")))
         p.kb = float(tmp) if tmp else np.nan
-        
+
         tmp = self.wellTableView.indexWidget(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("XNorth"))).checkState()
         p.xNorth = True if tmp == Qt.Qt.Checked else False
-        
+
         if p.xNorth:
             p.headX, p.headY = p.headY, p.headX
 
         return p
 
     def getReadWriteDevParamFromTable(self, d_proxy_row: int) -> ReadWriteDevParam:
-        """Read data needed to open/create `h5geo.H5DevCurve` object. 
+        """Read data needed to open/create `h5geo.H5DevCurve` object.
 
         Args:
             d_proxy_row (int): dev table's proxy model row number
@@ -446,7 +446,7 @@ class qColadaDevReader(qColadaReader):
             ReadWriteDevParam: filled with values instance
         """
         p = ReadWriteDevParam()
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("read file")))
         p.readFile = tmp if tmp else ''
@@ -458,39 +458,39 @@ class qColadaDevReader(qColadaReader):
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("dev create")))
         p.devCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("skip lines")))
         p.skipLines = int(tmp) if tmp else 0
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("delimiter")))
-        p.delimiter = tmp if tmp else ' '    
-        
+        p.delimiter = tmp if tmp else ' '
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("temporal units")))
         p.temporalUnits = tmp if tmp else ''
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("angle units")))
         p.angleUnits = tmp if tmp else ''
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("trajectory format")))
         p.trajFormat = tmp if tmp else ''
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("coord_1 col")))
         p.coord_1_col = int(tmp)-1 if tmp else 0
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("coord_2 col")))
         p.coord_2_col = int(tmp)-1 if tmp else 0
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("coord_3 col")))
         p.coord_3_col = int(tmp)-1 if tmp else 0
-        
+
         tmp = self.devProxy.data(
             self.devProxy.index(d_proxy_row, self.devTableHdrNames.index("depth mult")))
         p.depthMult = int(tmp) if tmp else 1
@@ -510,7 +510,7 @@ class qColadaDevReader(qColadaReader):
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")))
         p.crs = tmp if tmp else ''
-        
+
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")))
         p.lengthUnits = tmp if tmp else ''
@@ -542,7 +542,7 @@ class qColadaDevReader(qColadaReader):
         return p
 
     def updateWellTableRow(self, w_proxy_row: int):
-        """Resets well table's row and then adds `DevRead` obj to `devDict` attr and then updates dev table. 
+        """Resets well table's row and then adds `DevRead` obj to `devDict` attr and then updates dev table.
         Fills well table as much as it can.
 
         Args:
@@ -561,7 +561,7 @@ class qColadaDevReader(qColadaReader):
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("head x")), d.getHeadXCoord())
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("head y")), d.getHeadYCoord())
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("KB")), d.getKB())
-        
+
         p = self.getReadWriteWellParamFromTable(w_proxy_row)
         self.updateDevTable(p.readFile)
 
@@ -578,7 +578,7 @@ class qColadaDevReader(qColadaReader):
         self.resetDevTable(readFile)
 
         d = DevRead(readFile)
-        
+
         self.devModel.insertRow(self.devModel.rowCount())
         row = self.devModel.rowCount()-1
         proxy_row = self.devProxy.mapFromSource(self.devModel.index(row, self.devTableHdrNames.index("plot"))).row()
@@ -588,13 +588,13 @@ class qColadaDevReader(qColadaReader):
         readFileItem = QtGui.QStandardItem(readFile)
         readFileItem.setFlags(readFileItem.flags() & ~Qt.Qt.ItemIsEditable)
         self.devModel.setItem(row, self.devTableHdrNames.index("read file"), readFileItem)
-        self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("dev create")), 
+        self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("dev create")),
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
         self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("skip lines")), d.getSkipLines())
         self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("delimiter")), d.getDelimiter())
         self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("temporal units")), 'millisecond')
         self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("angle units")), 'degree')
-        self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("trajectory format")), 
+        self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("trajectory format")),
             str(h5geo.TrajectoryFormat.MD_AZIM_INCL).rsplit('.', 1)[-1])
         self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("depth mult")), str(-1))
         self.devModel.setData(self.devModel.index(row, self.devTableHdrNames.index("chunk size")), 1000)  # don't use `p.chunkSize` as it will be empty
@@ -602,7 +602,7 @@ class qColadaDevReader(qColadaReader):
         self.devModel.verticalHeaderItem(row).setCheckState(Qt.Qt.Checked)
         for row in range(self.devModel.rowCount()):
             self.devModel.verticalHeaderItem(row).setText(str(row + 1))
-            
+
         self.devDict[readFile] = d
 
     def resetWellTableRow(self, w_proxy_row: int):
@@ -620,9 +620,9 @@ class qColadaDevReader(qColadaReader):
                     Util.defaultWellDir() + "/" + fi.baseName() + ".h5")
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")),
                     Util.CRSAuthName() + ":" + str(Util.CRSCode()))
-        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")), 
+        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")),
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
-        
+
         self.wellTableView.setIndexWidget(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("XNorth")), QtGui.QCheckBox())
 
     def resetDevTable(self):
@@ -652,7 +652,7 @@ class qColadaDevReader(qColadaReader):
         col = self.devTableHdrNames.index("read file")
         for row in range(self.devModel.rowCount()):
             self.devModel.data(self.devModel.index(row, col))
-            
+
     def onDevProxyDataChanged(self, topLeft: QtCore.QModelIndex, bottomRight: QtCore.QModelIndex, roles: list):
         trajFormat_col = self.devTableHdrNames.index("trajectory format")
         if trajFormat_col >= topLeft.column() and trajFormat_col <= bottomRight.column() and Qt.Qt.DisplayRole in roles:
@@ -662,26 +662,27 @@ class qColadaDevReader(qColadaReader):
                 devFileColNames = d.getColNames()
                 if not devFileColNames:
                     continue
-                
+
                 trajFormatSplit = p_d.trajFormat.split('_')
                 if len(trajFormatSplit) != 3:
                     continue
-                
+
                 tmp = devFileColNames.index(trajFormatSplit[0])+1 if trajFormatSplit[0] in devFileColNames else ''
                 self.devProxy.setData(self.devProxy.index(
                     row, self.devTableHdrNames.index("coord_1 col")), tmp)
-                
+
                 tmp = devFileColNames.index(trajFormatSplit[1])+1 if trajFormatSplit[1] in devFileColNames else ''
                 self.devProxy.setData(self.devProxy.index(
                     row, self.devTableHdrNames.index("coord_2 col")), tmp)
-                
+
                 tmp = devFileColNames.index(trajFormatSplit[2])+1 if trajFormatSplit[2] in devFileColNames else ''
                 self.devProxy.setData(self.devProxy.index(
-                    row, self.devTableHdrNames.index("coord_3 col")), tmp)                                
-                
+                    row, self.devTableHdrNames.index("coord_3 col")), tmp)
+
     def onAddBtnClicked(self):
         fileNames = ctk.ctkFileDialog.getOpenFileNames(None, 'Select one or more DEV files to open', '', 'Deviation (*.dev *.dat *.txt);; all (*.*)')
 
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
         for name in fileNames:
             if self.wellModel.findItems(name, Qt.Qt.MatchFixedString, self.wellTableHdrNames.index("read file")):
                 QtGui.QMessageBox.warning(self, "Warning", name+": is already in table!");
@@ -697,7 +698,8 @@ class qColadaDevReader(qColadaReader):
             for row in range(self.wellModel.rowCount()):
                 self.wellModel.verticalHeaderItem(row).setText(str(row + 1))
 
-            self.updateWellTableRow(row);
+            self.updateWellTableRow(row)
+        QtGui.QApplication.restoreOverrideCursor()
 
     def onRemoveToolBtnClicked(self):
         """Removes selected rows from well model."""
@@ -718,16 +720,19 @@ class qColadaDevReader(qColadaReader):
 
         for row in range(self.wellModel.rowCount()):
             self.wellModel.verticalHeaderItem(row).setText(str(row + 1))
-            
+
     def onAutoDefineToolBtnClicked(self):
         """Calls `updateWellTableRow` for selected well table's rows."""
         indexList = self.wellTableView.selectionModel().selectedRows()
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
         for index in indexList:
             self.updateWellTableRow(index.row())
+        QtGui.QApplication.restoreOverrideCursor()
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
             currentProjectUnits = Util.LengthUnits()
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.wellModel.rowCount())
             for row in range(self.wellModel.rowCount()):
@@ -738,7 +743,7 @@ class qColadaDevReader(qColadaReader):
                     h5wellCnt = h5geo.createWellContainerByName(p_w.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
 
                     if not h5wellCnt:
-                        errMsg = 'Can`t open or create: ' + p_w.saveFile + ''' 
+                        errMsg = 'Can`t open or create: ' + p_w.saveFile + '''
                         Possible reasons:
                         - `save to` is incorrect;
                         - `save to` points to an existing NON WELL CONTAINER file;
@@ -746,7 +751,7 @@ class qColadaDevReader(qColadaReader):
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
-                    
+
                     if p_w.xNorth:
                         p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.lengthUnits)
                     else:
@@ -756,22 +761,22 @@ class qColadaDevReader(qColadaReader):
                     coef_w = Util.convertUnits(
                         currentProjectUnits,
                         p_w.lengthUnits)
-                    
+
                     p_w.headX *= coef_w
                     p_w.headY *= coef_w
 
                     if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + Util.CRSAuthName() + ":" + str(Util.CRSCode()) + ''' 
+                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + Util.CRSAuthName() + ":" + str(Util.CRSCode()) + '''
                         Possible reasons:
                         - project is not set or contains incorrect CRS;
                         - `CRS` is incorrect;
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
-                    
+
                     h5well = h5wellCnt.createWell(p_w.wellName, p_w, p_w.wellCreateType)
                     if not h5well:
-                        errMsg = 'Can`t open, create or overwrite well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
+                        errMsg = 'Can`t open, create or overwrite well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''
                         Possible reasons:
                         - `well name` is incorrect;
                         - `well create` is incorrect;
@@ -780,7 +785,7 @@ class qColadaDevReader(qColadaReader):
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
-                    
+
                     itemList = self.devModel.findItems(p_w.readFile, Qt.Qt.MatchFixedString, self.devTableHdrNames.index("read file"))
                     for item in itemList:
                         if self.devModel.verticalHeaderItem(item.row()).checkState() != Qt.Qt.Checked:
@@ -793,7 +798,7 @@ class qColadaDevReader(qColadaReader):
 
                         h5devCurve = h5well.createDevCurve(p_d.devName, p_d, p_d.devCreateType)
                         if not h5devCurve:
-                            errMsg = 'Can`t open, create or overwrite dev curve: ' + p_d.devName + ' from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
+                            errMsg = 'Can`t open, create or overwrite dev curve: ' + p_d.devName + ' from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''
                             Possible reasons:
                             - `dev name` is incorrect;
                             - `dev create` is incorrect;
@@ -802,36 +807,36 @@ class qColadaDevReader(qColadaReader):
                             '''
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
-                        
+
                         if p_d.readFile not in self.devDict:
                             QtGui.QMessageBox.critical(self, "Error", "Well dict doesn't contain: " + p_d.readFile)
                             continue
 
                         A = np.genfromtxt(p_d.readFile, skip_header = p_d.skipLines)
-                        
+
                         if len(A.shape) < 2 or p_d.coord_1_col >= A.shape[1] or p_d.coord_2_col >= A.shape[1] or p_d.coord_3_col >= A.shape[1]:
                             errMsg = 'In file: ' + p_d.readFile + '\nnumber of columns is less then some of the `coord_n col`'
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
-                        
+
                         headXY = h5well.getHeadCoord(p_d.lengthUnits)
                         kb = h5well.getKB(p_d.lengthUnits)
-                        
+
                         # `traj2ALL` claims that all the spatial vars are of the same units
                         A_ALL = h5geo.traj2ALL(A[:, [p_d.coord_1_col, p_d.coord_2_col, p_d.coord_3_col]], headXY[0], headXY[1], kb, p_d.angleUnits, h5geo.TrajectoryFormat.__members__[p_d.trajFormat], p_w.xNorth)
-                        
+
                         if p_w.xNorth:
                             x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,2], A_ALL[:,1], p_w.crs, p_d.lengthUnits)
                         else:
                             x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,1], A_ALL[:,2], p_w.crs, p_d.lengthUnits)
-                        
+
                         val &= h5devCurve.writeCurve(h5geo.DevDataType.MD, A_ALL[:,0], p_d.lengthUnits)
                         val &= h5devCurve.writeCurve(h5geo.DevDataType.X, x, currentProjectUnits)
                         val &= h5devCurve.writeCurve(h5geo.DevDataType.Y, y, currentProjectUnits)
                         val &= h5devCurve.writeCurve(h5geo.DevDataType.TVD, A_ALL[:,4] * p_d.depthMult, p_d.lengthUnits)
-                        
+
                         if not val:
-                            errMsg = 'Can`t write data to dev curve: ' + p_d.devName + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
+                            errMsg = 'Can`t write data to dev curve: ' + p_d.devName + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''
                             Possible reasons:
                             - `dev_data` dataset is broken (some attributes are missing or dataset is not resizable);
                             - you don't have write permissions inside specified container (maybe 3rd party app is blocking this container);
@@ -841,7 +846,7 @@ class qColadaDevReader(qColadaReader):
 
                         if progressDialog.wasCanceled:
                             break
-                        
+
                     h5wellCnt.getH5File().flush()
 
                 except h5gt.Exception as ex:
@@ -850,6 +855,7 @@ class qColadaDevReader(qColadaReader):
                     continue
 
             progressDialog.setValue(self.wellModel.rowCount())
+            QtGui.QApplication.restoreOverrideCursor()
 
         elif button == self.buttonBox.button(QtGui.QDialogButtonBox.Cancel):
             self.close()

@@ -96,6 +96,8 @@ void qColadaAppMainWindowPrivate::init()
   this->loadSeisDataFromDefaultDirectory();
   this->loadWellDataFromDefaultDirectory();
   this->loadMapDataFromDefaultDirectory();
+
+  util::initProjLibDB();
 }
 
 void qColadaAppMainWindowPrivate::setupPythonModules() {
@@ -527,8 +529,6 @@ qColadaAppMainWindow::qColadaAppMainWindow(QWidget* windowParent)
 {
   Q_D(qColadaAppMainWindow);
   d->init();
-
-  util::initProjLibDB();
 }
 
 //-----------------------------------------------------------------------------

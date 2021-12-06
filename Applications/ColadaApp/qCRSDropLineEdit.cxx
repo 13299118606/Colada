@@ -120,6 +120,12 @@ void qCRSDropLineEdit::setCRS(
   d->AuthNameLineEdit->blockSignals(false);
   d->CodeLineEdit->blockSignals(false);
 
+  // All the four signals must be emitted saving in settings
+  // claims CRSNameChanged, CRSAuthNameChanged, CRSCodeChanged to be emitted
+  // and CRSChanged is more convenient signal for other widgets
+  emit CRSNameChanged(name);
+  emit CRSAuthNameChanged(authName);
+  emit CRSCodeChanged(code);
   emit CRSChanged(name, authName, code);
 }
 

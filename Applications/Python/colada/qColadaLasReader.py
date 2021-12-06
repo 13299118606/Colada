@@ -457,6 +457,7 @@ class qColadaLasReader(qColadaReader):
     def onAddBtnClicked(self):
         fileNames = ctk.ctkFileDialog.getOpenFileNames(None, 'Select one or more LAS files to open', '', 'LAS (*.las *.dat *.txt);; all (*.*)')
 
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
         for name in fileNames:
             if self.wellModel.findItems(name, Qt.Qt.MatchFixedString, self.wellTableHdrNames.index("read file")):
                 QtGui.QMessageBox.warning(self, "Warning", name+": is already in table!");
@@ -472,7 +473,8 @@ class qColadaLasReader(qColadaReader):
             for row in range(self.wellModel.rowCount()):
                 self.wellModel.verticalHeaderItem(row).setText(str(row + 1))
 
-            self.updateWellTableRow(row);
+            self.updateWellTableRow(row)
+        QtGui.QApplication.restoreOverrideCursor()
 
     def onRemoveToolBtnClicked(self):
         """Removes selected rows from well model."""
@@ -496,12 +498,15 @@ class qColadaLasReader(qColadaReader):
     def onAutoDefineToolBtnClicked(self):
         """Calls `updateWellTableRow` for selected well table's rows."""
         indexList = self.wellTableView.selectionModel().selectedRows()
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
         for index in indexList:
             self.updateWellTableRow(index.row())
+        QtGui.QApplication.restoreOverrideCursor()
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
             currentProjectUnits = Util.LengthUnits()
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.wellModel.rowCount())
             for row in range(self.wellModel.rowCount()):
@@ -616,6 +621,7 @@ class qColadaLasReader(qColadaReader):
                     continue
 
             progressDialog.setValue(self.wellModel.rowCount())
+            QtGui.QApplication.restoreOverrideCursor()
 
         elif button == self.buttonBox.button(QtGui.QDialogButtonBox.Cancel):
             self.close()
