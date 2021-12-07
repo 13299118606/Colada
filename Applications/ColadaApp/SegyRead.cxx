@@ -296,27 +296,6 @@ void SegyRead::readOnlyTraces(
     return;
   }
 
-//  double coef = units::convert(
-//      units::unit_from_string(p.lengthUnits),
-//      units::unit_from_string(util::lengthUnits().toStdString()));
-
-//  OGRSpatialReference srFrom;
-//  srFrom.SetFromUserInput(p.crs.toUtf8());
-//  srFrom.SetLinearUnitsAndUpdateParameters(p.lengthUnits.c_str(), coef);
-
-//  OGRSpatialReference srTo = util::getCurrentProjection();
-//  OGRCoordinateTransformation *coordTrans =
-//      OGRCreateCoordinateTransformation(&srFrom, &srTo);
-
-//  if (!coordTrans){
-//    errMsg = p.readFile + ": Unable to create \"OGRCoordinateTransformation\". "
-//"Either CRS or units is incorrect";
-//    return;
-//  }
-
-//  bool doCoordTransform =
-//      !srFrom.IsEmpty() && !srTo.IsEmpty() && !srFrom.IsSame(&srTo);
-
   qint32 *memFile_qint32 =
       bit_cast<qint32 *>(qFile.map(3600, qFile.size() - 3600));
   qint16 *memFile_qint16 =
@@ -331,15 +310,11 @@ void SegyRead::readOnlyTraces(
     readDataFromLE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
                    p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc,
                    mapHdr2origin);
-//    if (doCoordTransform)
-//      crsHeaderCoordTranslate(coordTrans, HDR);
   } else if (p.endian == h5geo::SegyEndian::Big) {
     /* reads HDR and TRACE */
     readDataFromBE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
                    p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc,
                    mapHdr2origin);
-//    if (doCoordTransform)
-//      crsHeaderCoordTranslate(coordTrans, HDR);
   }
 
   qFile.unmap(bit_cast<uchar *>(memFile_qint32));
@@ -408,27 +383,6 @@ H5Seis *SegyRead::readTracesInHeap(
   size_t J = p.traceHeapSize;
   size_t N = nTrc / p.traceHeapSize;
 
-//  double coef = units::convert(
-//      units::unit_from_string(p.lengthUnits),
-//      units::unit_from_string(util::lengthUnits().toStdString()));
-
-//  OGRSpatialReference srFrom;
-//  srFrom.SetFromUserInput(p.crs.toUtf8());
-//  srFrom.SetLinearUnitsAndUpdateParameters(p.lengthUnits.c_str(), coef);
-
-//  OGRSpatialReference srTo = util::getCurrentProjection();
-//  OGRCoordinateTransformation *coordTrans =
-//      OGRCreateCoordinateTransformation(&srFrom, &srTo);
-
-//  if (!coordTrans){
-//    errMsg = p.readFile + ": Unable to create \"OGRCoordinateTransformation\". "
-//"Either CRS or units is incorrect";
-//    return nullptr;
-//  }
-
-//  bool doCoordTransform =
-//      !srFrom.IsEmpty() && !srTo.IsEmpty() && !srFrom.IsSame(&srTo);
-
   std::string saveFile = p.saveFile.toStdString();
   H5SeisCnt_ptr seisCnt_ptr = H5SeisCnt_ptr(h5geo::createSeisContainerByName(
       saveFile, h5geo::CreationType::OPEN_OR_CREATE));
@@ -484,8 +438,6 @@ H5Seis *SegyRead::readTracesInHeap(
       readDataFromLE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
                      p.format, nSamp, bytesPerTrc, 0, J,
                      mapHdr2origin);
-//      if (doCoordTransform)
-//        crsHeaderCoordTranslate(coordTrans, HDR);
 
       if (progressDialog.wasCanceled())
         continue;
@@ -537,8 +489,6 @@ H5Seis *SegyRead::readTracesInHeap(
       readDataFromBE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
                      p.format, nSamp, bytesPerTrc, 0, J,
                      mapHdr2origin);
-//      if (doCoordTransform)
-//        crsHeaderCoordTranslate(coordTrans, HDR);
 
       if (progressDialog.wasCanceled())
         continue;

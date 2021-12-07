@@ -96,7 +96,7 @@ QString util::CRSName()
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString crsName = appSettings->value("Projection/CRSName", "").toString();
+  QString crsName = appSettings->value("SpatialReference/CRSName", "").toString();
   return crsName;
 }
 
@@ -105,7 +105,7 @@ QString util::CRSAuthName()
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString crsAuthName = appSettings->value("Projection/CRSAuthName", "").toString();
+  QString crsAuthName = appSettings->value("SpatialReference/CRSAuthName", "").toString();
   return crsAuthName;
 }
 
@@ -114,7 +114,7 @@ int util::CRSCode()
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  QString crsCode = appSettings->value("Projection/CRSCode", "").toString();
+  QString crsCode = appSettings->value("SpatialReference/CRSCode", "").toString();
   return crsCode.toInt();
 }
 
@@ -198,7 +198,7 @@ QString util::defaultMapDir(){
   return path;
 }
 
-bool util::getAvailableProjections(
+bool util::getAvailableCRS(
     QStringList &authNameList,
     QStringList &codeList,
     QStringList &nameList){
@@ -222,21 +222,21 @@ bool util::getAvailableProjections(
   return true;
 }
 
-void util::getCurrentProjection(
+void util::getCurrentCRS(
     QString &authName,
     QString &code,
     QString &name){
   qSlicerApplication* app = qSlicerApplication::application();
   QSettings* appSettings = app->userSettings();
   Q_ASSERT(appSettings);
-  authName = appSettings->value("Projection/CRSAuthName", "").toString();
-  code = appSettings->value("Projection/CRSCode", "").toString();
-  name = appSettings->value("Projection/CRSName", "").toString();
+  authName = appSettings->value("SpatialReference/CRSAuthName", "").toString();
+  code = appSettings->value("SpatialReference/CRSCode", "").toString();
+  name = appSettings->value("SpatialReference/CRSName", "").toString();
 }
 
-OGRSpatialReference util::getCurrentProjection(){
+OGRSpatialReference util::getCurrentCRS(){
   QString authName, code, name;
-  getCurrentProjection(authName, code, name);
+  getCurrentCRS(authName, code, name);
 
   /* if project doesn't have specific CRS */
   if (authName.isEmpty() && code.isEmpty())
@@ -255,7 +255,7 @@ OGRSpatialReference util::getCurrentProjection(){
   return srTo;
 }
 
-bool util::convCoord2CurrentProjection(
+bool util::convCoord2CurrentCRS(
     int nCount,
     double *x,
     double *y,
@@ -275,7 +275,7 @@ bool util::convCoord2CurrentProjection(
   srFrom.SetFromUserInput(authCodeFrom.data());
   srFrom.SetLinearUnitsAndUpdateParameters(units.toUtf8(), coef);
 
-  OGRSpatialReference srTo = getCurrentProjection();
+  OGRSpatialReference srTo = getCurrentCRS();
 
   OGRCoordinateTransformation *coordTrans =
       OGRCreateCoordinateTransformation(&srFrom, &srTo);

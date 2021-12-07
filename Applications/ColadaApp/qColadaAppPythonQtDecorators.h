@@ -111,27 +111,27 @@ public slots:
   QString static_Util_defaultWellDir(){ return util::defaultWellDir(); };
   QString static_Util_defaultMapDir(){ return util::defaultMapDir(); };
 
-  bool static_Util_getAvailableProjections(
+  bool static_Util_getAvailableCRS(
       QStringList &authNameList,
       QStringList &codeList,
       QStringList &nameList){
-    return util::getAvailableProjections(
+    return util::getAvailableCRS(
           authNameList, codeList, nameList);
   };
-  void static_Util_getCurrentProjection(
+  void static_Util_getCurrentCRS(
       QString &authName,
       QString &code,
       QString &name){
-    return util::getCurrentProjection(authName, code, name);
+    return util::getCurrentCRS(authName, code, name);
   };
-  OGRSpatialReference static_Util_getCurrentProjection(){ return util::getCurrentProjection(); };
+  OGRSpatialReference static_Util_getCurrentCRS(){ return util::getCurrentCRS(); };
 
-  bool static_Util_convCoord2CurrentProjection(
+  bool static_Util_convCoord2CurrentCRS(
       int nCount, double *x,
       double *y,
       QByteArray authCodeFrom,
       const QString &units){
-    return util::convCoord2CurrentProjection(
+    return util::convCoord2CurrentCRS(
           nCount, x, y, authCodeFrom, units);
   };
 

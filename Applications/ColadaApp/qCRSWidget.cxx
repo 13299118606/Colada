@@ -82,7 +82,7 @@ void qCRSWidgetPrivate::setupUi(QWidget* q) {
 
 void qCRSWidgetPrivate::setupTableData(QWidget* q) {
   QStringList authNameList, codeList, nameList;
-  if (!util::getAvailableProjections(
+  if (!util::getAvailableCRS(
         authNameList, codeList, nameList))
     return;
 

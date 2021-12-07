@@ -51,19 +51,19 @@ QString defaultSeisDir();
 QString defaultWellDir();
 QString defaultMapDir();
 
-bool getAvailableProjections(
+bool getAvailableCRS(
     QStringList &authNameList,
     QStringList &codeList,
     QStringList &nameList);
 
-void getCurrentProjection(
+void getCurrentCRS(
     QString &authName,
     QString &code,
     QString &name);
 
-OGRSpatialReference getCurrentProjection();
+OGRSpatialReference getCurrentCRS();
 
-bool convCoord2CurrentProjection(
+bool convCoord2CurrentCRS(
     int nCount,
     double *x,
     double *y,
