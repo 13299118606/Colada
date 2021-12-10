@@ -61,7 +61,6 @@ class DevRead():
     def getDelimiter(self) -> str:
         return self.delimiter
 
-
     def getHeaderLines(self) -> list:
         """[summary]
 
@@ -94,7 +93,7 @@ class DevRead():
     def getSkipLines(self):
         return len(self.getHeaderLines())
 
-    def getColNames(self, commentSymbol = '#') -> list:
+    def getColNames(self, commentSymbol='#') -> list:
         """Return automatically defined column names"""
         hdrLines = self.getHeaderLines()
         for hdr in reversed(hdrLines):
@@ -130,7 +129,6 @@ class ReadWriteWellParam(h5geo.WellParam):
     """Contains data needed to create new `h5geo.H5Well` object. Inherits from `h5geo.WellParam`"""
     readFile = ''
     saveFile = ''
-    crs = ''
     wellName = ''
     wellCreateType = ''
     xNorth = False
@@ -140,7 +138,6 @@ class ReadWriteDevParam(h5geo.DevCurveParam):
     """Contains data needed to create new `h5geo.H5DevCurve` object. Inherits from `h5geo.DevCurveParam`"""
     readFile = ''
     saveFile = ''
-    crs = ''
     wellName = ''
     wellCreateType = ''
     devName = ''
@@ -212,7 +209,7 @@ class qColadaDevReader(qColadaReader):
         "XNorth"]
 
     wellTableHdrTips = [
-        "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). . Must be set if new well is going to be created",
+        "Read file", "Container where to save data", "Coordinate reference system",
         "Well name", "Unique Well Identifier", "Creation type for well",
         "Length units",
         "Header X coordinate. Must be set if new well is going to be created", "Header Y coordinate. Must be set if new well is going to be created", "Kelly Bushing",
@@ -398,7 +395,7 @@ class qColadaDevReader(qColadaReader):
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")))
-        p.crs = tmp if tmp else ''
+        p.spatialReference = tmp if tmp else ''
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well name")))
@@ -509,7 +506,7 @@ class qColadaDevReader(qColadaReader):
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")))
-        p.crs = tmp if tmp else ''
+        p.spatialReference = tmp if tmp else ''
 
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")))
@@ -731,7 +728,6 @@ class qColadaDevReader(qColadaReader):
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
-            currentProjectUnits = Util.LengthUnits()
             QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.wellModel.rowCount())
@@ -753,26 +749,7 @@ class qColadaDevReader(qColadaReader):
                         continue
 
                     if p_w.xNorth:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.lengthUnits)
-                    else:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.lengthUnits)
-
-                    # if new well will be created then the units will be `p_w.lengthUnits`
-                    coef_w = Util.convertUnits(
-                        currentProjectUnits,
-                        p_w.lengthUnits)
-
-                    p_w.headX *= coef_w
-                    p_w.headY *= coef_w
-
-                    if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + Util.CRSAuthName() + ":" + str(Util.CRSCode()) + '''
-                        Possible reasons:
-                        - project is not set or contains incorrect CRS;
-                        - `CRS` is incorrect;
-                        '''
-                        QtGui.QMessageBox.critical(self, "Error", errMsg)
-                        continue
+                        p_w.headX, p_w.headY = p_w.headY, p_w.headX
 
                     h5well = h5wellCnt.createWell(p_w.wellName, p_w, p_w.wellCreateType)
                     if not h5well:
@@ -819,21 +796,19 @@ class qColadaDevReader(qColadaReader):
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
 
-                        headXY = h5well.getHeadCoord(p_d.lengthUnits)
-                        kb = h5well.getKB(p_d.lengthUnits)
-
-                        # `traj2ALL` claims that all the spatial vars are of the same units
-                        A_ALL = h5geo.traj2ALL(A[:, [p_d.coord_1_col, p_d.coord_2_col, p_d.coord_3_col]], headXY[0], headXY[1], kb, p_d.angleUnits, h5geo.TrajectoryFormat.__members__[p_d.trajFormat], p_w.xNorth)
-
-                        if p_w.xNorth:
-                            x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,2], A_ALL[:,1], p_w.crs, p_d.lengthUnits)
+                        val = True
+                        if p_d.trajFormat == h5geo.TrajectoryFormat.MD_AZIM_INCL.name:
+                            val &= h5devCurve.writeMD(A[:, p_d.coord_1_col])
+                            val &= h5devCurve.writeAZIM(A[:, p_d.coord_2_col])
+                            val &= h5devCurve.writeINCL(A[:, p_d.coord_3_col])
                         else:
-                            x, y, val = Util.convCoord2CurrentProjection(A_ALL[:,1], A_ALL[:,2], p_w.crs, p_d.lengthUnits)
-
-                        val &= h5devCurve.writeCurve(h5geo.DevDataType.MD, A_ALL[:,0], p_d.lengthUnits)
-                        val &= h5devCurve.writeCurve(h5geo.DevDataType.X, x, currentProjectUnits)
-                        val &= h5devCurve.writeCurve(h5geo.DevDataType.Y, y, currentProjectUnits)
-                        val &= h5devCurve.writeCurve(h5geo.DevDataType.TVD, A_ALL[:,4] * p_d.depthMult, p_d.lengthUnits)
+                            # `traj2ALL` claims that all the length vars are in the same units
+                            headXY = h5well.getHeadCoord()
+                            kb = h5well.getKB()
+                            A_ALL = h5geo.traj2ALL(A[:, [p_d.coord_1_col, p_d.coord_2_col, p_d.coord_3_col]], headXY[0], headXY[1], kb, p_d.angleUnits, h5geo.TrajectoryFormat.__members__[p_d.trajFormat], p_w.xNorth)
+                            val &= h5devCurve.writeMD(A_ALL[:, 0])
+                            val &= h5devCurve.writeAZIM(A_ALL[:, 7])
+                            val &= h5devCurve.writeINCL(A_ALL[:, 8])
 
                         if not val:
                             errMsg = 'Can`t write data to dev curve: ' + p_d.devName + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''

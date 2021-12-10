@@ -162,7 +162,7 @@ void qColadaH5WellModel::fetchMore(const QModelIndex &parent) {
 
   int insrtCnt = childItems.count() - 1;
   beginInsertRows(parent, 0, insrtCnt);
-  parentItem->setChildItems(childItems);
+  parentItem->setChildren(childItems);
   endInsertRows();
   parentItem->setMapped(true);
 }

@@ -65,7 +65,7 @@ QWidget *qColadaH5ItemDelegate::createEditor(QWidget *parent,
     nameQList = h5Dir.entryList();
   } else if (item->isGeoObject()) {
     h5gt::Group group = item->getGeoObject()->getObjG();
-    qColadaH5Item *parentItem = item->getParentItem();
+    qColadaH5Item *parentItem = item->getParent();
     if (item->isGeoContainer()) {
       h5gt::File parentFile = parentItem->getGeoContainer()->getH5File();
       std::vector<std::string> nameList = parentFile.listObjectNames();

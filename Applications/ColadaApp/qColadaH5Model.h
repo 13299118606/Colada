@@ -12,14 +12,28 @@
 #include "qColadaAppExport.h"
 #include "qColadaH5Item.h"
 
-class qColadaH5ModelPrivate;
+// CTK includes
+#include <ctkVTKObject.h>
 
-//namespace h5gt {
-//class File;
-//}
+class qColadaH5ModelPrivate;
+class vtkObject;
+class vtkMRMLNode;
+
+namespace Colada {
+
+
+enum ColadaRoles{
+  CheckBoxClickedRole=Qt::UserRole,
+//  myRole2,
+//  myRole3
+};
+
+
+} // Colada namespace
 
 class Q_COLADA_APP_EXPORT qColadaH5Model : public QAbstractItemModel {
   Q_OBJECT
+  QVTK_OBJECT
 
 public:
   explicit qColadaH5Model(QObject *parent = nullptr);
@@ -95,6 +109,13 @@ public slots:
 
   QStringList mimeTypes() const override;
   QMimeData *mimeData(const QModelIndexList &indexes) const override;
+
+
+  void onMRMLSceneNodeAdded(vtkObject*, vtkObject* node);
+  void onMRMLSceneNodeRemoved(vtkObject*, vtkObject* node);
+
+protected:
+  qColadaH5Item* findMRMLGeoNode(vtkMRMLNode* node);
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

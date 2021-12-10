@@ -35,7 +35,7 @@ int qColadaH5Item::childCount() const {
 int qColadaH5Item::childNumber() const {
   Q_D(const qColadaH5Item);
   if (d->parentItem)
-    return d->parentItem->getChildItems().indexOf(
+    return d->parentItem->getChildren().indexOf(
         const_cast<qColadaH5Item *>(this));
   return 0;
 }
@@ -139,15 +139,19 @@ bool qColadaH5Item::setData(const QString &newItemData) {
   return false;
 }
 
-qint64 qColadaH5Item::findRow(QVector<qColadaH5Item *> itemList,
-                              qColadaH5Item *item) const {
+qint64 qColadaH5Item::findRow(
+    QVector<qColadaH5Item *> itemList,
+    qColadaH5Item *item) const
+{
   QVector<qColadaH5Item *>::Iterator it =
       std::find(itemList.begin(), itemList.end(), item);
   return std::distance(itemList.begin(),
                        it); // should be the same as: it - itemList.begin()
 }
 
-qColadaH5Item *qColadaH5Item::getChildByName(const QString &name) const {
+qColadaH5Item *qColadaH5Item::getChildByName(
+    const QString &name) const
+{
   Q_D(const qColadaH5Item);
   for (auto &item : d->childItems)
     if (item->data().compare(name, Qt::CaseInsensitive) == 0)
@@ -156,30 +160,30 @@ qColadaH5Item *qColadaH5Item::getChildByName(const QString &name) const {
   return nullptr;
 }
 
-qColadaH5Item *qColadaH5Item::getChildItem(int number) const {
+qColadaH5Item *qColadaH5Item::getChild(int number) const {
   Q_D(const qColadaH5Item);
   if (number < 0 || number >= d->childItems.size())
     return nullptr;
   return d->childItems.at(number);
 }
 
-QVector<qColadaH5Item *> qColadaH5Item::getChildItems() const {
+QVector<qColadaH5Item *> qColadaH5Item::getChildren() const {
   Q_D(const qColadaH5Item);
   return d->childItems;
 }
 
-qColadaH5Item *qColadaH5Item::getParentItem() const {
+qColadaH5Item *qColadaH5Item::getParent() const {
   Q_D(const qColadaH5Item);
   return d->parentItem;
 }
 
 int qColadaH5Item::getRow() const {
-  if (this->getParentItem() == nullptr)
+  if (this->getParent() == nullptr)
     return -1;
 
-  qColadaH5Item *parent = this->getParentItem();
+  qColadaH5Item *parent = this->getParent();
   for (int i = 0; i < parent->childCount(); i++)
-    if (parent->getChildItem(i) == this)
+    if (parent->getChild(i) == this)
       return i;
 
   return -1;
@@ -197,7 +201,7 @@ QList<qColadaH5Item *> qColadaH5Item::getItemListToRoot() {
   qColadaH5Item *item = this;
   while (!item->isRoot()) {
     itemListToRoot.push_back(item);
-    item = item->getParentItem();
+    item = item->getParent();
   }
   itemListToRoot.push_back(item);
   /* we want ROOT to be 0 element */
@@ -220,13 +224,13 @@ H5BaseObject* qColadaH5Item::getGeoObject() const {
   return dynamic_cast<H5BaseObject *>(d->itemData.get());
 }
 
-bool qColadaH5Item::setChildItems(QVector<qColadaH5Item *> childItems) {
+bool qColadaH5Item::setChildren(QVector<qColadaH5Item *> childItems) {
   Q_D(qColadaH5Item);
   d->childItems = childItems;
   return true;
 }
 
-bool qColadaH5Item::setParentItem(qColadaH5Item *parentItem) {
+bool qColadaH5Item::setParent(qColadaH5Item *parentItem) {
   Q_D(qColadaH5Item);
   d->parentItem = parentItem;
   return true;
@@ -273,7 +277,7 @@ Qt::CheckState qColadaH5Item::checkState() const {
 
 bool qColadaH5Item::isEvenOneChildChecked() {
   for (int i = 0; i < childCount(); i++) {
-    if (getChildItem(i)->checkState() != Qt::Unchecked)
+    if (getChild(i)->checkState() != Qt::Unchecked)
       return true;
   }
   return false;

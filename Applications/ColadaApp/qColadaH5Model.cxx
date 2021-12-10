@@ -2,6 +2,13 @@
 #include "qColadaH5Model.h"
 #include "qColadaH5Model_p.h"
 
+// Slicer includes
+#include "qSlicerApplication.h"
+
+// MRML includes
+#include "vtkMRMLScene.h"
+#include "vtkMRMLDisplayableNode.h"
+
 // h5gt includes
 #include <h5gt/H5File.hpp>
 #include <h5gt/H5Group.hpp>
@@ -16,14 +23,27 @@
 #include <QDataStream>
 #include <QSet>
 #include <QStack>
+#include <QDebug>
 
 qColadaH5ModelPrivate::qColadaH5ModelPrivate(qColadaH5Model &q) : q_ptr(&q) {}
 
 qColadaH5ModelPrivate::~qColadaH5ModelPrivate() {}
 
 void qColadaH5ModelPrivate::init(const QString &title) {
+  Q_Q(qColadaH5Model);
   rootItem = new qColadaH5Item(nullptr, nullptr);
   headerData = title;
+
+  qSlicerApplication * app = qSlicerApplication::application();
+  if (!app){
+    qCritical() << "qColadaH5ModelPrivate::init: unable to get application instance";
+    return;
+  }
+
+  q->qvtkConnect(app->mrmlScene(), vtkMRMLScene::NodeAddedEvent,
+                 q, SLOT(onMRMLSceneNodeAdded(vtkObject*, vtkObject*)));
+  q->qvtkConnect(app->mrmlScene(), vtkMRMLScene::NodeRemovedEvent,
+                 q, SLOT(onMRMLSceneNodeRemoved(vtkObject*, vtkObject*)));
 }
 
 qColadaH5Model::qColadaH5Model(QObject *parent)
@@ -68,7 +88,7 @@ qColadaH5Item *qColadaH5Model::itemFromIndex(const QModelIndex &index) const {
   qColadaH5Item *parent = static_cast<qColadaH5Item *>(index.internalPointer());
   if (parent == nullptr)
     return nullptr;
-  return parent->getChildItem(index.row());
+  return parent->getChild(index.row());
 }
 
 qColadaH5Item *qColadaH5Model::getRootItem() const { 
@@ -120,8 +140,11 @@ QVariant qColadaH5Model::data(const QModelIndex &index, int role) const {
   }
 }
 
-bool qColadaH5Model::setData(const QModelIndex &index, const QVariant &value,
-                             int role) {
+bool qColadaH5Model::setData(
+    const QModelIndex &index,
+    const QVariant &value,
+    int role)
+{
   if (!index.isValid())
     return false;
 
@@ -135,8 +158,9 @@ bool qColadaH5Model::setData(const QModelIndex &index, const QVariant &value,
     emit dataChanged(index, index, {Qt::DisplayRole});
     return result;
   } else if (role == Qt::CheckStateRole) {
-    item->setCheckState(static_cast<Qt::CheckState>(value.toInt()));
-    emit dataChanged(index, index, {Qt::CheckStateRole});
+//    item->setCheckState(static_cast<Qt::CheckState>(value.toInt()));
+//    emit dataChanged(index, index, {Qt::CheckStateRole});
+    emit dataChanged(index, index, {Colada::CheckBoxClickedRole});
     //setCheckStateForItemStair(item, static_cast<Qt::CheckState>(value.toInt()));
     return true;
   }
@@ -144,8 +168,11 @@ bool qColadaH5Model::setData(const QModelIndex &index, const QVariant &value,
   return false;
 }
 
-QVariant qColadaH5Model::headerData(int section, Qt::Orientation orientation,
-                                    int role) const {
+QVariant qColadaH5Model::headerData(
+    int section,
+    Qt::Orientation orientation,
+    int role) const
+{
   Q_D(const qColadaH5Model);
   if (orientation == Qt::Horizontal && role == Qt::DisplayRole &&
       section == 0) {
@@ -229,7 +256,7 @@ qColadaH5Model::getItemListToRoot(qColadaH5Item *item) const {
 
   while (!item->isRoot()) {
     itemListToRoot.push_back(item);
-    item = item->getParentItem();
+    item = item->getParent();
   }
   itemListToRoot.push_back(item);
   /* we want ROOT to be 0 element */
@@ -268,25 +295,27 @@ QList<QModelIndex> qColadaH5Model::getIndexListToRoot(
 void qColadaH5Model::getFullChildIndexList(
     qColadaH5Item *item, QList<QModelIndex> &fullChildIndexList) {
   for (int i = 0; i < item->childCount(); i++) {
-    QModelIndex childIndex = createIndex(i, 0, item->getChildItem(i));
+    QModelIndex childIndex = createIndex(i, 0, item->getChild(i));
     fullChildIndexList.push_back(childIndex);
-    getFullChildIndexList(item->getChildItem(i), fullChildIndexList);
+    getFullChildIndexList(item->getChild(i), fullChildIndexList);
   }
 }
 
 void qColadaH5Model::getFullChildList(qColadaH5Item *item,
                                       QList<qColadaH5Item *> &fullChildList) {
   for (int i = 0; i < item->childCount(); i++) {
-    fullChildList.push_back(item->getChildItem(i));
+    fullChildList.push_back(item->getChild(i));
     getFullChildList(fullChildList.last(), fullChildList);
   }
 }
 
 bool qColadaH5Model::canAddH5File(h5gt::File file) const { return true; }
 
-bool qColadaH5Model::addH5File(const QString &fullName) {
-  
-  if (H5Fis_hdf5(fullName.toUtf8()) <= 0)
+bool qColadaH5Model::addH5File(const QString &fullName)
+{
+  h5gt::FileAccessProps fapl;
+  if (H5Fis_hdf5(fullName.toUtf8()) <= 0 ||
+      H5Fis_accessible(fullName.toUtf8(), fapl.getId()) <= 0)
     return false;
 
   h5gt::File file(fullName.toStdString(), h5gt::File::ReadWrite);
@@ -312,14 +341,14 @@ bool qColadaH5Model::addH5File(h5gt::File file) {
 void qColadaH5Model::releaseCheckState(qColadaH5Item *topLevelItem) {
   topLevelItem->setCheckState(Qt::Unchecked);
   for (int i = 0; i < topLevelItem->childCount(); i++) {
-    releaseCheckState(topLevelItem->getChildItem(i));
+    releaseCheckState(topLevelItem->getChild(i));
   }
 }
 
 void qColadaH5Model::updateCheckState(qColadaH5Item *topLevelItem) {
   topLevelItem->setCheckState(topLevelItem->checkState());
   for (int i = 0; i < topLevelItem->childCount(); i++) {
-    updateCheckState(topLevelItem->getChildItem(i));
+    updateCheckState(topLevelItem->getChild(i));
   }
 }
 
@@ -336,7 +365,8 @@ void qColadaH5Model::sendItemDataChanged(
 }
 
 void qColadaH5Model::sendAllChildDataChanged(
-    qColadaH5Item *topLevelItem, const QVector<int> &roles) {
+    qColadaH5Item *topLevelItem, const QVector<int> &roles)
+{
   QList<QModelIndex> fullChildIndexList;
   getFullChildIndexList(topLevelItem, fullChildIndexList);
   for (const QModelIndex& index : fullChildIndexList){
@@ -344,17 +374,20 @@ void qColadaH5Model::sendAllChildDataChanged(
   }
 }
 
-void qColadaH5Model::sendAllItemsToRootDataChanged(qColadaH5Item *lowLevelItem,
-                                                   const QVector<int> &roles) {
+void qColadaH5Model::sendAllItemsToRootDataChanged(
+    qColadaH5Item *lowLevelItem,
+    const QVector<int> &roles)
+{
   QList<QModelIndex> indexListToRoot = getIndexListToRoot(lowLevelItem);
   for (int i = 0; i < indexListToRoot.count(); i++) {
     emit dataChanged(indexListToRoot[i], indexListToRoot[i], roles);
   }
 }
 
-void qColadaH5Model::setCheckStateForItemStair(qColadaH5Item *item,
-                                               Qt::CheckState checkState) {
-
+void qColadaH5Model::setCheckStateForItemStair(
+    qColadaH5Item *item,
+    Qt::CheckState checkState)
+{
   QList<qColadaH5Item *> itemListToRoot = getItemListToRoot(item);
   QList<QModelIndex> indexListToRoot = getIndexListToRoot(item, itemListToRoot);
 
@@ -444,7 +477,7 @@ QMimeData *qColadaH5Model::mimeData(const QModelIndexList &indexes) const
       if (seen.contains(itm))
         continue;
       seen.insert(itm);
-      const QVector<qColadaH5Item*> &childList = itm->getChildItems();
+      const QVector<qColadaH5Item*> &childList = itm->getChildren();
       for (int i = 0; i < childList.count(); ++i) {
         qColadaH5Item *chi = childList.at(i);
         if (chi) {
@@ -461,8 +494,99 @@ QMimeData *qColadaH5Model::mimeData(const QModelIndexList &indexes) const
   while (!stack.isEmpty()) {
     qColadaH5Item *item = stack.pop();
     stream << *item;
-    stack += item->getChildItems();
+    stack += item->getChildren();
   }
   data->setData(format, encoded);
   return data;
+}
+
+void qColadaH5Model::onMRMLSceneNodeAdded(
+    vtkObject*, vtkObject* node)
+{
+  Q_D(qColadaH5Model);
+  vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(node);
+  if (!dispNode)
+    return;
+
+  qColadaH5Item* item = this->findMRMLGeoNode(dispNode);
+  if (!item)
+    return;
+
+  item->setCheckState(Qt::Checked);
+  QModelIndex index = getIndex(item);
+  emit dataChanged(index, index, {Qt::CheckStateRole});
+}
+
+void qColadaH5Model::onMRMLSceneNodeRemoved(
+    vtkObject*, vtkObject* node)
+{
+  Q_D(qColadaH5Model);
+  vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(node);
+  if (!dispNode)
+    return;
+
+  qColadaH5Item* item = this->findMRMLGeoNode(dispNode);
+  if (!item)
+    return;
+
+  item->setCheckState(Qt::Unchecked);
+  QModelIndex index = getIndex(item);
+  emit dataChanged(index, index, {Qt::CheckStateRole});
+}
+
+qColadaH5Item* qColadaH5Model::findMRMLGeoNode(vtkMRMLNode* node)
+{
+  Q_D(qColadaH5Model);
+  if (!node)
+    return nullptr;
+
+  auto fileName = node->GetAttribute("GeoContainer");
+  if (!fileName)
+    return nullptr;
+
+  auto objName = node->GetAttribute("GeoObject");
+  if (!objName)
+    return nullptr;
+
+  h5gt::FileAccessProps fapl;
+  if (H5Fis_hdf5(fileName) <= 0 ||
+      H5Fis_accessible(fileName, fapl.getId()) <= 0 )
+    return nullptr;
+
+  h5gt::File h5File(
+        fileName,
+        h5gt::File::ReadOnly, fapl);
+
+  if (!h5File.hasObject(objName, h5gt::ObjectType::Group))
+    return nullptr;
+
+  QString qFileName = QString::fromUtf8(fileName);
+  QString qObjName = QString::fromUtf8(objName);
+  QStringList qObjNameList = qObjName.split(':');
+
+  qColadaH5Item* item = nullptr;
+  QVector<qColadaH5Item *> children = d->rootItem->getChildren();
+  for (qColadaH5Item * child : children){
+    H5BaseContainer* baseCnt = child->getGeoContainer();
+    if (!baseCnt)
+      continue;
+
+    if (h5File == baseCnt->getH5File()){
+      item = child;
+      break;
+    }
+  }
+
+  if (!item)
+    return nullptr;
+
+  fetchAllChildren(this->getIndex(item));
+  for (int i = 0; i < qObjNameList.count(); i++){
+    if (item)
+      item = item->getChildByName(qObjNameList[i]);
+    else
+      return nullptr;
+  }
+
+  return item;
 }

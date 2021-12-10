@@ -107,7 +107,7 @@ void qColadaH5TreeView::addContainer(const QStringList &fileNameList) {
   for (int i = 0; i < fileNameList.count(); i++) {
     if (root->getChildByName(fileNameList[i]) == nullptr)
       if (!srcModel->addH5File(fileNameList[i])){
-        qWarning() << "qColadaH5TreeView::addContainer(): unable to add the file:" << fileNameList[i];
+        qWarning() << "qColadaH5TreeView::addContainer: unable to add the file:" << fileNameList[i];
       }
   }
 }
