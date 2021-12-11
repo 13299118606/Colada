@@ -126,6 +126,9 @@ set(APPLIB_SRCS
   qPathEditDelegate.h
   qPathEditDelegate.cxx
 
+  qMRMLCompletableNodeComboBox.h
+  qMRMLCompletableNodeComboBox.cxx
+
   qColadaAppPythonQtDecorators.h
   )
 
@@ -166,6 +169,8 @@ set(APPLIB_MOC_SRCS
   qScienceSpinBoxDelegate.h
   qLineEditDelegate.h
   qPathEditDelegate.h
+
+  qMRMLCompletableNodeComboBox.h
 
   qColadaAppPythonQtDecorators.h
   )

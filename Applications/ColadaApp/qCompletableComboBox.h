@@ -9,7 +9,7 @@ class qCompletableComboBox : public QComboBox
 public:
   qCompletableComboBox(QWidget *parent = nullptr);
 
-private slots:
+protected slots:
   void onEditingFinished();
 };
 
