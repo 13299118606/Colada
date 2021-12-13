@@ -2,6 +2,13 @@
 #include "qColadaH5WellModel.h"
 #include "qColadaH5WellModel_p.h"
 
+// Slicer includes
+#include "qSlicerApplication.h"
+
+// MRML includes
+#include <vtkMRMLScene.h>
+#include <vtkMRMLMarkupsNode.h>
+
 // h5gt includes
 #include <h5gt/H5File.hpp>
 #include <h5gt/H5Group.hpp>
@@ -49,6 +56,7 @@ QVariant qColadaH5WellModel::data(const QModelIndex &index, int role) const {
 
   if (role == Qt::CheckStateRole)
     if (wellFromItem(itemFromIndex(index)) == nullptr &&
+        devCurveFromItem(itemFromIndex(index)) == nullptr &&
         logCurveFromItem(itemFromIndex(index)) == nullptr)
       return QVariant();
 
@@ -74,11 +82,10 @@ void qColadaH5WellModel::fetchMore(const QModelIndex &parent) {
   QVector<qColadaH5Item *> childItems;
   if (parentItem->isGeoContainer()) {
     H5BaseContainer *obj = parentItem->getGeoContainer();
-    h5gt::File file = obj->getH5File();
-    H5WellCnt_ptr wellCnt(h5geo::openWellContainer(file));
-    if (wellCnt == nullptr)
+    if (obj == nullptr)
       return;
 
+    h5gt::File file = obj->getH5File();
     std::vector<std::string> childrenNameList = file.listObjectNames();
 
     childItems.reserve(childrenNameList.size());
@@ -86,39 +93,25 @@ void qColadaH5WellModel::fetchMore(const QModelIndex &parent) {
       if (file.getObjectType(childrenNameList[i]) != h5gt::ObjectType::Group)
         continue;
 
-      h5gt::Group group = file.getGroup(childrenNameList[i]);
-      H5Well *well = wellCnt->getWell(group);
-      if (well) {
-        childItems.push_back(new qColadaH5Item(well, parentItem));
+      h5gt::Group group = file.getGroup(childrenNameList[i]);     
+      if (h5geo::isWell(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openWell(group), parentItem));
       } else {
-        H5BaseObject *baseObj = h5geo::openBaseObject(group);
-        childItems.push_back(new qColadaH5Item(baseObj, parentItem));
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openBaseObject(group), parentItem));
       }
     }
   } else if (parentItem->isGeoObject()) {
     H5BaseObject *obj = parentItem->getGeoObject();
-    if (obj == nullptr || dynamic_cast<H5DevCurve *>(obj) ||
+    if (obj == nullptr ||
+        dynamic_cast<H5DevCurve *>(obj) ||
         dynamic_cast<H5LogCurve *>(obj))
       return;
 
-    h5gt::File file = obj->getH5File();
     h5gt::Group objG = obj->getObjG();
-    h5gt::Group parentG = objG;
-
-    H5WellCnt_ptr wellCnt(h5geo::openWellContainer(file));
-    if (wellCnt == nullptr)
-      return;
-
-    H5Well_ptr well(nullptr);
-
-    while (parentG.getPath() != "/") {
-      well = H5Well_ptr(wellCnt->getWell(parentG));
-      if (well)
-        break;
-
-      parentG = parentG.getParent();
-    }
-
     std::vector<std::string> childrenNameList = objG.listObjectNames();
 
     childItems.reserve(childrenNameList.size());
@@ -128,31 +121,23 @@ void qColadaH5WellModel::fetchMore(const QModelIndex &parent) {
 
       h5gt::Group group = objG.getGroup(childrenNameList[i]);
 
-      if (well == nullptr) {
-        H5Well *well = wellCnt->getWell(group);
-        if (well) {
-          childItems.push_back(new qColadaH5Item(well, parentItem));
-        } else {
-          H5BaseObject *baseObj = h5geo::openBaseObject(group);
-          childItems.push_back(new qColadaH5Item(baseObj, parentItem));
-        }
-        continue;
+      if (h5geo::isWell(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openWell(group), parentItem));
+      } else if (h5geo::isDevCurve(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openDevCurve(group), parentItem));
+      } else if (h5geo::isLogCurve(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openLogCurve(group), parentItem));
+      } else {
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openBaseObject(group), parentItem));
       }
-
-      H5DevCurve *devCurve = well->getDevCurve(group);
-      if (devCurve) {
-        childItems.push_back(new qColadaH5Item(devCurve, parentItem));
-        continue;
-      }
-
-      H5LogCurve *logCurve = well->getLogCurve(group);
-      if (logCurve) {
-        childItems.push_back(new qColadaH5Item(logCurve, parentItem));
-        continue;
-      }
-
-      H5BaseObject *baseObj = h5geo::openBaseObject(group);
-      childItems.push_back(new qColadaH5Item(baseObj, parentItem));
     }
   }
   childItems.shrink_to_fit();
@@ -175,7 +160,7 @@ Qt::ItemFlags qColadaH5WellModel::flags(const QModelIndex &index) const {
       Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled;
 
   qColadaH5Item *item = itemFromIndex(index);
-  if (wellFromItem(item) || logCurveFromItem(item))
+  if (wellFromItem(item) || devCurveFromItem(item) || logCurveFromItem(item))
     flags |= Qt::ItemIsUserCheckable;
 
   return flags;
@@ -203,4 +188,106 @@ H5DevCurve *qColadaH5WellModel::devCurveFromItem(qColadaH5Item *item) const {
 
 H5LogCurve *qColadaH5WellModel::logCurveFromItem(qColadaH5Item *item) const {
   return dynamic_cast<H5LogCurve *>(item->getGeoObject());
+}
+
+void qColadaH5WellModel::onMRMLSceneNodeAdded(vtkObject*, vtkObject* node)
+{
+  Q_D(qColadaH5WellModel);
+  this->qColadaH5Model::onMRMLSceneNodeAdded(nullptr, node);
+
+  vtkMRMLMarkupsNode* markupNode = vtkMRMLMarkupsNode::SafeDownCast(node);
+  if (markupNode && std::string(markupNode->GetName()) == "well_tops"){
+    qvtkConnect(markupNode, vtkMRMLMarkupsNode::PointAddedEvent,
+                   this, SLOT(onMarkupPointAdded(vtkObject*, vtkObject*)));
+    qvtkConnect(markupNode, vtkMRMLMarkupsNode::PointRemovedEvent,
+                   this, SLOT(onMarkupPointRemoved(vtkObject*, vtkObject*)));
+  }
+}
+
+void qColadaH5WellModel::onMarkupPointAdded(vtkObject* caller, int pid)
+{
+  Q_D(qColadaH5WellModel);
+  vtkMRMLMarkupsNode* markupNode =
+      vtkMRMLMarkupsNode::SafeDownCast(caller);
+  if (!markupNode)
+    return;
+
+  if (pid < 0 ||
+      pid >= markupNode->GetNumberOfControlPoints())
+    return;
+
+  auto controlPoint = markupNode->GetNthControlPoint(pid);
+  QString description = QString::fromStdString(controlPoint->Description);
+
+  QString fileName, objName;
+  getContainerAndObjNamesFromControlPointDesription(
+        description, fileName, objName);
+
+  if (fileName.isEmpty() ||
+      objName.isEmpty())
+    return;
+
+  qColadaH5Item* item = findItemByContainerAndObjectNames(fileName, objName);
+  if (!item)
+    return;
+
+  item->setCheckState(Qt::Checked);
+  QModelIndex index = getIndex(item);
+  emit dataChanged(index, index, {Qt::CheckStateRole});
+}
+
+void qColadaH5WellModel::onMarkupPointRemoved(vtkObject* caller, int pid)
+{
+  Q_D(qColadaH5WellModel);
+  vtkMRMLMarkupsNode* markupNode =
+      vtkMRMLMarkupsNode::SafeDownCast(caller);
+  if (!markupNode)
+    return;
+
+  if (pid < 0 ||
+      pid >= markupNode->GetNumberOfControlPoints())
+    return;
+
+  auto controlPoint = markupNode->GetNthControlPoint(pid);
+  QString description = QString::fromStdString(controlPoint->Description);
+
+  QString fileName, objName;
+  getContainerAndObjNamesFromControlPointDesription(
+        description, fileName, objName);
+
+  if (fileName.isEmpty() ||
+      objName.isEmpty())
+    return;
+
+  qColadaH5Item* item = findItemByContainerAndObjectNames(fileName, objName);
+  if (!item)
+    return;
+
+  item->setCheckState(Qt::Unchecked);
+  QModelIndex index = getIndex(item);
+  emit dataChanged(index, index, {Qt::CheckStateRole});
+}
+
+void qColadaH5WellModel::getContainerAndObjNamesFromControlPointDesription(
+    const QString &description,
+    QString& fileName, QString& objName)
+{
+  QStringList lines = description.split("\n");
+
+  for (const auto& line : lines){
+    QStringList strings = line.split(" :");
+
+    if (strings.count() != 2)
+      continue;
+
+    if (strings[0].contains("GeoContainer")){
+      fileName = strings[1];
+    } else if (strings[0].contains("GeoObject")){
+      objName = strings[1];
+    }
+
+    if (!fileName.isEmpty() &&
+        !objName.isEmpty())
+      return;
+  }
 }

@@ -67,11 +67,10 @@ void qColadaH5MapModel::fetchMore(const QModelIndex &parent) {
   QVector<qColadaH5Item *> childItems;
   if (parentItem->isGeoContainer()) {
     H5BaseContainer *obj = parentItem->getGeoContainer();
-    h5gt::File file = obj->getH5File();
-    H5MapCnt_ptr mapCnt(h5geo::openMapContainer(file));
-    if (mapCnt == nullptr)
+    if (obj == nullptr)
       return;
 
+    h5gt::File file = obj->getH5File();
     std::vector<std::string> childrenNameList = file.listObjectNames();
 
     childItems.reserve(childrenNameList.size());
@@ -80,26 +79,23 @@ void qColadaH5MapModel::fetchMore(const QModelIndex &parent) {
         continue;
 
       h5gt::Group group = file.getGroup(childrenNameList[i]);
-      H5Map *map = mapCnt->getMap(group);
-      if (map) {
-        childItems.push_back(new qColadaH5Item(map, parentItem));
+      if (h5geo::isMap(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openMap(group), parentItem));
       } else {
-        H5BaseObject *baseObj = h5geo::openBaseObject(group);
-        childItems.push_back(new qColadaH5Item(baseObj, parentItem));
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openBaseObject(group), parentItem));
       }
     }
   } else if (parentItem->isGeoObject()) {
     H5BaseObject *obj = parentItem->getGeoObject();
-    if (obj == nullptr || dynamic_cast<H5Map *>(obj))
+    if (obj == nullptr ||
+        dynamic_cast<H5Map *>(obj))
       return;
 
-    h5gt::File file = obj->getH5File();
     h5gt::Group objG = obj->getObjG();
-
-    H5MapCnt_ptr mapCnt(h5geo::openMapContainer(file));
-    if (mapCnt == nullptr)
-      return;
-
     std::vector<std::string> childrenNameList = objG.listObjectNames();
 
     childItems.reserve(childrenNameList.size());
@@ -108,12 +104,14 @@ void qColadaH5MapModel::fetchMore(const QModelIndex &parent) {
         continue;
 
       h5gt::Group group = objG.getGroup(childrenNameList[i]);
-      H5Map *map = mapCnt->getMap(group);
-      if (map) {
-        childItems.push_back(new qColadaH5Item(map, parentItem));
+      if (h5geo::isMap(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openMap(group), parentItem));
       } else {
-        H5BaseObject *baseObj = h5geo::openBaseObject(group);
-        childItems.push_back(new qColadaH5Item(baseObj, parentItem));
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openBaseObject(group), parentItem));
       }
     }
   }

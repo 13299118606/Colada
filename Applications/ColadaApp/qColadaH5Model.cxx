@@ -34,7 +34,7 @@ void qColadaH5ModelPrivate::init(const QString &title) {
   rootItem = new qColadaH5Item(nullptr, nullptr);
   headerData = title;
 
-  qSlicerApplication * app = qSlicerApplication::application();
+  app = qSlicerApplication::application();
   if (!app){
     qCritical() << "qColadaH5ModelPrivate::init: unable to get application instance";
     return;
@@ -504,11 +504,13 @@ void qColadaH5Model::onMRMLSceneNodeAdded(
     vtkObject*, vtkObject* node)
 {
   Q_D(qColadaH5Model);
+  std::cout << "NODE ADDED" << std::endl;
   vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(node);
   if (!dispNode)
     return;
+  std::cout << "NODE ADDED IS DISPLAYABLE: " << dispNode->GetName() << std::endl;
 
-  qColadaH5Item* item = this->findMRMLGeoNode(dispNode);
+  qColadaH5Item* item = this->findItemByMRMLGeoNode(dispNode);
   if (!item)
     return;
 
@@ -525,7 +527,7 @@ void qColadaH5Model::onMRMLSceneNodeRemoved(
   if (!dispNode)
     return;
 
-  qColadaH5Item* item = this->findMRMLGeoNode(dispNode);
+  qColadaH5Item* item = this->findItemByMRMLGeoNode(dispNode);
   if (!item)
     return;
 
@@ -534,36 +536,29 @@ void qColadaH5Model::onMRMLSceneNodeRemoved(
   emit dataChanged(index, index, {Qt::CheckStateRole});
 }
 
-qColadaH5Item* qColadaH5Model::findMRMLGeoNode(vtkMRMLNode* node)
+qColadaH5Item* qColadaH5Model::findItemByContainerAndObjectNames(
+    const QString& fileName, const QString& objName)
 {
   Q_D(qColadaH5Model);
-  if (!node)
-    return nullptr;
-
-  auto fileName = node->GetAttribute("GeoContainer");
-  if (!fileName)
-    return nullptr;
-
-  auto objName = node->GetAttribute("GeoObject");
-  if (!objName)
-    return nullptr;
-
   h5gt::FileAccessProps fapl;
-  if (H5Fis_hdf5(fileName) <= 0 ||
-      H5Fis_accessible(fileName, fapl.getId()) <= 0 )
+  if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
+      H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0 )
     return nullptr;
 
   h5gt::File h5File(
-        fileName,
+        fileName.toStdString(),
         h5gt::File::ReadOnly, fapl);
 
-  if (!h5File.hasObject(objName, h5gt::ObjectType::Group))
+  if (!h5File.hasObject(objName.toStdString(), h5gt::ObjectType::Group))
     return nullptr;
 
-  QString qFileName = QString::fromUtf8(fileName);
-  QString qObjName = QString::fromUtf8(objName);
-  QStringList qObjNameList = qObjName.split(':');
+  std::cout << "hasObject!" <<std::endl;
 
+  QStringList objNameList = objName.split(QLatin1Char('/'), Qt::SkipEmptyParts); // '/' is hdf5 path delimiter
+  for (int i = 0; i < objNameList.count(); i++)
+    std::cout << objNameList[i].toStdString() << std::endl;
+
+  // 1) find container among children of root item
   qColadaH5Item* item = nullptr;
   QVector<qColadaH5Item *> children = d->rootItem->getChildren();
   for (qColadaH5Item * child : children){
@@ -580,13 +575,33 @@ qColadaH5Item* qColadaH5Model::findMRMLGeoNode(vtkMRMLNode* node)
   if (!item)
     return nullptr;
 
+  // 2) find item by gradually accessing childs
   fetchAllChildren(this->getIndex(item));
-  for (int i = 0; i < qObjNameList.count(); i++){
+  for (int i = 0; i < objNameList.count(); i++){
+    std::cout << objNameList[i].toStdString() << std::endl;
     if (item)
-      item = item->getChildByName(qObjNameList[i]);
+      item = item->getChildByName(objNameList[i]);
     else
       return nullptr;
   }
 
   return item;
+}
+
+qColadaH5Item* qColadaH5Model::findItemByMRMLGeoNode(vtkMRMLNode* node)
+{
+  Q_D(qColadaH5Model);
+  if (!node)
+    return nullptr;
+
+  auto fileName = node->GetAttribute("GeoContainer");
+  if (!fileName)
+    return nullptr;
+
+  auto objName = node->GetAttribute("GeoObject");
+  if (!objName)
+    return nullptr;
+
+  return findItemByContainerAndObjectNames(
+        QString::fromUtf8(fileName), QString::fromUtf8(objName));
 }

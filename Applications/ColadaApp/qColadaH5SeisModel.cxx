@@ -67,11 +67,10 @@ void qColadaH5SeisModel::fetchMore(const QModelIndex &parent) {
   QVector<qColadaH5Item *> childItems;
   if (parentItem->isGeoContainer()) {
     H5BaseContainer *obj = parentItem->getGeoContainer();
-    h5gt::File file = obj->getH5File();
-    H5SeisCnt_ptr seisCnt(h5geo::openSeisContainer(file));
-    if (seisCnt == nullptr)
+    if (obj == nullptr)
       return;
 
+    h5gt::File file = obj->getH5File();
     std::vector<std::string> childrenNameList = file.listObjectNames();
 
     childItems.reserve(childrenNameList.size());
@@ -80,26 +79,23 @@ void qColadaH5SeisModel::fetchMore(const QModelIndex &parent) {
         continue;
 
       h5gt::Group group = file.getGroup(childrenNameList[i]);
-      H5Seis *seis = seisCnt->getSeis(group);
-      if (seis) {
-        childItems.push_back(new qColadaH5Item(seis, parentItem));
+      if (h5geo::isSeis(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openSeis(group), parentItem));
       } else {
-        H5BaseObject *baseObj = h5geo::openBaseObject(group);
-        childItems.push_back(new qColadaH5Item(baseObj, parentItem));
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openBaseObject(group), parentItem));
       }
     }
   } else if (parentItem->isGeoObject()) {
     H5BaseObject *obj = parentItem->getGeoObject();
-    if (obj == nullptr || dynamic_cast<H5Seis *>(obj))
+    if (obj == nullptr ||
+        dynamic_cast<H5Seis *>(obj))
       return;
 
-    h5gt::File file = obj->getH5File();
     h5gt::Group objG = obj->getObjG();
-
-    H5SeisCnt_ptr seisCnt(h5geo::openSeisContainer(file));
-    if (seisCnt == nullptr)
-      return;
-
     std::vector<std::string> childrenNameList = objG.listObjectNames();
 
     childItems.reserve(childrenNameList.size());
@@ -108,12 +104,14 @@ void qColadaH5SeisModel::fetchMore(const QModelIndex &parent) {
         continue;
 
       h5gt::Group group = objG.getGroup(childrenNameList[i]);
-      H5Seis *seis = seisCnt->getSeis(group);
-      if (seis) {
-        childItems.push_back(new qColadaH5Item(seis, parentItem));
+      if (h5geo::isSeis(group)){
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openSeis(group), parentItem));
       } else {
-        H5BaseObject *baseObj = h5geo::openBaseObject(group);
-        childItems.push_back(new qColadaH5Item(baseObj, parentItem));
+        childItems.push_back(
+              new qColadaH5Item(
+                h5geo::openBaseObject(group), parentItem));
       }
     }
   }

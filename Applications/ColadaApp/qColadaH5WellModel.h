@@ -13,6 +13,7 @@ class H5LogCurve;
 
 class Q_COLADA_APP_EXPORT qColadaH5WellModel : public qColadaH5Model {
   Q_OBJECT
+  QVTK_OBJECT
 
 public:
   typedef qColadaH5Model Superclass;
@@ -36,6 +37,16 @@ public slots:
   H5WellContainer *wellCntFromItem(qColadaH5Item *item) const;
   H5DevCurve *devCurveFromItem(qColadaH5Item *item) const;
   H5LogCurve *logCurveFromItem(qColadaH5Item *item) const;
+
+  virtual void onMRMLSceneNodeAdded(vtkObject*, vtkObject* node) override;
+
+  void onMarkupPointAdded(vtkObject* caller, int pid);
+  void onMarkupPointRemoved(vtkObject* caller, int pid);
+
+protected:
+  void getContainerAndObjNamesFromControlPointDesription(
+      const QString& description,
+      QString& fileName, QString& objName);
 
 protected:
   explicit qColadaH5WellModel(qColadaH5WellModelPrivate *pimpl, QObject *parent);
