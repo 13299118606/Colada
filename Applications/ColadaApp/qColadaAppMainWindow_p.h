@@ -50,19 +50,9 @@ public:
   virtual void setupUi(QMainWindow * mainWindow);
 
 protected:
-  virtual void setupDockWidgets(QMainWindow* mainWindow);
-  virtual void setupTreeViews(QMainWindow *mainWindow);
   virtual void setupStatusBar(QMainWindow* mainWindow);
-  virtual void setupMenuBar(QMainWindow* mainWindow);
-  virtual void setupFileMenu(QMainWindow* mainWindow);
-  virtual void setupViewMenu(QMainWindow* mainWindow);
   virtual void setupSliceNodes(QMainWindow * mainWindow);
   virtual void setupColadaStyles(QMainWindow * mainWindow);
-  virtual void setupGeneralPanelDefaultDirs(QMainWindow * mainWindow);
-
-  virtual void loadSeisDataFromDefaultDirectory();
-  virtual void loadWellDataFromDefaultDirectory();
-  virtual void loadMapDataFromDefaultDirectory();
 
   vtkSmartPointer<vtkMatrix3x3> GenerateOrientationMatrix(const std::string& name);
   vtkSmartPointer<vtkMatrix3x3> GenerateXYOrientationMatrix();
@@ -71,10 +61,6 @@ protected:
 
 public:
   QLabel *currentProjectLabel, *currentCRSLabel;
-  QDockWidget* seisDockWidget, *mapDockWidget, *wellDockWidget;
-  qColadaH5MapTreeView *mapTreeView;
-  qColadaH5SeisTreeView *seisTreeView;
-  qColadaH5WellTreeView *wellTreeView;
 };
 
 #endif

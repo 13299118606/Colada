@@ -18,13 +18,6 @@
 // Colada includes
 #include "qColadaAppMainWindow.h"
 #include "qColadaAppMainWindow_p.h"
-#include "qColadaH5MapTreeView.h"
-#include "qColadaH5SeisTreeView.h"
-#include "qColadaH5WellTreeView.h"
-#include "qColadaH5MapModel.h"
-#include "qColadaH5SeisModel.h"
-#include "qColadaH5WellModel.h"
-#include "qColadaH5ProxyModel.h"
 #include "util.h"
 
 // Qt includes
@@ -93,9 +86,9 @@ void qColadaAppMainWindowPrivate::init()
   this->Superclass::init();
   setupPythonModules();
 
-  this->loadSeisDataFromDefaultDirectory();
-  this->loadWellDataFromDefaultDirectory();
-  this->loadMapDataFromDefaultDirectory();
+//  this->loadSeisDataFromDefaultDirectory();
+//  this->loadWellDataFromDefaultDirectory();
+//  this->loadMapDataFromDefaultDirectory();
 
   util::initProjLibDB();
 }
@@ -119,7 +112,7 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
 
   qSlicerApplication * app = qSlicerApplication::application();
   if (!app){
-    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get app instance";
+    qCritical() << "qColadaAppMainWindowPrivate::setupUi: unable to get app instance";
     return;
   }
 
@@ -173,49 +166,9 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   this->StatusBar->setVisible(true);
 
   // Setup Colada UI
-  setupDockWidgets(mainWindow);
-  setupTreeViews(mainWindow);
   setupStatusBar(mainWindow);
-  setupMenuBar(mainWindow);
   setupSliceNodes(mainWindow);
   setupColadaStyles(mainWindow);
-  setupGeneralPanelDefaultDirs(mainWindow);
-}
-
-void qColadaAppMainWindowPrivate::setupDockWidgets(QMainWindow* mainWindow) {
-  PanelDockWidget->setWindowTitle("Modules");
-
-  seisDockWidget = new QDockWidget("Seismic", mainWindow);
-  mapDockWidget = new QDockWidget("Maps", mainWindow);
-  wellDockWidget = new QDockWidget("Wells", mainWindow);
-
-  seisDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
-                                  Qt::DockWidgetArea::RightDockWidgetArea);
-  mapDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
-                                  Qt::DockWidgetArea::RightDockWidgetArea);
-  wellDockWidget->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea |
-                                  Qt::DockWidgetArea::RightDockWidgetArea);
-
-  mainWindow->addDockWidget(Qt::LeftDockWidgetArea, seisDockWidget);
-  seisDockWidget->setObjectName("SeisDockWidget");
-  mainWindow->addDockWidget(Qt::LeftDockWidgetArea, mapDockWidget);
-  mapDockWidget->setObjectName("MapDockWidget");
-  mainWindow->addDockWidget(Qt::LeftDockWidgetArea, wellDockWidget);
-  wellDockWidget->setObjectName("WellDockWidget");
-
-  mainWindow->tabifyDockWidget(wellDockWidget, mapDockWidget);
-  mainWindow->tabifyDockWidget(mapDockWidget, seisDockWidget);
-  mainWindow->tabifyDockWidget(seisDockWidget, PanelDockWidget);
-}
-
-void qColadaAppMainWindowPrivate::setupTreeViews(QMainWindow *mainWindow) {
-  mapTreeView = new qColadaH5MapTreeView(mapDockWidget);
-  seisTreeView = new qColadaH5SeisTreeView(seisDockWidget);
-  wellTreeView = new qColadaH5WellTreeView(wellDockWidget);
-
-  mapDockWidget->setWidget(mapTreeView);
-  seisDockWidget->setWidget(seisTreeView);
-  wellDockWidget->setWidget(wellTreeView);
 }
 
 void qColadaAppMainWindowPrivate::setupStatusBar(QMainWindow* mainWindow) {
@@ -226,31 +179,6 @@ void qColadaAppMainWindowPrivate::setupStatusBar(QMainWindow* mainWindow) {
 
   StatusBar->addWidget(currentProjectLabel);
   StatusBar->addWidget(currentCRSLabel);
-}
-
-void qColadaAppMainWindowPrivate::setupMenuBar(QMainWindow* mainWindow) {
-  // Fill in all menus 
-  setupFileMenu(mainWindow);
-  setupViewMenu(mainWindow);
-}
-
-void qColadaAppMainWindowPrivate::setupFileMenu(QMainWindow* mainWindow) {
-  Q_Q(qColadaAppMainWindow);
-
-  QList<QAction*> actionList = FileMenu->actions();
-//  for (int i = 0; i < actionList.count(); i++)
-//    FileMenu->removeAction(actionList[i]);
-}
-
-void qColadaAppMainWindowPrivate::setupViewMenu(QMainWindow* mainWindow) {
-  Q_Q(qColadaAppMainWindow);
-
-  QList<QAction*> actionList = ViewMenu->actions();
-  
-  ViewMenu->insertActions(actionList[3],
-    { seisDockWidget->toggleViewAction(),
-    mapDockWidget->toggleViewAction(),
-    wellDockWidget->toggleViewAction() });
 }
 
 void qColadaAppMainWindowPrivate::setupSliceNodes(QMainWindow * mainWindow)
@@ -347,7 +275,7 @@ void qColadaAppMainWindowPrivate::setupSliceNodes(QMainWindow * mainWindow)
   vtkMRMLLayoutNode* layoutNode =  vtkMRMLLayoutNode::SafeDownCast(
     this->LayoutManager->mrmlScene()->GetSingletonNode("vtkMRMLLayoutNode","vtkMRMLLayoutNode"));
   if(!layoutNode){
-    qCritical() << "qColadaAppMainWindowPrivate::setupSliceNodes(): layoutNode not found!";
+    qCritical() << "qColadaAppMainWindowPrivate::setupSliceNodes: layoutNode not found!";
     return;
   }
 
@@ -380,7 +308,7 @@ void qColadaAppMainWindowPrivate::setupColadaStyles(QMainWindow * mainWindow)
   Q_Q(qColadaAppMainWindow);
   qSlicerApplication * app = qSlicerApplication::application();
   if (!app){
-    qCritical() << "qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(): unable to get app instance";
+    qCritical() << "qColadaAppMainWindowPrivate::setupColadaStyles: unable to get app instance";
     return;
   }
 
@@ -389,93 +317,12 @@ void qColadaAppMainWindowPrivate::setupColadaStyles(QMainWindow * mainWindow)
         app->settingsDialog()->panel(qSlicerApplication::tr("Appearance")));
 
   if (!settingsStylesPanel){
-    qCritical() << "qColadaAppMainWindowPrivate::setupUi(): unable to get `qSlicerSettingsStylesPanel` to connect `currentStyleChanged`";
+    qCritical() << "qColadaAppMainWindowPrivate::setupColadaStyles: unable to get `qSlicerSettingsStylesPanel` to connect `currentStyleChanged`";
     return;
   }
 
   q->connect(settingsStylesPanel, &qSlicerSettingsStylesPanel::currentStyleChanged,
              q, &qColadaAppMainWindow::onCurrentStyleChanged);
-}
-
-void qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(QMainWindow * mainWindow)
-{
-  qSlicerApplication * app = qSlicerApplication::application();
-  if (!app){
-    qCritical() << "qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(): unable to get app instance";
-    return;
-  }
-
-  qSlicerSettingsGeneralPanel* settingsGeneralPanel =
-      qobject_cast<qSlicerSettingsGeneralPanel*>(
-        app->settingsDialog()->panel(qSlicerApplication::tr("General")));
-
-  ctkDirectoryButton* defaultSeisDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
-  // the same as default scene path to not deal with whether the dir does exist or not
-  defaultSeisDirectoryButton->setDirectory(
-        qSlicerCoreApplication::application()->defaultScenePath());
-  qSlicerRelativePathMapper* relativeSeisPathMapper =
-      new qSlicerRelativePathMapper(defaultSeisDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
-
-  ctkDirectoryButton* defaultWellDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
-  // the same as default scene path to not deal with whether the dir does exist or not
-  defaultWellDirectoryButton->setDirectory(
-        qSlicerCoreApplication::application()->defaultScenePath());
-  qSlicerRelativePathMapper* relativeWellPathMapper =
-      new qSlicerRelativePathMapper(defaultWellDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
-
-
-  ctkDirectoryButton* defaultMapDirectoryButton = new ctkDirectoryButton(settingsGeneralPanel);
-  // the same as default scene path to not deal with whether the dir does exist or not
-  defaultMapDirectoryButton->setDirectory(
-        qSlicerCoreApplication::application()->defaultScenePath());
-  qSlicerRelativePathMapper* relativeMapPathMapper =
-      new qSlicerRelativePathMapper(defaultMapDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
-
-  QFormLayout* formLayout =
-      qobject_cast<QFormLayout*>(settingsGeneralPanel->layout());
-
-  if (!formLayout){
-    qCritical() << "qColadaAppMainWindowPrivate::setupGeneralPanelDefaultDirs(): unable to get QFormLayout from qSlicerSettingsGeneralPanel";
-    return;
-  }
-
-  formLayout->insertRow(1, "Default seismic data location:", defaultSeisDirectoryButton);
-  formLayout->insertRow(2, "Default well data location:", defaultWellDirectoryButton);
-  formLayout->insertRow(3, "Default map data location:", defaultMapDirectoryButton);
-
-  settingsGeneralPanel->registerProperty("DefaultSeismicDataPath", relativeSeisPathMapper, "relativePath",
-                      SIGNAL(relativePathChanged(QString)),
-                      "Default seismic data path");
-  settingsGeneralPanel->registerProperty("DefaultWellDataPath", relativeWellPathMapper, "relativePath",
-                      SIGNAL(relativePathChanged(QString)),
-                      "Default well data path");
-  settingsGeneralPanel->registerProperty("DefaultMapDataPath", relativeMapPathMapper, "relativePath",
-                      SIGNAL(relativePathChanged(QString)),
-                      "Default map data path");
-}
-
-void qColadaAppMainWindowPrivate::loadSeisDataFromDefaultDirectory()
-{
-  QDir dir(util::defaultSeisDir());
-  QStringList files = dir.entryList(QStringList() << "*", QDir::Files);
-  for (QString& filename : files)
-    this->seisTreeView->addContainer(dir.absoluteFilePath(filename));
-}
-
-void qColadaAppMainWindowPrivate::loadWellDataFromDefaultDirectory()
-{
-  QDir dir(util::defaultWellDir());
-  QStringList files = dir.entryList(QStringList() << "*", QDir::Files);
-  for (QString& filename : files)
-    this->wellTreeView->addContainer(dir.absoluteFilePath(filename));
-}
-
-void qColadaAppMainWindowPrivate::loadMapDataFromDefaultDirectory()
-{
-  QDir dir(util::defaultMapDir());
-  QStringList files = dir.entryList(QStringList() << "*", QDir::Files);
-  for (QString& filename : files)
-    this->mapTreeView->addContainer(dir.absoluteFilePath(filename));
 }
 
 vtkSmartPointer<vtkMatrix3x3> qColadaAppMainWindowPrivate::GenerateOrientationMatrix(const std::string& name)
@@ -556,7 +403,7 @@ void qColadaAppMainWindow::onCurrentStyleChanged(const QString& name)
 {
   qSlicerApplication * app = qSlicerApplication::application();
   if (!app){
-    qCritical() << "qColadaAppMainWindow::onCurrentStyleChanged(): unable to get app instance";
+    qCritical() << "qColadaAppMainWindow::onCurrentStyleChanged: unable to get app instance";
     return;
   }
 
@@ -575,36 +422,6 @@ void qColadaAppMainWindow::onCurrentStyleChanged(const QString& name)
   } else {
     app->setStyleSheet("");
   }
-}
-
-QDockWidget* qColadaAppMainWindow::getMapDockWidget() {
-  Q_D(qColadaAppMainWindow);
-  return d->mapDockWidget;
-}
-
-QDockWidget *qColadaAppMainWindow::getSeisDockWidget() {
-  Q_D(qColadaAppMainWindow);
-  return d->seisDockWidget;
-}
-
-QDockWidget *qColadaAppMainWindow::getWellDockWidget() {
-  Q_D(qColadaAppMainWindow);
-  return d->wellDockWidget;
-}
-
-qColadaH5MapTreeView *qColadaAppMainWindow::getMapTreeView() {
-  Q_D(qColadaAppMainWindow);
-  return d->mapTreeView;
-}
-
-qColadaH5SeisTreeView *qColadaAppMainWindow::getSeisTreeView() {
-  Q_D(qColadaAppMainWindow);
-  return d->seisTreeView;
-}
-
-qColadaH5WellTreeView *qColadaAppMainWindow::getWellTreeView() {
-  Q_D(qColadaAppMainWindow);
-  return d->wellTreeView;
 }
 
 void qColadaAppMainWindow::showEvent(QShowEvent *event){

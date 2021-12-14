@@ -76,24 +76,12 @@ set(APPLIB_SRCS
   qCheckableVHeaderView.h
   qColadaH5TreeView.cxx
   qColadaH5TreeView.h
-  qColadaH5SeisTreeView.cxx
-  qColadaH5SeisTreeView.h
-  qColadaH5MapTreeView.cxx
-  qColadaH5MapTreeView.h
-  qColadaH5WellTreeView.cxx
-  qColadaH5WellTreeView.h
   qColadaH5Item.cxx
   qColadaH5Item.h
   qColadaH5ItemDelegate.cxx
   qColadaH5ItemDelegate.h
   qColadaH5Model.cxx
   qColadaH5Model.h
-  qColadaH5SeisModel.cxx
-  qColadaH5SeisModel.h
-  qColadaH5MapModel.cxx
-  qColadaH5MapModel.h
-  qColadaH5WellModel.cxx
-  qColadaH5WellModel.h
   qColadaH5ProxyModel.cxx
   qColadaH5ProxyModel.h
   qColadaReader.h
@@ -146,14 +134,8 @@ set(APPLIB_MOC_SRCS
   qCheckableHHeaderView.h
   qCheckableVHeaderView.h
   qColadaH5TreeView.h
-  qColadaH5MapTreeView.h
-  qColadaH5SeisTreeView.h
-  qColadaH5WellTreeView.h
   qColadaH5ItemDelegate.h
   qColadaH5Model.h
-  qColadaH5MapModel.h
-  qColadaH5SeisModel.h
-  qColadaH5WellModel.h
   qColadaH5ProxyModel.h
   qColadaReader.h
   qColadaSegyReader.h

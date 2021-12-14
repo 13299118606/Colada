@@ -504,11 +504,9 @@ void qColadaH5Model::onMRMLSceneNodeAdded(
     vtkObject*, vtkObject* node)
 {
   Q_D(qColadaH5Model);
-  std::cout << "NODE ADDED" << std::endl;
   vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(node);
   if (!dispNode)
     return;
-  std::cout << "NODE ADDED IS DISPLAYABLE: " << dispNode->GetName() << std::endl;
 
   qColadaH5Item* item = this->findItemByMRMLGeoNode(dispNode);
   if (!item)
@@ -552,11 +550,7 @@ qColadaH5Item* qColadaH5Model::findItemByContainerAndObjectNames(
   if (!h5File.hasObject(objName.toStdString(), h5gt::ObjectType::Group))
     return nullptr;
 
-  std::cout << "hasObject!" <<std::endl;
-
   QStringList objNameList = objName.split(QLatin1Char('/'), Qt::SkipEmptyParts); // '/' is hdf5 path delimiter
-  for (int i = 0; i < objNameList.count(); i++)
-    std::cout << objNameList[i].toStdString() << std::endl;
 
   // 1) find container among children of root item
   qColadaH5Item* item = nullptr;
@@ -578,7 +572,6 @@ qColadaH5Item* qColadaH5Model::findItemByContainerAndObjectNames(
   // 2) find item by gradually accessing childs
   fetchAllChildren(this->getIndex(item));
   for (int i = 0; i < objNameList.count(); i++){
-    std::cout << objNameList[i].toStdString() << std::endl;
     if (item)
       item = item->getChildByName(objNameList[i]);
     else

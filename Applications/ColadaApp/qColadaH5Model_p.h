@@ -23,7 +23,7 @@ public:
 protected:
     qColadaH5Item* rootItem;
     QString headerData;
-    qSlicerApplication * app
+    qSlicerApplication * app;
 };
 
 #endif
