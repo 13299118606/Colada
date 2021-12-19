@@ -26,10 +26,12 @@ protected:
   /// \brief for subclasses to add actions
   /// \param menu add actions here
   ///
-  virtual void fillHdrMenu(QMenu *menu, QPoint pos);
+  virtual void fillHdrMenu(QMenu *menu, const QPoint &pos);
+  virtual void fillTreeViewMenu(QMenu *menu, const QPoint &pos);
 
 private:
-  virtual void hdrMenuRequested(QPoint pos);
+  virtual void hdrMenuRequested(const QPoint &pos);
+  virtual void treeViewMenuRequested(const QPoint &pos);
 
 public slots:
   virtual void onAddContainer();

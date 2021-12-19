@@ -42,8 +42,10 @@ void qColadaH5TreeViewPrivate::init() {
 
   q->setModel(proxy);
 
-  QObject::connect(q->header(), &QTreeView::customContextMenuRequested,
+  QObject::connect(q->header(), &QHeaderView::customContextMenuRequested,
                    q, &qColadaH5TreeView::hdrMenuRequested);
+  QObject::connect(q, &QTreeView::customContextMenuRequested,
+                   q, &qColadaH5TreeView::treeViewMenuRequested);
 }
 
 qColadaH5TreeView::qColadaH5TreeView(QWidget *parent)
@@ -59,7 +61,7 @@ qColadaH5TreeView::qColadaH5TreeView(qColadaH5TreeViewPrivate *pimpl, QWidget *p
 
 qColadaH5TreeView::~qColadaH5TreeView() {}
 
-void qColadaH5TreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
+void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
   QAction *checkedOnlyAct = menu->addAction("Show checked only");
   checkedOnlyAct->setCheckable(true);
 
@@ -69,17 +71,29 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, QPoint pos) {
     checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
   else
     checkedOnlyAct->setDisabled(true);
-  menu->addSeparator();
-
   connect(checkedOnlyAct, &QAction::toggled, proxyModel,
           &qColadaH5ProxyModel::setShowCheckedItemsOnly);
+
+  QAction *expandAllAct = menu->addAction("Expand all");
+  connect(expandAllAct, &QAction::triggered, this,
+          &QTreeView::expandAll);
+
+  QAction *collapseAllAct = menu->addAction("Collapse all");
+  connect(collapseAllAct, &QAction::triggered, this,
+          &QTreeView::collapseAll);
+
+  menu->addSeparator();
 
   QAction *addContainerAction = menu->addAction("Add container");
   connect(addContainerAction, &QAction::triggered, this,
           &qColadaH5TreeView::onAddContainer);
 }
 
-void qColadaH5TreeView::hdrMenuRequested(QPoint pos) {
+void qColadaH5TreeView::fillTreeViewMenu(QMenu *menu, const QPoint &pos) {
+
+}
+
+void qColadaH5TreeView::hdrMenuRequested(const QPoint &pos) {
   QMenu *menu = new QMenu(header());
 
   /* for subclasses to add actions */
@@ -87,6 +101,17 @@ void qColadaH5TreeView::hdrMenuRequested(QPoint pos) {
 
   //    menu->popup(header()->mapToGlobal(pos));
   menu->exec(header()->mapToGlobal(pos));
+  menu->deleteLater();
+}
+
+void qColadaH5TreeView::treeViewMenuRequested(const QPoint &pos) {
+  QMenu *menu = new QMenu(this);
+
+  /* for subclasses to add actions */
+  fillTreeViewMenu(menu, pos);
+
+  //    menu->popup(header()->mapToGlobal(pos));
+  menu->exec(this->mapToGlobal(pos));
   menu->deleteLater();
 }
 
