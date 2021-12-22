@@ -44,7 +44,7 @@ template <typename T>
 /// /param tableView
 /// /param
 /// /return
-void setComboDelegateFromEnumClassForTable(QTableView *tableView, int col) {
+void setComboDelegateFromEnumClass(QTableView *tableView, int col) {
   auto comboData = magic_enum::enum_names<T>();
   QStringList comboDataList;
   for (const auto &name : comboData) {
@@ -121,19 +121,19 @@ void qColadaSegyReaderPrivate::initTable() {
   }
 
   /* ComboBoxDelegate */
-  setComboDelegateFromEnumClassForTable<h5geo::CreationType>(
+  setComboDelegateFromEnumClass<h5geo::CreationType>(
       tableView, tableHdrNames.indexOf("creation type"));
-  setComboDelegateFromEnumClassForTable<h5geo::SurveyType>(
+  setComboDelegateFromEnumClass<h5geo::SurveyType>(
       tableView, tableHdrNames.indexOf("survey type"));
-  setComboDelegateFromEnumClassForTable<h5geo::SeisDataType>(
+  setComboDelegateFromEnumClass<h5geo::SeisDataType>(
       tableView, tableHdrNames.indexOf("data type"));
-  setComboDelegateFromEnumClassForTable<h5geo::Domain>(
+  setComboDelegateFromEnumClass<h5geo::Domain>(
       tableView, tableHdrNames.indexOf("domain"));
-  setComboDelegateFromEnumClassForTable<h5geo::TxtEncoding>(
+  setComboDelegateFromEnumClass<h5geo::TxtEncoding>(
       tableView, tableHdrNames.indexOf("text encoding"));
-  setComboDelegateFromEnumClassForTable<h5geo::SegyEndian>(
+  setComboDelegateFromEnumClass<h5geo::SegyEndian>(
       tableView, tableHdrNames.indexOf("endianness"));
-  setComboDelegateFromEnumClassForTable<h5geo::SegyFormat>(
+  setComboDelegateFromEnumClass<h5geo::SegyFormat>(
       tableView, tableHdrNames.indexOf("format"));
 
   /* SpinBoxDelegate */

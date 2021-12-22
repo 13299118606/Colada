@@ -25,7 +25,6 @@ protected:
   ///
   /// \brief for subclasses to add actions
   /// \param menu add actions here
-  ///
   virtual void fillHdrMenu(QMenu *menu, const QPoint &pos);
   virtual void fillTreeViewMenu(QMenu *menu, const QPoint &pos);
 

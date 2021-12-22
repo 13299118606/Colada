@@ -84,6 +84,8 @@ set(APPLIB_SRCS
   qColadaH5Model.h
   qColadaH5ProxyModel.cxx
   qColadaH5ProxyModel.h
+  qColadaH5FileDialog.h
+  qColadaH5FileDialog.cxx
   qColadaReader.h
   qColadaReader.cxx
   qColadaSegyReader.h
@@ -137,6 +139,7 @@ set(APPLIB_MOC_SRCS
   qColadaH5ItemDelegate.h
   qColadaH5Model.h
   qColadaH5ProxyModel.h
+  qColadaH5FileDialog.h
   qColadaReader.h
   qColadaSegyReader.h
 
