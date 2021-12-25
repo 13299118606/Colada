@@ -86,13 +86,18 @@ public slots:
   qColadaH5Item *itemFromIndex(const QModelIndex &index) const;
   qColadaH5Item *getRootItem() const;
 
-  /// @brief Needs to be reimplemented by subclasses
-  /// @param file 
-  /// @return 
-  virtual bool canAddH5File(h5gt::File file) const;
+  /// brief Needs to be reimplemented by subclasses
+  /// param file
+  /// return
+  virtual bool canAddH5File(const h5gt::File& file) const;
+
+  qColadaH5Item* findH5File(const QString &fullName);
+  qColadaH5Item* findH5File(const h5gt::File& file);
 
   bool addH5File(const QString &fullName);
-  bool addH5File(h5gt::File file);
+  bool addH5File(const h5gt::File& file);
+  bool removeH5File(const QString &fullName);
+  bool removeH5File(const h5gt::File& file);
   void releaseCheckState(qColadaH5Item *topLevelItem);
   void updateCheckState(qColadaH5Item *topLevelItem);
   void sendItemDataChanged(

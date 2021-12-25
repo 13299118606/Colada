@@ -14,6 +14,9 @@
 // CTK includes
 #include <ctkFileDialog.h>
 
+// h5geo includes
+#include <h5geo/h5basecontainer.h>
+
 qColadaH5TreeViewPrivate::qColadaH5TreeViewPrivate(qColadaH5TreeView &q)
     : q_ptr(&q) {}
 
@@ -87,6 +90,13 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
   QAction *addContainerAction = menu->addAction("Add container");
   connect(addContainerAction, &QAction::triggered, this,
           &qColadaH5TreeView::onAddContainer);
+
+  QAction *removeContainerAction = menu->addAction("Remove container");
+  connect(removeContainerAction, &QAction::triggered, this,
+          &qColadaH5TreeView::onRemoveContainer);
+  QAction *reloadContainerAction = menu->addAction("Reload container");
+  connect(reloadContainerAction, &QAction::triggered, this,
+          &qColadaH5TreeView::onReloadContainer);
 }
 
 void qColadaH5TreeView::fillTreeViewMenu(QMenu *menu, const QPoint &pos) {
@@ -115,26 +125,58 @@ void qColadaH5TreeView::treeViewMenuRequested(const QPoint &pos) {
   menu->deleteLater();
 }
 
-void qColadaH5TreeView::addContainer(const QString &fileName) {
-  this->addContainer(QStringList() << fileName);
-}
-
-void qColadaH5TreeView::addContainer(const QStringList &fileNameList) {
+bool qColadaH5TreeView::addContainer(const QString &fileName) {
   qColadaH5ProxyModel *proxyModel =
       qobject_cast<qColadaH5ProxyModel *>(model());
-  if (!proxyModel)
-    return;
+  if (!proxyModel){
+    qCritical() << "qColadaH5TreeView::addContainer: proxy model not found";
+    return false;
+  }
 
   qColadaH5Model *srcModel =
       static_cast<qColadaH5Model *>(proxyModel->sourceModel());
 
-  qColadaH5Item *root = srcModel->getRootItem();
-  for (int i = 0; i < fileNameList.count(); i++) {
-    if (root->getChildByName(fileNameList[i]) == nullptr)
-      if (!srcModel->addH5File(fileNameList[i])){
-        qWarning() << "qColadaH5TreeView::addContainer: unable to add the file:" << fileNameList[i];
-      }
+  if (!srcModel){
+    qCritical() << "qColadaH5TreeView::addContainer: source model not found";
+    return false;
   }
+
+  qColadaH5Item *root = srcModel->getRootItem();
+  if (!srcModel->addH5File(fileName)){
+    qWarning() << "qColadaH5TreeView::addContainer: unable to add the file: " << fileName;
+    return false;
+  }
+  return true;
+}
+
+bool qColadaH5TreeView::removeContainer(const QString &fileName) {
+  qColadaH5ProxyModel *proxyModel =
+      qobject_cast<qColadaH5ProxyModel *>(model());
+  if (!proxyModel){
+    qCritical() << "qColadaH5TreeView::removeContainer: proxy model not found";
+    return false;
+  }
+
+  qColadaH5Model *srcModel =
+      static_cast<qColadaH5Model *>(proxyModel->sourceModel());
+
+  if (!srcModel){
+    qCritical() << "qColadaH5TreeView::removeContainer: source model not found";
+    return false;
+  }
+
+  qColadaH5Item *root = srcModel->getRootItem();
+  if (!srcModel->removeH5File(fileName)){
+    qWarning() << "qColadaH5TreeView::removeContainer: unable to remove the file: " << fileName;
+    return false;
+  }
+  return true;
+}
+
+bool qColadaH5TreeView::reloadContainer(const QString &fileName) {
+  if (removeContainer(fileName))
+    return addContainer(fileName);
+  return false;
 }
 
 void qColadaH5TreeView::onAddContainer() {
@@ -142,5 +184,59 @@ void qColadaH5TreeView::onAddContainer() {
       nullptr, QObject::tr("Open Container"), "",
       QObject::tr("hdf5 file (*.h5 *.hdf5); all (*.*)"));
 
-  addContainer(h5FileNameList);
+  for (const auto& fileName : h5FileNameList)
+    addContainer(fileName);
 }
+
+void qColadaH5TreeView::onRemoveContainer() {
+  auto* proxy = qobject_cast<qColadaH5ProxyModel*>(this->model());
+  auto* srcModel = qobject_cast<qColadaH5Model*>(proxy->sourceModel());
+  auto* selectedModel = this->selectionModel();
+
+  if (!selectedModel){
+    qCritical() << "qColadaH5TreeView::onRemoveContainer: " <<
+                   "selected model is missing";
+    return;
+  }
+
+  for (const auto& index : selectedModel->selectedIndexes()){
+    QModelIndex srcIndex = proxy->mapToSource(index);
+    qColadaH5Item* item = srcModel->itemFromIndex(srcIndex);
+    if (!item)
+      continue;
+
+    if (!item->isGeoContainer())
+      continue;
+
+    this->removeContainer(
+          QString::fromStdString(
+            item->getGeoContainer()->getH5File().getFileName()));
+  }
+}
+
+void qColadaH5TreeView::onReloadContainer() {
+  auto* proxy = qobject_cast<qColadaH5ProxyModel*>(this->model());
+  auto* srcModel = qobject_cast<qColadaH5Model*>(proxy->sourceModel());
+  auto* selectedModel = this->selectionModel();
+
+  if (!selectedModel){
+    qCritical() << "qColadaH5TreeView::onReloadContainer: " <<
+                   "selected model is missing";
+    return;
+  }
+
+  for (const auto& index : selectedModel->selectedIndexes()){
+    QModelIndex srcIndex = proxy->mapToSource(index);
+    qColadaH5Item* item = srcModel->itemFromIndex(srcIndex);
+    if (!item)
+      continue;
+
+    if (!item->isGeoContainer())
+      continue;
+
+    this->reloadContainer(
+          QString::fromStdString(
+            item->getGeoContainer()->getH5File().getFileName()));
+  }
+}
+

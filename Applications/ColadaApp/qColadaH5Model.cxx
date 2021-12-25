@@ -309,7 +309,28 @@ void qColadaH5Model::getFullChildList(qColadaH5Item *item,
   }
 }
 
-bool qColadaH5Model::canAddH5File(h5gt::File file) const { return true; }
+bool qColadaH5Model::canAddH5File(const h5gt::File& file) const { return true; }
+
+qColadaH5Item* qColadaH5Model::findH5File(const QString &fullName) {
+  try {
+    h5gt::File file(fullName.toStdString(), h5gt::File::ReadOnly);
+    return findH5File(file);
+  } catch (h5gt::Exception& err) {
+    qCritical() << "qColadaH5Model::findH5File: " << err.what();
+  }
+  return nullptr;
+}
+
+qColadaH5Item* qColadaH5Model::findH5File(const h5gt::File& file) {
+  for (qColadaH5Item* child : getRootItem()->getChildren()){
+    if (!child->isGeoContainer())
+      continue;
+
+    if (file == child->getGeoContainer()->getH5File())
+      return child;
+  }
+  return nullptr;
+}
 
 bool qColadaH5Model::addH5File(const QString &fullName)
 {
@@ -322,10 +343,15 @@ bool qColadaH5Model::addH5File(const QString &fullName)
   return addH5File(file);
 }
 
-bool qColadaH5Model::addH5File(h5gt::File file) { 
+bool qColadaH5Model::addH5File(const h5gt::File& file) {
   Q_D(qColadaH5Model);
-  if (!canAddH5File(file))
+  if (!canAddH5File(file)){
     return false;
+  }
+
+  if (findH5File(file)){
+    return false;
+  }
 
   H5BaseContainer *baseCnt = h5geo::openBaseContainer(file);
   qColadaH5Item *fileItem = new qColadaH5Item(baseCnt, d->rootItem);
@@ -336,6 +362,20 @@ bool qColadaH5Model::addH5File(h5gt::File file) {
   d->rootItem->insertChild(fileItem, d->rootItem->childCount());
   endInsertRows();
   return true;
+}
+
+bool qColadaH5Model::removeH5File(const QString &fullName) {
+  qColadaH5Item* item = this->findH5File(fullName);
+  if (item)
+    return this->removeRow(item->getRow());
+  return false;
+}
+
+bool qColadaH5Model::removeH5File(const h5gt::File& file) {
+  qColadaH5Item* item = this->findH5File(file);
+  if (item)
+    return this->removeRow(item->getRow());
+  return false;
 }
 
 void qColadaH5Model::releaseCheckState(qColadaH5Item *topLevelItem) {

@@ -18,8 +18,9 @@ public:
   explicit qColadaH5TreeView(QWidget *parent = nullptr);
   virtual ~qColadaH5TreeView() override;
 
-  void addContainer(const QString &fileName);
-  void addContainer(const QStringList &fileNameList);
+  bool addContainer(const QString &fileName);
+  bool removeContainer(const QString &fileName);
+  bool reloadContainer(const QString &fileName);
 
 protected:
   ///
@@ -34,6 +35,8 @@ private:
 
 public slots:
   virtual void onAddContainer();
+  virtual void onRemoveContainer();
+  virtual void onReloadContainer();
 
 protected:
   QScopedPointer<qColadaH5TreeViewPrivate> d_ptr;
