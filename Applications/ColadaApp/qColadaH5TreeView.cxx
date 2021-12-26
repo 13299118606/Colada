@@ -74,6 +74,9 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
     checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
   else
     checkedOnlyAct->setDisabled(true);
+
+  menu->addSeparator();
+
   connect(checkedOnlyAct, &QAction::toggled, proxyModel,
           &qColadaH5ProxyModel::setShowCheckedItemsOnly);
 
@@ -97,6 +100,8 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
   QAction *reloadContainerAction = menu->addAction("Reload container");
   connect(reloadContainerAction, &QAction::triggered, this,
           &qColadaH5TreeView::onReloadContainer);
+
+  menu->addSeparator();
 }
 
 void qColadaH5TreeView::fillTreeViewMenu(QMenu *menu, const QPoint &pos) {
