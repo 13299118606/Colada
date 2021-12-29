@@ -20,7 +20,7 @@ public:
 
   bool addContainer(const QString &fileName);
   bool removeContainer(const QString &fileName);
-  bool reloadContainer(const QString &fileName);
+  bool refreshContainer(const QString &fileName);
 
 protected:
   ///
@@ -36,7 +36,7 @@ private:
 public slots:
   virtual void onAddContainer();
   virtual void onRemoveContainer();
-  virtual void onReloadContainer();
+  virtual void onRefreshContainer();
 
 protected:
   QScopedPointer<qColadaH5TreeViewPrivate> d_ptr;

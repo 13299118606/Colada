@@ -161,105 +161,127 @@ class qColadaMapReader(qColadaReader):
         self.mapTableView.setItemDelegateForColumn(
             self.mapTableHdrNames.index("map name"), self.map_name_lineEditDelegate)
 
-    def getReadWriteMapParamFromTable(self, s_proxy_row: int) -> ReadWriteMapParam:
+        # connect to update checkstate from selected rows
+        self.mapModel.dataChanged.connect(self.onMapModeDataChanged)
+
+    def onMapModeDataChanged(self, topLeft, bottomRight, roles):
+        if Qt.Qt.CheckStateRole not in roles:
+            return
+        selectionModel = self.mapTableView.selectionModel()
+        if not selectionModel:
+            return
+        item = self.mapModel.itemFromIndex(topLeft)
+        if not item:
+            return
+        checkState = item.checkState()
+        self.mapModel.dataChanged.disconnect(self.onMapModeDataChanged)
+        for index in selectionModel.selectedIndexes:
+            item = self.mapModel.item(index.row(), index.column())
+            if not item:
+                continue
+            item.setCheckState(checkState)
+        self.mapModel.dataChanged.connect(self.onMapModeDataChanged)
+
+    def getReadWriteMapParamFromTable(self, m_proxy_row: int) -> ReadWriteMapParam:
         """Read data needed to open/create `h5geo.H5Map` object.
 
         Args:
-            s_proxy_row (int): map table's proxy model row number
+            m_proxy_row (int): map table's proxy model row number
 
         Returns:
             ReadWriteMapParam: filled with values instance
         """
+        m_row = self.mapProxy.mapToSource(self.mapProxy.index(m_proxy_row, 0)).row()
         p = ReadWriteMapParam()
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("read file")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("read file")))
         p.readFile = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("save to")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("save to")))
         p.saveFile = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("CRS")))
         p.spatialReference = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map name")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("map name")))
         p.mapName = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("map create")))
         p.mapCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("domain")))
         p.domain = h5geo.Domain.__members__[tmp] if tmp in h5geo.Domain.__members__ else h5geo.Domain(0)
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("length units")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("length units")))
         p.lengthUnits = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("data units")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("data units")))
         p.dataUnits = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x0")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("x0")))
         p.X0 = float(tmp) if tmp else np.nan
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y0")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("y0")))
         p.Y0 = float(tmp) if tmp else np.nan
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x1")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("x1")))
         p.X1 = float(tmp) if tmp else np.nan
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y1")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("y1")))
         p.Y1 = float(tmp) if tmp else np.nan
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x2")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("x2")))
         p.X2 = float(tmp) if tmp else np.nan
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y2")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("y2")))
         p.Y2 = float(tmp) if tmp else np.nan
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("nx")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("nx")))
         p.nX = int(tmp) if tmp else 0
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("ny")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("ny")))
         p.nY = int(tmp) if tmp else 0
 
         tmp = self.mapProxy.data(
-            self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("depth mult")))
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("depth mult")))
         p.depthMult = int(tmp) if tmp else 1
 
-        tmp = self.mapTableView.indexWidget(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("XNorth"))).checkState()
+        tmp = self.mapTableView.item(m_row, self.mapTableHdrNames.index("XNorth")).checkState()
         p.xNorth = True if tmp == Qt.Qt.Checked else False
 
         return p
 
-    def updateMapTableRow(self, s_proxy_row: int):
+    def updateMapTableRow(self, m_proxy_row: int):
         """Resets map table's row and then updates map table.
         Fills map table as much as it can.
 
         Args:
-            s_proxy_row (int): map table's proxy model row number
+            m_proxy_row (int): map table's proxy model row number
         """
-        s_model_row = self.mapProxy.mapToSource(self.mapProxy.index(s_proxy_row, 0)).row()
+        s_model_row = self.mapProxy.mapToSource(self.mapProxy.index(m_proxy_row, 0)).row()
 
-        self.resetMapTableRow(s_proxy_row)
+        self.resetMapTableRow(m_proxy_row)
 
-        readFile = self.mapProxy.data(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("read file")))
+        readFile = self.mapProxy.data(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("read file")))
 
         map_name = os.path.splitext(os.path.basename(readFile))[0]
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map name")), map_name)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("map name")), map_name)
 
         ds = gdal.Open(readFile, gdal.GA_ReadOnly)
         if not ds:
@@ -281,14 +303,14 @@ class qColadaMapReader(qColadaReader):
         x2 = GT[0] + ds.RasterXSize*GT[1] + 0*GT[2]
         y2 = GT[3] + ds.RasterXSize*GT[4] + 0*GT[5]
 
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x0")), x0)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y0")), y0)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x1")), x1)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y1")), y1)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("x2")), x2)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("y2")), y2)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("nx")), ds.RasterXSize)
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("ny")), ds.RasterYSize)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("x0")), x0)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("y0")), y0)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("x1")), x1)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("y1")), y1)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("x2")), x2)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("y2")), y2)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("nx")), ds.RasterXSize)
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("ny")), ds.RasterYSize)
 
         nx_item = QtGui.QStandardItem(str(ds.RasterXSize))
         nx_item.setFlags(nx_item.flags() & ~Qt.Qt.ItemIsEditable)
@@ -298,28 +320,34 @@ class qColadaMapReader(qColadaReader):
         ny_item.setFlags(ny_item.flags() & ~Qt.Qt.ItemIsEditable)
         self.mapModel.setItem(s_model_row, self.mapTableHdrNames.index("ny"), ny_item)
 
-    def resetMapTableRow(self, s_proxy_row: int):
+    def resetMapTableRow(self, m_proxy_row: int):
         """Set some default values to map table.
 
         Args:
-            s_proxy_row (int): map table's proxy model row number
+            m_proxy_row (int): map table's proxy model row number
         """
-        readFile = self.mapProxy.data(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("read file")))
+        readFile = self.mapProxy.data(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("read file")))
         fi = QtCore.QFileInfo(readFile);
         if not fi.exists():
             return
 
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("save to")),
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("save to")),
                     Util.defaultMapDir() + "/" + fi.baseName() + ".h5")
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("CRS")),
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("CRS")),
                     Util.CRSAuthName() + ":" + str(Util.CRSCode()))
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("map create")),
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("map create")),
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("domain")),
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("domain")),
             str(h5geo.Domain.TVDSS).rsplit('.', 1)[-1])
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("length units")), 'meter')
-        self.mapProxy.setData(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("depth mult")), str(-1))
-        self.mapTableView.setIndexWidget(self.mapProxy.index(s_proxy_row, self.mapTableHdrNames.index("XNorth")), QtGui.QCheckBox())
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("length units")), 'meter')
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("depth mult")), str(-1))
+
+        m_row = self.mapProxy.mapToSource(self.mapProxy.index(m_proxy_row, 0)).row()
+
+        xNorthItem = QtGui.QStandardItem()
+        xNorthItem.setCheckable(True)
+        xNorthItem.setEditable(False)
+        self.mapModel.setItem(m_row, self.mapTableHdrNames.index("XNorth"), xNorthItem)
 
     def onAddBtnClicked(self):
         long_name_list = []

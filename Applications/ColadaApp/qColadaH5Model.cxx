@@ -334,13 +334,18 @@ qColadaH5Item* qColadaH5Model::findH5File(const h5gt::File& file) {
 
 bool qColadaH5Model::addH5File(const QString &fullName)
 {
-  h5gt::FileAccessProps fapl;
-  if (H5Fis_hdf5(fullName.toUtf8()) <= 0 ||
-      H5Fis_accessible(fullName.toUtf8(), fapl.getId()) <= 0)
-    return false;
+  try {
+    h5gt::FileAccessProps fapl;
+    if (H5Fis_hdf5(fullName.toUtf8()) <= 0 ||
+        H5Fis_accessible(fullName.toUtf8(), fapl.getId()) <= 0)
+      return false;
 
-  h5gt::File file(fullName.toStdString(), h5gt::File::ReadWrite);
-  return addH5File(file);
+    h5gt::File file(fullName.toStdString(), h5gt::File::ReadWrite);
+    return addH5File(file);
+  } catch (h5gt::Exception& err) {
+    qCritical() << "qColadaH5Model::addH5File: " << err.what();
+    return false;
+  }
 }
 
 bool qColadaH5Model::addH5File(const h5gt::File& file) {

@@ -6,25 +6,29 @@ from welly import Well
 import os, slicer, ctk
 import numpy as np
 
+
 class ReadWriteWellParam(h5geo.WellParam):
     """Contains data needed to create new `h5geo.H5Well` object. Inherits from `h5geo.WellParam`"""
     readFile = ''
-    saveFile = '' 
-    crs = '' 
+    saveFile = ''
+    crs = ''
     wellName = ''
     wellCreateType = ''
     xNorth = False
+    findWellByUWI = False
+
 
 class ReadWriteLogParam(h5geo.LogCurveParam):
     """Contains data needed to create new `h5geo.H5LogCurve` object. Inherits from `h5geo.LogCurveParam`"""
     readFile = ''
-    saveFile = '' 
-    crs = '' 
+    saveFile = ''
+    crs = ''
     wellName = ''
     wellCreateType = ''
     logType = ''
     logName = ''
     logCreateType = ''
+
 
 class qColadaLasReader(qColadaReader):
     """Class designated to read LAS files (log curves)
@@ -55,7 +59,7 @@ class qColadaLasReader(qColadaReader):
     mainSplitter = None
 
     # delegates must exist during object's lifetime or application will be break down!
-    well_save_to_pathEditDelegate = qPathEditDelegate() 
+    well_save_to_pathEditDelegate = qPathEditDelegate()
     well_create_comboDelegate = qComboBoxDelegate()
     well_length_units_comboDelegate = qComboBoxDelegate()
     well_headX_scienceSpinBoxDelegate = qScienceSpinBoxDelegate()
@@ -74,26 +78,26 @@ class qColadaLasReader(qColadaReader):
 
     wellTableHdrNames = [
         "read file", "save to", "CRS",
-        "well name", "UWI", "well create",
-        "length units",
+        "well name", "UWI", "find well by UWI",
+        "well create", "length units",
         "head x", "head y", "KB",
         "XNorth"]
 
     wellTableHdrTips = [
         "Read file", "Container where to save data", "CRS authority name and code (example: EPSG:2000). Must be set if new well is going to be created",
-        "Well name", "Unique Well Identifier", "Creation type for well", 
-        "Length units",
+        "Well name", "Unique Well Identifier", "Use UWI when serching for a well (by default well name is used)",
+        "Creation type for well", "Length units",
         "Header X coordinate. Must be set if new well is going to be created", "Header Y coordinate. Must be set if new well is going to be created", "Kelly Bushing",
         "`X` axis points to the North? checked - True, unchecked - False"]
 
     logTableHdrNames = [
-        "plot", "read file", "log type", "log name", 
+        "plot", "read file", "log type", "log name",
         "log create", "data units", "chunk size"]
 
     logTableHdrTips = [
-        "Plot data", "Read file", "Log type (name for group of logs)", "Log name (must be unique inside well and log type)", 
+        "Plot data", "Read file", "Log type (name for group of logs)", "Log name (must be unique inside well and log type)",
         "Creation type for log", "Data units", "Chunk size (hdf5 feature aimed to increase perfomance of IO operations)"]
-    
+
     def __init__(self, parent=None):
         super(qColadaReader, self).__init__(parent)
         self.initGUIVars()
@@ -186,6 +190,9 @@ class qColadaLasReader(qColadaReader):
         self.wellTableView.setItemDelegateForColumn(
             self.wellTableHdrNames.index("UWI"), self.well_UWI_lineEditDelegate)
 
+        # connect to update checkstate from selected rows
+        self.wellModel.dataChanged.connect(self.onWellModeDataChanged)
+
     def initLogTable(self):
         self.logModel.setHorizontalHeaderLabels(self.logTableHdrNames)
         self.logModel.setColumnCount(len(self.logTableHdrNames))
@@ -216,8 +223,26 @@ class qColadaLasReader(qColadaReader):
         self.logTableView.setItemDelegateForColumn(
             self.logTableHdrNames.index("log name"), self.log_name_lineEditDelegate)
 
+    def onWellModeDataChanged(self, topLeft, bottomRight, roles):
+        if Qt.Qt.CheckStateRole not in roles:
+            return
+        selectionModel = self.wellTableView.selectionModel()
+        if not selectionModel:
+            return
+        item = self.wellModel.itemFromIndex(topLeft)
+        if not item:
+            return
+        checkState = item.checkState()
+        self.wellModel.dataChanged.disconnect(self.onWellModeDataChanged)
+        for index in selectionModel.selectedIndexes:
+            item = self.wellModel.item(index.row(), index.column())
+            if not item:
+                continue
+            item.setCheckState(checkState)
+        self.wellModel.dataChanged.connect(self.onWellModeDataChanged)
+
     def getReadWriteWellParamFromTable(self, w_proxy_row: int) -> ReadWriteWellParam:
-        """Read data needed to open/create `h5geo.H5Well` object. 
+        """Read data needed to open/create `h5geo.H5Well` object.
 
         Args:
             w_proxy_row (int): well table's proxy model row number
@@ -225,6 +250,7 @@ class qColadaLasReader(qColadaReader):
         Returns:
             ReadWriteWellParam: filled with values instance
         """
+        w_row = self.wellProxy.mapToSource(self.wellProxy.index(w_proxy_row, 0)).row()
         p = ReadWriteWellParam()
 
         tmp = self.wellProxy.data(
@@ -247,6 +273,9 @@ class qColadaLasReader(qColadaReader):
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("UWI")))
         p.uwi = tmp if tmp else ''
 
+        tmp = self.wellModel.item(w_row, self.wellTableHdrNames.index("find well by UWI")).checkState()
+        p.findWellByUWI = True if tmp == Qt.Qt.Checked else False
+
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")))
         p.wellCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
@@ -266,17 +295,17 @@ class qColadaLasReader(qColadaReader):
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("KB")))
         p.kb = float(tmp) if tmp else np.nan
-        
-        tmp = self.wellTableView.indexWidget(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("XNorth"))).checkState()
+
+        tmp = self.wellModel.item(w_row, self.wellTableHdrNames.index("XNorth")).checkState()
         p.xNorth = True if tmp == Qt.Qt.Checked else False
-        
+
         if p.xNorth:
             p.headX, p.headY = p.headY, p.headX
 
         return p
 
     def getReadWriteLogParamFromTable(self, l_proxy_row: int) -> ReadWriteLogParam:
-        """Read data needed to open/create `h5geo.H5LogCurve` object. 
+        """Read data needed to open/create `h5geo.H5LogCurve` object.
 
         Args:
             l_proxy_row (int): log table's proxy model row number
@@ -308,7 +337,7 @@ class qColadaLasReader(qColadaReader):
 
         tmp = self.logProxy.data(
             self.logProxy.index(l_proxy_row, self.logTableHdrNames.index("chunk size")))
-        p.chunkSize = int(tmp) if tmp else 1000
+        p.chunkSize = int(tmp) if tmp else 100
 
 
         itemList = self.wellModel.findItems(p.readFile, Qt.Qt.MatchFixedString, self.wellTableHdrNames.index("read file"))
@@ -333,7 +362,7 @@ class qColadaLasReader(qColadaReader):
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")))
         p.wellCreateType = h5geo.CreationType.__members__[tmp] if tmp in h5geo.CreationType.__members__ else h5geo.CreationType(0)
-        
+
         tmp = self.wellProxy.data(
             self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")))
         p.lengthUnits = tmp if tmp else ''
@@ -353,14 +382,14 @@ class qColadaLasReader(qColadaReader):
         return p
 
     def updateWellTableRow(self, w_proxy_row: int):
-        """Resets well table's row and then updates log table. 
+        """Resets well table's row and then updates log table.
         Fills well table as much as it can.
 
         Args:
             w_proxy_row (int): well table's proxy model row number
         """
         self.resetWellTableRow(w_proxy_row)
-        
+
         p_w = self.getReadWriteWellParamFromTable(w_proxy_row)
 
         readFile = self.wellProxy.data(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("read file")))
@@ -369,8 +398,15 @@ class qColadaLasReader(qColadaReader):
 
         well_name = w.name if w.name else os.path.splitext(os.path.basename(readFile))[0]
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well name")), well_name)
-        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("UWI")), w.uwi)
-        
+
+        well_uwi = w.uwi
+        if not well_uwi:
+            if hasattr(w.header, 'api'):
+                well_uwi = w.header.api
+                if len(well_uwi) > 9:
+                    well_uwi = well_uwi[5:10] # info https://en.wikipedia.org/wiki/API_well_number
+        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("UWI")), well_uwi)
+
         self.updateLogTable(w)
 
     def updateLogTable(self, w: Well):
@@ -394,12 +430,12 @@ class qColadaLasReader(qColadaReader):
             readFileItem = QtGui.QStandardItem(w.fname)
             readFileItem.setFlags(readFileItem.flags() & ~Qt.Qt.ItemIsEditable)
             self.logModel.setItem(row, self.logTableHdrNames.index("read file"), readFileItem)
-            self.logModel.setData(self.logModel.index(row, self.logTableHdrNames.index("log create")), 
+            self.logModel.setData(self.logModel.index(row, self.logTableHdrNames.index("log create")),
                 str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
             self.logModel.setData(self.logModel.index(row, self.logTableHdrNames.index("log type")), log_name)
             self.logModel.setData(self.logModel.index(row, self.logTableHdrNames.index("log name")), log_name)
             self.logModel.setData(self.logModel.index(row, self.logTableHdrNames.index("data units")), log.units)
-            self.logModel.setData(self.logModel.index(row, self.logTableHdrNames.index("chunk size")), 1000)  # don't use `p.chunkSize` as it will be empty
+            self.logModel.setData(self.logModel.index(row, self.logTableHdrNames.index("chunk size")), 100)  # don't use `p.chunkSize` as it will be empty
 
             self.logModel.verticalHeaderItem(row).setCheckState(Qt.Qt.Checked)
             for row in range(self.logModel.rowCount()):
@@ -420,11 +456,21 @@ class qColadaLasReader(qColadaReader):
                     Util.defaultWellDir() + "/" + fi.baseName() + ".h5")
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("CRS")),
                     Util.CRSAuthName() + ":" + str(Util.CRSCode()))
-        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")), 
+        self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("well create")),
             str(h5geo.CreationType.OPEN_OR_CREATE).rsplit('.', 1)[-1])
         self.wellProxy.setData(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("length units")), 'meter')
-        
-        self.wellTableView.setIndexWidget(self.wellProxy.index(w_proxy_row, self.wellTableHdrNames.index("XNorth")), QtGui.QCheckBox())        
+
+        w_row = self.wellProxy.mapToSource(self.wellProxy.index(w_proxy_row, 0)).row()
+
+        findByUWIItem = QtGui.QStandardItem()
+        findByUWIItem.setCheckable(True)
+        findByUWIItem.setEditable(False)
+        self.wellModel.setItem(w_row, self.wellTableHdrNames.index("find well by UWI"), findByUWIItem)
+
+        xNorthItem = QtGui.QStandardItem()
+        xNorthItem.setCheckable(True)
+        xNorthItem.setEditable(False)
+        self.wellModel.setItem(w_row, self.wellTableHdrNames.index("XNorth"), xNorthItem)
 
     def resetLogTable(self):
         """Deletes all rows from log model (thus log table becomes clean)."""
@@ -494,7 +540,7 @@ class qColadaLasReader(qColadaReader):
 
         for row in range(self.wellModel.rowCount()):
             self.wellModel.verticalHeaderItem(row).setText(str(row + 1))
-            
+
     def onAutoDefineToolBtnClicked(self):
         """Calls `updateWellTableRow` for selected well table's rows."""
         indexList = self.wellTableView.selectionModel().selectedRows()
@@ -505,7 +551,6 @@ class qColadaLasReader(qColadaReader):
 
     def onButtonBoxClicked(self, button):
         if button == self.buttonBox.button(QtGui.QDialogButtonBox.Ok):
-            currentProjectUnits = Util.LengthUnits()
             QtGui.QApplication.setOverrideCursor(QtCore.Qt.BusyCursor)
             progressDialog = slicer.util.createProgressDialog(
                 parent=self, maximum=self.wellModel.rowCount())
@@ -517,7 +562,7 @@ class qColadaLasReader(qColadaReader):
                     h5wellCnt = h5geo.createWellContainerByName(p_w.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
 
                     if not h5wellCnt:
-                        errMsg = 'Can`t open or create: ' + p_w.saveFile + ''' 
+                        errMsg = 'Can`t open or create: ' + p_w.saveFile + '''
                         Possible reasons:
                         - `save to` is incorrect;
                         - `save to` points to an existing NON WELL CONTAINER file;
@@ -525,32 +570,22 @@ class qColadaLasReader(qColadaReader):
                         '''
                         QtGui.QMessageBox.critical(self, "Error", errMsg)
                         continue
-                    
-                    if p_w.xNorth:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headY, p_w.headX, p_w.crs, p_w.lengthUnits)
+
+                    h5well = None
+                    if not p_w.findWellByUWI:
+                        h5well = h5wellCnt.createWell(p_w.wellName, p_w, p_w.wellCreateType)
                     else:
-                        p_w.headX, p_w.headY, val = Util.convCoord2CurrentProjection(p_w.headX, p_w.headY, p_w.crs, p_w.lengthUnits)
-                        
-                    # if new well will be created then the units will be `p_w.lengthUnits`
-                    coef_w = Util.convertUnits(
-                        currentProjectUnits,
-                        p_w.lengthUnits)
-                    
-                    p_w.headX *= coef_w
-                    p_w.headY *= coef_w
-                        
-                    if not val:
-                        errMsg = 'Can`t transform coordinates from: ' + p_w.crs + ' to: ' + Util.CRSAuthName() + ":" + str(Util.CRSCode()) + ''' 
-                        Possible reasons:
-                        - project is not set or contains incorrect CRS;
-                        - `CRS` is incorrect;
-                        '''
-                        QtGui.QMessageBox.critical(self, "Error", errMsg)
-                        continue
-                    
-                    h5well = h5wellCnt.createWell(p_w.wellName, p_w, p_w.wellCreateType)
+                        if (p_w.wellCreateType != h5geo.CreationType.CREATE and
+                                p_w.wellCreateType != h5geo.CreationType.CREATE_OR_OVERWRITE and
+                                p_w.wellCreateType != h5geo.CreationType.CREATE_UNDER_NEW_NAME):
+                            h5well = h5wellCnt.getWellByUWI(p_w.uwi)
+                            if not h5well and p_w.wellCreateType == h5geo.CreationType.OPEN_OR_CREATE:
+                                h5well = h5wellCnt.createWell(p_w.wellName, p_w, p_w.wellCreateType)
+                        else:
+                            h5well = h5wellCnt.createWell(p_w.wellName, p_w, p_w.wellCreateType)
+
                     if not h5well:
-                        errMsg = 'Can`t open, create or overwrite well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
+                        errMsg = 'Can`t open, create or overwrite well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''
                         Possible reasons:
                         - `well name` is incorrect;
                         - `well create` is incorrect;
@@ -572,7 +607,7 @@ class qColadaLasReader(qColadaReader):
 
                         h5logCurve = h5well.createLogCurve(p_l.logType, p_l.logName, p_l, p_l.logCreateType)
                         if not h5logCurve:
-                            errMsg = 'Can`t open, create or overwrite log type: ' + p_l.logType + ' with name: ' + p_l.logName + ' from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
+                            errMsg = 'Can`t open, create or overwrite log type: ' + p_l.logType + ' with name: ' + p_l.logName + ' from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''
                             Possible reasons:
                             - `log type` or `log name` is incorrect;
                             - `log create` is incorrect;
@@ -584,7 +619,7 @@ class qColadaLasReader(qColadaReader):
 
                         w = Well.from_las(p_l.readFile, index=p_l.lengthUnits)
                         if not h5logCurve.writeCurve(h5geo.LogDataType.MD, w.survey_basis(), p_l.lengthUnits):
-                            errMsg = 'Can`t write depth curve (MD) to log name: ' + p_l.logName + 'from log type: ' + p_l.logType + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
+                            errMsg = 'Can`t write depth curve (MD) to log name: ' + p_l.logName + 'from log type: ' + p_l.logType + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''
                             Possible reasons:
                             - `log_data` dataset is broken (some attributes are missing or dataset is not resizable);
                             - incorrect `length units`;
@@ -594,14 +629,14 @@ class qColadaLasReader(qColadaReader):
                             continue
 
                         if p_l.logType not in w.data:
-                            errMsg = 'Given `read file`: ' + p_l.readFile + ' doesn`t contain `log type`: ' + p_l.logType + ''' 
+                            errMsg = 'Given `read file`: ' + p_l.readFile + ' doesn`t contain `log type`: ' + p_l.logType + '''
                             Please check mentionned `log type` of the given well
                             '''
                             QtGui.QMessageBox.critical(self, "Error", errMsg)
                             continue
 
                         if not h5logCurve.writeCurve(h5geo.LogDataType.VAL, w.data[p_l.logType].values, p_l.dataUnits):
-                            errMsg = 'Can`t write data curve (VAL) to log name: ' + p_l.logName + 'from log type: ' + p_l.logType + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + ''' 
+                            errMsg = 'Can`t write data curve (VAL) to log name: ' + p_l.logName + 'from log type: ' + p_l.logType + 'from well: ' + p_w.wellName + ' from container: ' + p_w.saveFile + '''
                             Possible reasons:
                             - `log_data` dataset is broken (some attributes are missing or dataset is not resizable);
                             - incorrect `data units` (if the curve is not overwriten and previous `data units` belongs to another dimensionality then you may need to overwrite it as it is impossible to convert units in this way);
@@ -612,7 +647,7 @@ class qColadaLasReader(qColadaReader):
 
                         if progressDialog.wasCanceled:
                             break
-                        
+
                     h5wellCnt.getH5File().flush()
 
                 except h5gt.Exception as ex:

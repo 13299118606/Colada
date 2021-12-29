@@ -97,9 +97,9 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
   QAction *removeContainerAction = menu->addAction("Remove container");
   connect(removeContainerAction, &QAction::triggered, this,
           &qColadaH5TreeView::onRemoveContainer);
-  QAction *reloadContainerAction = menu->addAction("Reload container");
-  connect(reloadContainerAction, &QAction::triggered, this,
-          &qColadaH5TreeView::onReloadContainer);
+  QAction *refreshContainerAction = menu->addAction("Refresh container");
+  connect(refreshContainerAction, &QAction::triggered, this,
+          &qColadaH5TreeView::onRefreshContainer);
 
   menu->addSeparator();
 }
@@ -178,7 +178,7 @@ bool qColadaH5TreeView::removeContainer(const QString &fileName) {
   return true;
 }
 
-bool qColadaH5TreeView::reloadContainer(const QString &fileName) {
+bool qColadaH5TreeView::refreshContainer(const QString &fileName) {
   if (removeContainer(fileName))
     return addContainer(fileName);
   return false;
@@ -204,6 +204,11 @@ void qColadaH5TreeView::onRemoveContainer() {
     return;
   }
 
+  // as we remove file by file we should get all selected names first
+  // else we will get incorrect indexes as selected model is not updated
+  // each time we remove the row
+  QStringList fileNames;
+  fileNames.reserve(selectedModel->selectedIndexes().count());
   for (const auto& index : selectedModel->selectedIndexes()){
     QModelIndex srcIndex = proxy->mapToSource(index);
     qColadaH5Item* item = srcModel->itemFromIndex(srcIndex);
@@ -213,19 +218,23 @@ void qColadaH5TreeView::onRemoveContainer() {
     if (!item->isGeoContainer())
       continue;
 
-    this->removeContainer(
+    fileNames.append(
           QString::fromStdString(
             item->getGeoContainer()->getH5File().getFileName()));
   }
+
+  for (const auto& name : fileNames){
+    this->removeContainer(name);
+  }
 }
 
-void qColadaH5TreeView::onReloadContainer() {
+void qColadaH5TreeView::onRefreshContainer() {
   auto* proxy = qobject_cast<qColadaH5ProxyModel*>(this->model());
   auto* srcModel = qobject_cast<qColadaH5Model*>(proxy->sourceModel());
   auto* selectedModel = this->selectionModel();
 
   if (!selectedModel){
-    qCritical() << "qColadaH5TreeView::onReloadContainer: " <<
+    qCritical() << "qColadaH5TreeView::onRefreshContainer: " <<
                    "selected model is missing";
     return;
   }
@@ -239,7 +248,7 @@ void qColadaH5TreeView::onReloadContainer() {
     if (!item->isGeoContainer())
       continue;
 
-    this->reloadContainer(
+    this->refreshContainer(
           QString::fromStdString(
             item->getGeoContainer()->getH5File().getFileName()));
   }
