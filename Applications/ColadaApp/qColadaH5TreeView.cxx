@@ -89,7 +89,9 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
           &QTreeView::collapseAll);
 
   menu->addSeparator();
+}
 
+void qColadaH5TreeView::fillTreeViewMenu(QMenu *menu, const QPoint &pos) {
   QAction *addContainerAction = menu->addAction("Add container");
   connect(addContainerAction, &QAction::triggered, this,
           &qColadaH5TreeView::onAddContainer);
@@ -102,10 +104,6 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
           &qColadaH5TreeView::onRefreshContainer);
 
   menu->addSeparator();
-}
-
-void qColadaH5TreeView::fillTreeViewMenu(QMenu *menu, const QPoint &pos) {
-
 }
 
 void qColadaH5TreeView::hdrMenuRequested(const QPoint &pos) {
