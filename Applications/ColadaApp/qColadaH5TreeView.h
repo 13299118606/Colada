@@ -37,6 +37,8 @@ public slots:
   virtual void onAddContainer();
   virtual void onRemoveContainer();
   virtual void onRefreshContainer();
+  virtual void onExpandSelected();
+  virtual void onCollapseSelected();
 
 protected:
   QScopedPointer<qColadaH5TreeViewPrivate> d_ptr;

@@ -77,16 +77,24 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
 
   menu->addSeparator();
 
-  connect(checkedOnlyAct, &QAction::toggled, proxyModel,
-          &qColadaH5ProxyModel::setShowCheckedItemsOnly);
+  connect(checkedOnlyAct, &QAction::toggled,
+          proxyModel, &qColadaH5ProxyModel::setShowCheckedItemsOnly);
+
+  QAction *expandSelectedAct = menu->addAction("Expand");
+  connect(expandSelectedAct, &QAction::triggered,
+          this, &qColadaH5TreeView::onExpandSelected);
+
+  QAction *collapseSelectedAct = menu->addAction("Collapse");
+  connect(collapseSelectedAct, &QAction::triggered,
+          this, &qColadaH5TreeView::onCollapseSelected);
 
   QAction *expandAllAct = menu->addAction("Expand all");
-  connect(expandAllAct, &QAction::triggered, this,
-          &QTreeView::expandAll);
+  connect(expandAllAct, &QAction::triggered,
+          this, &QTreeView::expandAll);
 
   QAction *collapseAllAct = menu->addAction("Collapse all");
-  connect(collapseAllAct, &QAction::triggered, this,
-          &QTreeView::collapseAll);
+  connect(collapseAllAct, &QAction::triggered,
+          this, &QTreeView::collapseAll);
 
   menu->addSeparator();
 }
@@ -252,3 +260,32 @@ void qColadaH5TreeView::onRefreshContainer() {
   }
 }
 
+void qColadaH5TreeView::onExpandSelected() {
+  auto* selectedModel = this->selectionModel();
+
+  if (!selectedModel){
+    qCritical() << "qColadaH5TreeView::onExpandSelected: " <<
+                   "selected model is missing";
+    return;
+  }
+
+  for (const auto& index : selectedModel->selectedIndexes()){
+    if (!index.isValid())
+      continue;
+    this->expandRecursively(index, -1);
+  }
+}
+
+void qColadaH5TreeView::onCollapseSelected() {
+  auto* selectedModel = this->selectionModel();
+
+  if (!selectedModel){
+    qCritical() << "qColadaH5TreeView::onCollapseSelected: " <<
+                   "selected model is missing";
+    return;
+  }
+
+  for (const auto& index : selectedModel->selectedIndexes()){
+    this->collapse(index);
+  }
+}

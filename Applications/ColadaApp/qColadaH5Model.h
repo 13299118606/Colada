@@ -115,14 +115,10 @@ public slots:
   QStringList mimeTypes() const override;
   QMimeData *mimeData(const QModelIndexList &indexes) const override;
 
-
   virtual void onMRMLSceneNodeAdded(vtkObject*, vtkObject* node);
   virtual void onMRMLSceneNodeRemoved(vtkObject*, vtkObject* node);
 
-protected:
-  qColadaH5Item* findItemByContainerAndObjectNames(
-      const QString& fileName, const QString& objName);
-  qColadaH5Item* findItemByMRMLGeoNode(vtkMRMLNode* node);
+  virtual qColadaH5Item* findItemByNode(vtkMRMLNode* node);
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

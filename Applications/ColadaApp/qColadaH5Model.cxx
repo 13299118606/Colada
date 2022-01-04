@@ -553,7 +553,7 @@ void qColadaH5Model::onMRMLSceneNodeAdded(
   if (!dispNode)
     return;
 
-  qColadaH5Item* item = this->findItemByMRMLGeoNode(dispNode);
+  qColadaH5Item* item = this->findItemByNode(dispNode);
   if (!item)
     return;
 
@@ -570,7 +570,7 @@ void qColadaH5Model::onMRMLSceneNodeRemoved(
   if (!dispNode)
     return;
 
-  qColadaH5Item* item = this->findItemByMRMLGeoNode(dispNode);
+  qColadaH5Item* item = this->findItemByNode(dispNode);
   if (!item)
     return;
 
@@ -579,23 +579,35 @@ void qColadaH5Model::onMRMLSceneNodeRemoved(
   emit dataChanged(index, index, {Qt::CheckStateRole});
 }
 
-qColadaH5Item* qColadaH5Model::findItemByContainerAndObjectNames(
-    const QString& fileName, const QString& objName)
+qColadaH5Item* qColadaH5Model::findItemByNode(vtkMRMLNode* node)
 {
   Q_D(qColadaH5Model);
+  if (!node)
+    return nullptr;
+
+  auto fileName = node->GetAttribute("GeoContainer");
+  if (!fileName)
+    return nullptr;
+
+  auto objName = node->GetAttribute("GeoObject");
+  if (!objName)
+    return nullptr;
+
+
   h5gt::FileAccessProps fapl;
-  if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
-      H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0 )
+  if (H5Fis_hdf5(fileName) <= 0 ||
+      H5Fis_accessible(fileName, fapl.getId()) <= 0 )
     return nullptr;
 
   h5gt::File h5File(
-        fileName.toStdString(),
+        fileName,
         h5gt::File::ReadOnly, fapl);
 
-  if (!h5File.hasObject(objName.toStdString(), h5gt::ObjectType::Group))
+  if (!h5File.hasObject(objName, h5gt::ObjectType::Group))
     return nullptr;
 
-  QStringList objNameList = objName.split(QLatin1Char('/'), Qt::SkipEmptyParts); // '/' is hdf5 path delimiter
+  QStringList objNameList = QString::fromStdString(objName).
+      split(QLatin1Char('/'), Qt::SkipEmptyParts); // '/' is hdf5 path delimiter
 
   // 1) find container among children of root item
   qColadaH5Item* item = nullptr;
@@ -624,22 +636,4 @@ qColadaH5Item* qColadaH5Model::findItemByContainerAndObjectNames(
   }
 
   return item;
-}
-
-qColadaH5Item* qColadaH5Model::findItemByMRMLGeoNode(vtkMRMLNode* node)
-{
-  Q_D(qColadaH5Model);
-  if (!node)
-    return nullptr;
-
-  auto fileName = node->GetAttribute("GeoContainer");
-  if (!fileName)
-    return nullptr;
-
-  auto objName = node->GetAttribute("GeoObject");
-  if (!objName)
-    return nullptr;
-
-  return findItemByContainerAndObjectNames(
-        QString::fromUtf8(fileName), QString::fromUtf8(objName));
 }
