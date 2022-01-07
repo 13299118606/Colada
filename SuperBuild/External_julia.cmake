@@ -23,7 +23,7 @@ endif()
 
 set(julia_VER_MAJ 1)
 set(julia_VER_MIN 6)
-set(julia_VER_PATCH 1)
+set(julia_VER_PATCH 5)
 
 set(julia_VER 
   "${julia_VER_MAJ}.${julia_VER_MIN}.${julia_VER_PATCH}"  # MUST be qouted  "" to avoid semicolon delimiter
