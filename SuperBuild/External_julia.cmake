@@ -71,34 +71,6 @@ if(NOT EXISTS ${julia_EXECUTABLE} AND NOT Slicer_USE_SYSTEM_${proj})
     )
 
   ExternalProject_GenerateProjectDescription_Step(${proj})
-
-  #-----------------------------------------------------------------------------
-  # Slicer Launcher setting specific to build tree
-
-  # library paths
-  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD ${julia_DIR}/bin)
-  mark_as_superbuild(
-    VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
-    LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
-    )
-
-  # paths
-  set(${proj}_PATHS_LAUNCHER_BUILD ${julia_DIR}/${_lib_subdir})
-  mark_as_superbuild(
-    VARS ${proj}_PATHS_LAUNCHER_BUILD
-    LABELS "PATHS_LAUNCHER_BUILD"
-    )
-
-  #-----------------------------------------------------------------------------
-  # Slicer Launcher setting specific to install tree
-
-  # library paths
-  set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED <APPLAUNCHER_SETTINGS_DIR>/../lib/julia/bin)
-  mark_as_superbuild(
-    VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
-    LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
-    )
-
 else()
   # The project is provided using julia_DIR, nevertheless since other project may depend on julia,
   # let's add an 'empty' one
@@ -146,4 +118,46 @@ endif()
 mark_as_superbuild(
   VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
   LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
+  )
+
+
+#-----------------------------------------------------------------------------
+# Slicer Launcher setting specific to build tree
+# library paths
+set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
+  ${julia_DIR}/lib
+  )
+mark_as_superbuild(
+  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+  LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
+  )
+
+# paths
+set(${proj}_PATHS_LAUNCHER_BUILD 
+  ${julia_DIR}/bin
+  )
+mark_as_superbuild(
+  VARS ${proj}_PATHS_LAUNCHER_BUILD
+  LABELS "PATHS_LAUNCHER_BUILD"
+  )
+
+#-----------------------------------------------------------------------------
+# Slicer Launcher setting specific to install tree
+# library paths
+set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED 
+  <APPLAUNCHER_SETTINGS_DIR>/../lib/julia/lib
+  )
+mark_as_superbuild(
+  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
+  LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
+  )
+
+# paths
+set(${proj}_PATHS_LAUNCHER_INSTALLED 
+  <APPLAUNCHER_SETTINGS_DIR>/../lib/julia/bin
+  )
+
+mark_as_superbuild(
+  VARS ${proj}_PATHS_LAUNCHER_INSTALLED
+  LABELS "PATHS_LAUNCHER_BUILD"
   )

@@ -115,6 +115,7 @@ mark_as_superbuild(
 # Windows and Linux has different `site-packages` subdir
 set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED 
   <APPLAUNCHER_SETTINGS_DIR>/../lib/Python/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo
+  <APPLAUNCHER_SETTINGS_DIR>/../lib/Python/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/lib
   <APPLAUNCHER_SETTINGS_DIR>/../lib/Python/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/data/proj
   <APPLAUNCHER_SETTINGS_DIR>/../lib/Python/${PYTHON_SITE_PACKAGES_SUBDIR}/GDAL.libs
   )

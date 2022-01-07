@@ -128,15 +128,7 @@ mark_as_superbuild(
 #-----------------------------------------------------------------------------
 # Launcher setting specific to install tree
 
-# library paths
-set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED 
-  ${EP_BINARY_DIR}/${_library_output_subdir}
-  )
-mark_as_superbuild(
-  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
-  LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
-  )
-
+# Set env variable
 set(${proj}_ENVVARS_LAUNCHER_INSTALLED 
   "HDF5_USE_FILE_LOCKING=FALSE"
   )
