@@ -31,16 +31,16 @@ SlicerReadApplicationProperties()
 set(${PROJECT_NAME}_FOLDER "App-${PROJECT_NAME}")
 
 find_package(OpenMP REQUIRED) # Colada needs OpenMP
-find_package(ZLIB REQUIRED)
-find_package(units REQUIRED CONFIG)  # based on units_DIR
-find_package(HDF5 REQUIRED CONFIG)  # based on HDF5_DIR
-find_package(h5geo REQUIRED CONFIG)  # based on h5geo_DIR
-find_package(GDAL REQUIRED)
+# find_package(ZLIB REQUIRED)
+# find_package(units REQUIRED CONFIG)  # based on units_DIR
+# find_package(HDF5 REQUIRED CONFIG)  # based on HDF5_DIR
+# find_package(h5geo REQUIRED CONFIG)  # based on h5geo_DIR
+# find_package(GDAL REQUIRED)
 
-# GDAL::GDAL depends on many libs (TIFF, GEOS etc). Here we are linking them
-if(DEFINED GDAL_LIBS)
-  target_link_libraries(GDAL::GDAL INTERFACE ${GDAL_LIBS})
-endif()
+# # GDAL::GDAL depends on many libs (TIFF, GEOS etc). Here we are linking them
+# if(DEFINED GDAL_LIBS)
+#   target_link_libraries(GDAL::GDAL INTERFACE ${GDAL_LIBS})
+# endif()
 
 # --------------------------------------------------------------------------
 # Application library
@@ -170,11 +170,12 @@ set(APPLIB_RESOURCES
 set(APPLIB_TARGET_LIBRARIES
   # ColadaCore  # this may be useful when splitting qColadaApp by few subprojects
   OpenMP::OpenMP_CXX
-  hdf5::hdf5-shared
-  h5geo
-  GDAL::GDAL
-  units::units
+  # hdf5::hdf5-shared
+  ${h5geo_LIBRARY}
+  ${GDAL_LIBRARY}
+  ${units_LIBRARY}
   ${julia_LIB}
+  ${HDF5_C_LIBRARY}
   )
 
 if(WIN32)
@@ -182,10 +183,14 @@ if(WIN32)
 endif()
 
 set(APPLIB_DIRS 
+  ${h5geo_INCLUDE_DIR}
+  ${units_INCLUDE_DIR}
+  ${GDAL_INCLUDE_DIR}
   ${Eigen3_INCLUDE_DIR}
   ${h5gt_INCLUDE_DIR}
   ${magic_enum_INCLUDE_DIR}
   ${julia_INCLUDE_DIR}
+  ${HDF5_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
@@ -210,6 +215,9 @@ slicerMacroBuildAppLibrary(
   TARGET_LIBRARIES ${APPLIB_TARGET_LIBRARIES}
   INCLUDE_DIRECTORIES ${APPLIB_DIRS}
   )
+
+# add ${APPLIB_NAME}_INCLUDE_DIRS to SlicerConfig.cmake 
+set_property(GLOBAL APPEND PROPERTY SLICER_MODULE_TARGETS ${APPLIB_NAME})
 
 # --------------------------------------------------------------------------
 # Plugins that depend on qColadaApp
@@ -248,43 +256,108 @@ slicerMacroBuildApplication(
   ${extra_args}
   )
 
-#-----------------------------------------------------------------------------
-message("Slicer_INSTALL_ROOT: ${Slicer_INSTALL_ROOT}")
-message("Slicer_INSTALL_BIN_DIR: ${Slicer_INSTALL_BIN_DIR}")
-message("julia_ROOT: ${julia_ROOT}")
+# --------------------------------------------------------------------------
 # Install extension deps packages
-# install(CODE "message(\"CPack: - Install directory: ${julia_ROOT}\")")
+# --------------------------------------------------------------------------
+
 install(
-  DIRECTORY ${julia_ROOT}/  # '/' in the end is necessary
-  DESTINATION ${Slicer_INSTALL_ROOT}/julia
-  COMPONENT RuntimeLibraries  # 'ALL' doesn't work
+  DIRECTORY "${julia_ROOT}/"                  # '/' in the end of path is necessary
+  DESTINATION ${Slicer_INSTALL_ROOT}
+  COMPONENT Runtime
+  PATTERN "LICENSE.md" EXCLUDE
   )
 
-# Install libraries
-include(${Slicer_SOURCE_DIR}/CMake/SlicerFunctionInstallLibrary.cmake)
-slicerInstallLibrary(
-  FILE ${HDF5_ROOT}/lib/hdf5
-  DESTINATION ${Slicer_INSTALL_BIN_DIR}
-  COMPONENT RuntimeLibraries
+if(WIN32)
+  install(
+    DIRECTORY "${HDF5_ROOT}/bin/"
+    DESTINATION ${Slicer_INSTALL_BIN_DIR}
+    COMPONENT Runtime
+    )
+  install(
+    DIRECTORY "${h5geo_ROOT}/lib/"
+    DESTINATION ${Slicer_INSTALL_BIN_DIR}
+    COMPONENT Runtime
+    PATTERN "cmake" EXCLUDE
+    PATTERN "*.lib" EXCLUDE
+    )
+  install(
+    DIRECTORY "${units_ROOT}/lib/"
+    DESTINATION ${Slicer_INSTALL_BIN_DIR}
+    COMPONENT Runtime
+    PATTERN "cmake" EXCLUDE
+    PATTERN "*.lib" EXCLUDE
   )
-slicerInstallLibrary(
-  FILE ${h5geo_ROOT}/lib/h5geo
-  DESTINATION ${Slicer_INSTALL_BIN_DIR}
-  COMPONENT RuntimeLibraries
-  )
+else()
+  # HDF5 tools are in 'bin' folder
+  install(
+    DIRECTORY "${HDF5_ROOT}/bin/"
+    DESTINATION ${Slicer_INSTALL_BIN_DIR}
+    COMPONENT Runtime
+    )
+  install(
+    DIRECTORY "${HDF5_ROOT}/lib/"
+    DESTINATION ${Slicer_INSTALL_LIB_DIR}
+    COMPONENT Runtime
+    PATTERN "pkgconfig" EXCLUDE
+    PATTERN "*.a" EXCLUDE                     # exclude static lib
+    )
+  install(
+    DIRECTORY "${h5geo_ROOT}/lib/"
+    DESTINATION ${Slicer_INSTALL_LIB_DIR}
+    COMPONENT Runtime
+    PATTERN "cmake" EXCLUDE
+    )
+  install(
+    DIRECTORY "${units_ROOT}/lib/"
+    DESTINATION ${Slicer_INSTALL_LIB_DIR}
+    COMPONENT Runtime
+    PATTERN "cmake" EXCLUDE
+    )
+endif()
 
-set(EXTENSION_NAME Colada)
-set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${HDF5_ROOT};HDF5;ALL;/")
-set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${h5geo_ROOT};h5geo;ALL;/")
-set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${julia_ROOT};julia;ALL;/")
+# install(
+#   FILES ${HDF5_ROOT}/lib/hdf5
+#   DESTINATION ${Slicer_INSTALL_LIB_DIR}
+#   COMPONENT Runtime 
+#   )
+# install(
+#   FILES ${h5geo_ROOT}/lib/h5geo
+#   DESTINATION ${Slicer_INSTALL_LIB_DIR}
+#   COMPONENT Runtime 
+#   )
+
+# # Install libraries
+# include(${Slicer_SOURCE_DIR}/CMake/SlicerFunctionInstallLibrary.cmake)
+# slicerInstallLibrary(
+#   FILE ${HDF5_ROOT}/lib/hdf5
+#   DESTINATION ${Slicer_INSTALL_BIN_DIR}
+#   COMPONENT RuntimeLibraries
+#   )
+# slicerInstallLibrary(
+#   FILE ${h5geo_ROOT}/lib/h5geo
+#   DESTINATION ${Slicer_INSTALL_BIN_DIR}
+#   COMPONENT RuntimeLibraries
+#   )
+
+# set(EXTENSION_NAME Colada)
+# set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${HDF5_ROOT};HDF5;ALL;/")
+# set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${h5geo_ROOT};h5geo;ALL;/")
+# set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${julia_ROOT};julia;ALL;/")
 
 #-----------------------------------------------------------------------------
 # list(APPEND CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
 # list(APPEND CPACK_INSTALL_CMAKE_PROJECTS "${${EXTENSION_NAME}_CPACK_INSTALL_CMAKE_PROJECTS}")
 # include(${Slicer_EXTENSION_GENERATE_CONFIG})
 # include(${Slicer_SOURCE_DIR}/CMake/SlicerCPack.cmake)
-include(${Slicer_SOURCE_DIR}/CMake/SlicerExtensionGenerateConfig.cmake)
-include(${Slicer_SOURCE_DIR}/CMake/SlicerExtensionCPack.cmake)
 
-message("HDF5_ROOT: ${HDF5_ROOT}")
-message("CPACK_INSTALL_CMAKE_PROJECTS: ${CPACK_INSTALL_CMAKE_PROJECTS}")
+# include(${Slicer_SOURCE_DIR}/CMake/SlicerExtensionGenerateConfig.cmake)
+# include(${Slicer_SOURCE_DIR}/CMake/SlicerExtensionCPack.cmake)
+
+# message("HDF5_ROOT: ${HDF5_ROOT}")
+# message("CPACK_INSTALL_CMAKE_PROJECTS: ${CPACK_INSTALL_CMAKE_PROJECTS}")
+
+# --------------------------------------------------------------------------
+# Set INCLUDE_DIRS variable to SlicerConfig.cmake
+# --------------------------------------------------------------------------
+set(${APPLIB_NAME}_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+    CACHE INTERNAL "${APPLIB_NAME} include dirs" FORCE)

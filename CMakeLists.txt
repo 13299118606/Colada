@@ -23,8 +23,6 @@ else()
   set(slicersources_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/slicersources-subbuild)
 endif()
 
-message("slicersources_SOURCE_DIR: ${slicersources_SOURCE_DIR}")
-
 # copy external HDF5, VTK, ITK, CTK to Slicer sources
 # configure_file(
 #   "${CMAKE_CURRENT_SOURCE_DIR}/CMake/External_HDF5.cmake" 
@@ -275,10 +273,15 @@ set(Slicer_QTSCRIPTEDMODULES_DISABLED
 
 # Enable/Disable Slicer custom modules: To create a new module, use the SlicerExtensionWizard.
 set(Slicer_EXTENSION_SOURCE_DIRS
-  #${Colada_SOURCE_DIR}/Modules/CLI/MyCLIModule
-  #${Colada_SOURCE_DIR}/Modules/Loadable/MyLoadableModule
+  ${Colada_SOURCE_DIR}/Modules/Loadable/Axes
+  ${Colada_SOURCE_DIR}/Modules/Loadable/Captions
+  ${Colada_SOURCE_DIR}/Modules/Loadable/SceneFilter
+  ${Colada_SOURCE_DIR}/Modules/Loadable/SpatialReference
+  ${Colada_SOURCE_DIR}/Modules/Loadable/Zoom
   ${Colada_SOURCE_DIR}/Modules/Scripted/Home
-  #${Colada_SOURCE_DIR}/Extensions
+  ${Colada_SOURCE_DIR}/Modules/Extensions/Seismic
+  ${Colada_SOURCE_DIR}/Modules/Extensions/Maps
+  ${Colada_SOURCE_DIR}/Modules/Extensions/Wells
   )
 
 # Add remote extension source directories
@@ -307,20 +310,17 @@ FetchContent_Populate(${extension_name}
   )
 list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
 
-# Seismic
-# set(extension_name "Seismic")
+# SlicerJupyter
+# set(extension_name "SlicerJupyter")
 # set(${extension_name}_SOURCE_DIR "${CMAKE_BINARY_DIR}/${extension_name}")
 # FetchContent_Populate(${extension_name}
 #   SOURCE_DIR     ${${extension_name}_SOURCE_DIR}
-#   GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/tierra-colada/Seismic.git
-#   GIT_TAG        main
+#   GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/Slicer/SlicerJupyter
+#   GIT_TAG        b282a2c819da1e3e4fe1ab6c419e2299f976720d
 #   GIT_PROGRESS   1
 #   QUIET
 #   )
 # list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
-
-# Add default extensions
-# add_subdirectory(Extensions)
 
 
 include(${CMAKE_SOURCE_DIR}/CMake/ColadaMacroEditSourceCode.cmake)
@@ -366,5 +366,3 @@ coladaMacroEditcpp(
 
 # Add Slicer sources
 add_subdirectory(${slicersources_SOURCE_DIR} ${slicersources_BINARY_DIR})
-
-

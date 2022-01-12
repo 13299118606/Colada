@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>qSlicerZoom3DWidget</class>
+ <widget class="qSlicerWidget" name="qSlicerZoom3DWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>324</width>
+    <height>116</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="hLayout">
+     <item>
+      <widget class="QLabel" name="viewLabel">
+       <property name="text">
+        <string>View:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="qMRMLNodeComboBox" name="viewNodeSelector">
+       <property name="nodeTypes">
+        <stringlist>
+         <string>vtkMRMLViewNode</string>
+        </stringlist>
+       </property>
+       <property name="addEnabled">
+        <bool>false</bool>
+       </property>
+       <property name="removeEnabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="zoomXLabel">
+       <property name="text">
+        <string>zoom-X:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="zoomYLabel">
+       <property name="text">
+        <string>zoom-Y:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="zoomZLabel">
+       <property name="text">
+        <string>zoom-Z:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="qSlicerGainWidget" name="xGainWidget" native="true"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="qSlicerGainWidget" name="yGainWidget" native="true"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="qSlicerGainWidget" name="zGainWidget" native="true"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>qMRMLNodeComboBox</class>
+   <extends>QWidget</extends>
+   <header>qMRMLNodeComboBox.h</header>
+   <container>1</container>
+   <slots>
+    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+    <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>qSlicerWidget</class>
+   <extends>QWidget</extends>
+   <header>qSlicerWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>qSlicerGainWidget</class>
+   <extends>QWidget</extends>
+   <header>qSlicerGainWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>qSlicerZoom3DWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>viewNodeSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>40</x>
+     <y>107</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>111</x>
+     <y>30</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

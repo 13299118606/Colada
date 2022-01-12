@@ -19,8 +19,6 @@ endif()
 # Eigen3
 #
 find_package(Eigen3 REQUIRED)
-message("EIGEN3_INCLUDE_DIRS: ${EIGEN3_INCLUDE_DIRS}")
-message("Eigen3_INCLUDE_DIR: ${Eigen3_INCLUDE_DIR}")
 
 # # --------------------------------------------------------------------------
 # # Include dirs
@@ -81,15 +79,15 @@ set(lib_name ${PROJECT_NAME})
 set(srcs ${vtkEigen_SRCS})
 add_library(${lib_name} ${srcs})
 
-set(libs
-  ${VTK_LIBRARIES}
-  )
-target_link_libraries(${lib_name} ${libs})
+set_target_properties(${lib_name} PROPERTIES LABELS ${lib_name})
 
 # Apply user-defined properties to the library target.
 if(Slicer_LIBRARY_PROPERTIES)
   set_target_properties(${lib_name} PROPERTIES ${Slicer_LIBRARY_PROPERTIES})
 endif()
+
+set(libs ${VTK_LIBRARIES})
+target_link_libraries(${lib_name} ${libs})
 
 # --------------------------------------------------------------------------
 # Include dirs
@@ -115,6 +113,11 @@ endif()
 # --------------------------------------------------------------------------
 # Export target
 # --------------------------------------------------------------------------
+# add ${lib_name} to SlicerTargets.cmake
+set_property(GLOBAL APPEND PROPERTY Slicer_TARGETS ${lib_name})
+# add ${lib_name}_INCLUDE_DIRS to SlicerConfig.cmake 
+set_property(GLOBAL APPEND PROPERTY SLICER_MODULE_TARGETS ${lib_name})
+
 if(NOT DEFINED ${PROJECT_NAME}_EXPORT_FILE)
   set(${PROJECT_NAME}_EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
 endif()
@@ -136,7 +139,7 @@ if(NOT DEFINED ${PROJECT_NAME}_INSTALL_BIN_DIR)
   set(${PROJECT_NAME}_INSTALL_BIN_DIR bin)
 endif()
 if(NOT DEFINED ${PROJECT_NAME}_INSTALL_LIB_DIR)
-  set(${PROJECT_NAME}_INSTALL_LIB_DIR lib/${PROJECT_NAME})
+  set(${PROJECT_NAME}_INSTALL_LIB_DIR lib)
 endif()
 
 install(TARGETS ${lib_name}
@@ -172,21 +175,6 @@ if(VTK_WRAP_PYTHON)
   endif()
 endif()
 
-
-
-# --------------------------------------------------------------------------
-# Export target
-# --------------------------------------------------------------------------
-set_property(GLOBAL APPEND PROPERTY SLICER_CUSTOM_TARGETS ${lib_name})
-set_property(GLOBAL APPEND PROPERTY Slicer_TARGETS ${lib_name})
-# set_property(GLOBAL APPEND PROPERTY SLICER_MODULE_TARGETS ${lib_name})
-# set(Slicer_Libs_INCLUDE_DIRS "${Slicer_Libs_INCLUDE_DIRS};${include_dirs}" CACHE INTERNAL "Slicer Libs includes" FORCE)
-
-get_target_property(vtkEigen_INCLUDE_DIR ${lib_name} INCLUDE_DIRECTORIES)
-message("vtkEigen_INCLUDE_DIR: ${vtkEigen_INCLUDE_DIR}")
-
-
-
 # --------------------------------------------------------------------------
 # Testing (requires some of the examples)
 # --------------------------------------------------------------------------
@@ -198,7 +186,8 @@ message("vtkEigen_INCLUDE_DIR: ${vtkEigen_INCLUDE_DIR}")
 # Set INCLUDE_DIRS variable
 # --------------------------------------------------------------------------
 set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-  CACHE INTERNAL "${PROJECT_NAME} include dirs" FORCE)
+    CACHE INTERNAL "${PROJECT_NAME} include dirs" FORCE)
+set(Slicer_Libs_INCLUDE_DIRS "${Slicer_Libs_INCLUDE_DIRS};${include_dirs}" CACHE INTERNAL "Slicer Libs includes" FORCE)
 
 # --------------------------------------------------------------------------
 # Configure support file
