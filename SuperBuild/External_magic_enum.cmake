@@ -49,13 +49,8 @@ if(NOT DEFINED magic_enum_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   set(magic_enum_ROOT ${EP_SOURCE_DIR})
   set(magic_enum_DIR ${EP_SOURCE_DIR})
   set(magic_enum_INCLUDE_DIR ${EP_SOURCE_DIR}/include)
-else()
-  # The project is provided using magic_enum_DIR, nevertheless since other project may depend on magic_enum,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
 
-mark_as_superbuild(
+  mark_as_superbuild(
   VARS
     magic_enum_ROOT:PATH
     magic_enum_DIR:PATH
@@ -63,5 +58,12 @@ mark_as_superbuild(
   LABELS "FIND_PACKAGE"
   )
 
+else()
+  # The project is provided using magic_enum_DIR, nevertheless since other project may depend on magic_enum,
+  # let's add an 'empty' one
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
+
 ExternalProject_Message(${proj} "magic_enum_ROOT: ${magic_enum_ROOT}")
 ExternalProject_Message(${proj} "magic_enum_DIR: ${magic_enum_DIR}")
+ExternalProject_Message(${proj} "magic_enum_INCLUDE_DIR: ${magic_enum_INCLUDE_DIR}")

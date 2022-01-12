@@ -42,43 +42,37 @@ if(NOT Slicer_USE_SYSTEM_${proj})
     DEPENDS
       ${${proj}_DEPENDENCIES}
   )
+
+  ExternalProject_GenerateProjectDescription_Step(${proj})
   
   set(GDAL_ROOT "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo")
   set(GDAL_DIR "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo")
   set(GDAL_INCLUDE_DIR "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/include") # needed by FindGDAL
   if(WIN32)
     set(GDAL_LIBRARY "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/lib/gdal_i.lib")
-  elseif(UNIX)
+  else()
     set(GDAL_LIBRARY "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/osgeo/lib/libgdal.so")
     set(GDAL_LIBS_DIR "${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}/GDAL.libs")
     file(GLOB GDAL_LIBS
       "${GDAL_LIBS_DIR}/lib*"
     )
-    mark_as_superbuild(
-      VARS
-        GDAL_LIBS:FILEPATH  
-        LABELS "FIND_PACKAGE"
-      )
   endif()
 
-  ExternalProject_GenerateProjectDescription_Step(${proj})
+  mark_as_superbuild(
+  VARS
+    GDAL_INCLUDE_DIR:PATH
+    GDAL_LIBRARY:FILEPATH  
+    GDAL_ROOT:PATH
+    GDAL_DIR:PATH
+    GDAL_LIBS_DIR:PATH
+  LABELS "FIND_PACKAGE"
+  )
 
 else()
   # The project is provided using GDAL_DIR, nevertheless since other project may depend on GDAL,
   # let's add an 'empty' one
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
-
-mark_as_superbuild(
-  VARS
-    GDAL_INCLUDE_DIR:PATH
-    GDAL_LIBRARY:FILEPATH  
-    GDAL_ROOT:PATH
-    GDAL_DIR:PATH
-    GDAL_LIBS:PATH
-    GDAL_LIBS_DIR:PATH
-  LABELS "FIND_PACKAGE"
-  )
 
 ExternalProject_Message(${proj} "GDAL_INCLUDE_DIR: ${GDAL_INCLUDE_DIR}")
 ExternalProject_Message(${proj} "GDAL_LIBRARY: ${GDAL_LIBRARY}")

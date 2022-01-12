@@ -38,15 +38,15 @@ set(julia_ROOT ${julia_DIR})
 set(julia_INCLUDE_DIR ${julia_DIR}/include)
 # `mark_as_superbuild` must not contain LIST (i.e. one file/dir per var)
 if(WIN32)
-  set(julia_LIB 
+  set(julia_LIBRARY 
     "${julia_DIR}/lib/libjulia.dll.a"
     )
-  set(julia_openlibm_LIB 
+  set(julia_openlibm_LIBRARY 
     "${julia_DIR}/lib/libopenlibm.dll.a"
     )
   set(julia_EXECUTABLE "${julia_DIR}/bin/julia.exe")
 else()
-  set(julia_LIB 
+  set(julia_LIBRARY 
   "${julia_DIR}/lib/libjulia.so"
   )
   set(julia_EXECUTABLE "${julia_DIR}/bin/julia")
@@ -71,55 +71,35 @@ if(NOT EXISTS ${julia_EXECUTABLE} AND NOT Slicer_USE_SYSTEM_${proj})
     )
 
   ExternalProject_GenerateProjectDescription_Step(${proj})
+
+  mark_as_superbuild(
+  VARS
+    julia_ROOT:PATH
+    julia_DIR:PATH
+    julia_INCLUDE_DIR:PATH
+    julia_LIBRARY:FILEPATH
+    julia_EXECUTABLE:FILEPATH
+  LABELS "FIND_PACKAGE"
+  )
+
+  if(WIN32)
+    mark_as_superbuild(
+      VARS
+      julia_openlibm_LIBRARY:FILEPATH
+      LABELS "FIND_PACKAGE"
+      )
+  endif()
+
 else()
   # The project is provided using julia_DIR, nevertheless since other project may depend on julia,
   # let's add an 'empty' one
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
 
-mark_as_superbuild(
-  VARS
-  julia_ROOT:PATH
-  julia_DIR:PATH
-  julia_INCLUDE_DIR:PATH
-  julia_LIB:FILEPATH
-  julia_EXECUTABLE:FILEPATH
-  LABELS "FIND_PACKAGE"
-  )
-
-if(WIN32)
-mark_as_superbuild(
-  VARS
-  julia_openlibm_LIB:FILEPATH
-  LABELS "FIND_PACKAGE"
-  )
-endif()
-
 ExternalProject_Message(${proj} "julia_ROOT: ${julia_ROOT}")
 ExternalProject_Message(${proj} "julia_INCLUDE_DIR: ${julia_INCLUDE_DIR}")
-ExternalProject_Message(${proj} "julia_LIB: ${julia_LIB}")
+ExternalProject_Message(${proj} "julia_LIBRARY: ${julia_LIBRARY}")
 ExternalProject_Message(${proj} "julia_EXECUTABLE: ${julia_EXECUTABLE}")
-
-#-----------------------------------------------------------------------------
-# Launcher setting specific to build tree
-
-# library paths
-if(WIN32)
-  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
-    ${julia_ROOT}/bin
-    )
-else()
-  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
-    ${julia_ROOT}/lib
-    ${julia_ROOT}/lib/julia
-    )
-endif()
-
-mark_as_superbuild(
-  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
-  LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
-  )
-
 
 #-----------------------------------------------------------------------------
 # Slicer Launcher setting specific to build tree
@@ -138,26 +118,5 @@ set(${proj}_PATHS_LAUNCHER_BUILD
   )
 mark_as_superbuild(
   VARS ${proj}_PATHS_LAUNCHER_BUILD
-  LABELS "PATHS_LAUNCHER_BUILD"
-  )
-
-#-----------------------------------------------------------------------------
-# Slicer Launcher setting specific to install tree
-# library paths
-set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED 
-  <APPLAUNCHER_SETTINGS_DIR>/../lib/julia/lib
-  )
-mark_as_superbuild(
-  VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
-  LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
-  )
-
-# paths
-set(${proj}_PATHS_LAUNCHER_INSTALLED 
-  <APPLAUNCHER_SETTINGS_DIR>/../lib/julia/bin
-  )
-
-mark_as_superbuild(
-  VARS ${proj}_PATHS_LAUNCHER_INSTALLED
   LABELS "PATHS_LAUNCHER_BUILD"
   )

@@ -85,22 +85,33 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
   set(h5geo_ROOT ${EP_INSTALL_DIR})
-  set(h5geo_DIR "${EP_INSTALL_DIR}/lib/cmake/h5geo")
+  set(h5geo_DIR ${EP_INSTALL_DIR}/lib/cmake/h5geo)
+  set(h5geo_INCLUDE_DIR ${EP_INSTALL_DIR}/include)
+  if(WIN32)
+    set(h5geo_LIBRARY ${EP_INSTALL_DIR}/lib/h5geo.lib)
+  else()
+    set(h5geo_LIBRARY ${EP_INSTALL_DIR}/lib/libh5geo.so)
+  endif()
+
+  mark_as_superbuild(
+  VARS
+    h5geo_ROOT:PATH
+    h5geo_DIR:PATH
+    h5geo_LIBRARY:FILEPATH
+    h5geo_INCLUDE_DIR:PATH
+  LABELS "FIND_PACKAGE"
+  )
+
 else()
   # The project is provided using h5geo_DIR, nevertheless since other project may depend on h5geo,
   # let's add an 'empty' one
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
 
-mark_as_superbuild(
-  VARS
-    h5geo_ROOT:PATH
-    h5geo_DIR:PATH
-  LABELS "FIND_PACKAGE"
-  )
-
 ExternalProject_Message(${proj} "h5geo_ROOT: ${h5geo_ROOT}")
 ExternalProject_Message(${proj} "h5geo_DIR: ${h5geo_DIR}")
+ExternalProject_Message(${proj} "h5geo_LIBRARY: ${h5geo_LIBRARY}")
+ExternalProject_Message(${proj} "h5geo_INCLUDE_DIR: ${h5geo_INCLUDE_DIR}")
 
 #-----------------------------------------------------------------------------
 # Launcher setting specific to build tree

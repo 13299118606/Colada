@@ -49,19 +49,20 @@ if(NOT DEFINED Eigen3_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   set(Eigen3_ROOT ${EP_SOURCE_DIR})
   set(Eigen3_DIR ${EP_SOURCE_DIR})
   set(Eigen3_INCLUDE_DIR ${Eigen3_ROOT})  # needed to find Eigen in h5geo
-else()
-  # The project is provided using Eigen3_DIR, nevertheless since other project may depend on Eigen3,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
 
-mark_as_superbuild(
+  mark_as_superbuild(
   VARS
     Eigen3_ROOT:PATH
     Eigen3_DIR:PATH
     Eigen3_INCLUDE_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
+  
+else()
+  # The project is provided using Eigen3_DIR, nevertheless since other project may depend on Eigen3,
+  # let's add an 'empty' one
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
 
 ExternalProject_Message(${proj} "Eigen3_ROOT: ${Eigen3_ROOT}")
 ExternalProject_Message(${proj} "Eigen3_DIR: ${Eigen3_DIR}")

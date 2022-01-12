@@ -75,27 +75,39 @@ if(NOT DEFINED HDF5_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
   set(HDF5_ROOT ${EP_INSTALL_DIR})
-  set(HDF5_DIR "${EP_INSTALL_DIR}/cmake/hdf5")
-  # set(HDF5_DIR ${EP_INSTALL_DIR})
+  set(HDF5_DIR ${EP_INSTALL_DIR}/share/cmake/hdf5)
+  set(HDF5_INCLUDE_DIR ${EP_INSTALL_DIR}/include())
   if(WIN32)
     set(HDF5_RUNTIME_DIR ${EP_INSTALL_DIR}/bin)
+    if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+      set(HDF5_C_LIBRARY ${EP_INSTALL_DIR}/lib/hdf5_D.lib)
+    else()
+      set(HDF5_C_LIBRARY ${EP_INSTALL_DIR}/lib/hdf5.lib)
+    endif()
   else()
     set(HDF5_RUNTIME_DIR ${EP_INSTALL_DIR}/lib)
+    if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+      set(HDF5_C_LIBRARY ${EP_INSTALL_DIR}/lib/libhdf5_debug.lib)
+    else()
+      set(HDF5_C_LIBRARY ${EP_INSTALL_DIR}/lib/libhdf5.lib)
+    endif()
   endif()
+
+  mark_as_superbuild(
+  VARS
+    HDF5_ROOT:PATH
+    HDF5_DIR:PATH
+    HDF5_RUNTIME_DIR:PATH
+    HDF5_INCLUDE_DIR:PATH
+    HDF5_C_LIBRARY:FILEPATH
+  LABELS "FIND_PACKAGE"
+  )
 
 else()
   # The project is provided using HDF5_DIR, nevertheless since other project may depend on HDF5,
   # let's add an 'empty' one
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
-
-mark_as_superbuild(
-  VARS
-    HDF5_ROOT:PATH
-    HDF5_DIR:PATH
-    HDF5_RUNTIME_DIR:PATH
-  LABELS "FIND_PACKAGE"
-  )
 
 ExternalProject_Message(${proj} "HDF5_ROOT: ${HDF5_ROOT}")
 ExternalProject_Message(${proj} "HDF5_DIR: ${HDF5_DIR}")

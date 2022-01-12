@@ -68,6 +68,12 @@ if(NOT DEFINED units_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   set(units_ROOT ${EP_INSTALL_DIR})
   set(units_DIR "${EP_INSTALL_DIR}/lib/cmake/units")
+  set(units_INCLUDE_DIR ${EP_INSTALL_DIR}/include)
+  if(WIN32)
+    set(units_LIBRARY ${EP_INSTALL_DIR}/lib/units.lib)
+  else()
+    set(units_LIBRARY ${EP_INSTALL_DIR}/lib/libunits.so)
+  endif()
 else()
   # The project is provided using units_DIR, nevertheless since other project may depend on units,
   # let's add an 'empty' one
@@ -78,11 +84,15 @@ mark_as_superbuild(
   VARS
     units_ROOT:PATH
     units_DIR:PATH
+    units_INCLUDE_DIR:PATH
+    units_LIBRARY:FILEPATH
   LABELS "FIND_PACKAGE"
   )
 
 ExternalProject_Message(${proj} "units_ROOT: ${units_ROOT}")
 ExternalProject_Message(${proj} "units_DIR: ${units_DIR}")
+ExternalProject_Message(${proj} "units_INCLUDE_DIR: ${units_INCLUDE_DIR}")
+ExternalProject_Message(${proj} "units_LIBRARY: ${units_LIBRARY}")
 
 #-----------------------------------------------------------------------------
 # Launcher setting specific to build tree
