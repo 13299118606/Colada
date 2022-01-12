@@ -135,11 +135,12 @@ generate_export_header(
 # --------------------------------------------------------------------------
 # Install library
 # --------------------------------------------------------------------------
+message("Slicer_LIB_DIR: ${Slicer_LIB_DIR}")
 if(NOT DEFINED ${PROJECT_NAME}_INSTALL_BIN_DIR)
   set(${PROJECT_NAME}_INSTALL_BIN_DIR bin)
 endif()
 if(NOT DEFINED ${PROJECT_NAME}_INSTALL_LIB_DIR)
-  set(${PROJECT_NAME}_INSTALL_LIB_DIR lib)
+  set(${PROJECT_NAME}_INSTALL_LIB_DIR ${Slicer_LIB_DIR})
 endif()
 
 install(TARGETS ${lib_name}
