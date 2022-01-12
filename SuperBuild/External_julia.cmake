@@ -38,17 +38,11 @@ set(julia_ROOT ${julia_DIR})
 set(julia_INCLUDE_DIR ${julia_DIR}/include)
 # `mark_as_superbuild` must not contain LIST (i.e. one file/dir per var)
 if(WIN32)
-  set(julia_LIBRARY 
-    "${julia_DIR}/lib/libjulia.dll.a"
-    )
-  set(julia_openlibm_LIBRARY 
-    "${julia_DIR}/lib/libopenlibm.dll.a"
-    )
+  set(julia_LIBRARY "${julia_DIR}/lib/libjulia.dll.a")
+  set(julia_openlibm_LIBRARY "${julia_DIR}/lib/libopenlibm.dll.a")
   set(julia_EXECUTABLE "${julia_DIR}/bin/julia.exe")
 else()
-  set(julia_LIBRARY 
-  "${julia_DIR}/lib/libjulia.so"
-  )
+  set(julia_LIBRARY "${julia_DIR}/lib/libjulia.so")
   set(julia_EXECUTABLE "${julia_DIR}/bin/julia")
 endif()
 
@@ -85,7 +79,7 @@ if(NOT EXISTS ${julia_EXECUTABLE} AND NOT Slicer_USE_SYSTEM_${proj})
   if(WIN32)
     mark_as_superbuild(
       VARS
-      julia_openlibm_LIBRARY:FILEPATH
+        julia_openlibm_LIBRARY:FILEPATH
       LABELS "FIND_PACKAGE"
       )
   endif()
