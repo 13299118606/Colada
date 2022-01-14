@@ -146,6 +146,7 @@ void vtkSlicerSceneFilterLogic::setDomainFilter(const std::string& domain)
   h5geo::sr::setDomain(domain);
 
   h5geo::Domain domainEnum = h5geo::sr::getDomainEnum();
+  filter();
   InvokeEvent(
         vtkSlicerSceneFilterLogic::DomainChangedEvent,
         static_cast<void*>(&domainEnum));
@@ -183,7 +184,7 @@ void vtkSlicerSceneFilterLogic::filter()
 //---------------------------------------------------------------------------
 void vtkSlicerSceneFilterLogic::filter(vtkMRMLDisplayableNode* node)
 {
-  if (!node || !node->GetDisplayVisibility())
+  if (!node)
     return;
 
   std::string attrVal;
@@ -196,19 +197,24 @@ void vtkSlicerSceneFilterLogic::filter(vtkMRMLDisplayableNode* node)
     nodeDomain = node->GetAttribute("Domain");
 
   std::string domain = getDomainFilter();
-  if ((attrVal.empty() ||
-       this->Internal->attributeValue.empty() ||
-       attrVal == this->Internal->attributeValue) &&
-      (nodeDomain.empty() ||
-       domain == "ANY" ||
-       domain.empty() ||
-       nodeDomain == domain))
-    return;
-
-  node->SetDisplayVisibility(false);
-  node->InvokeEvent(
-        vtkMRMLDisplayableNode::DisplayModifiedEvent,
-        node);
+  if ((this->Internal->attributeValue.empty() ||
+       this->Internal->attributeValue == attrVal) &&
+      (domain == "ANY" ||
+       nodeDomain == domain)){
+    if (!node->GetDisplayVisibility()){
+      node->SetDisplayVisibility(true);
+      node->InvokeEvent(
+            vtkMRMLDisplayableNode::DisplayModifiedEvent,
+            node);
+    }
+  } else {
+    if (node->GetDisplayVisibility()){
+      node->SetDisplayVisibility(false);
+      node->InvokeEvent(
+            vtkMRMLDisplayableNode::DisplayModifiedEvent,
+            node);
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
