@@ -12,7 +12,6 @@
 #include <vtkObjectFactory.h>
 
 // h5geo includes
-#define H5GEO_USE_GDAL
 #include <h5geo/h5core.h>
 
 // STD includes
@@ -31,7 +30,7 @@ public:
     this->Logic = nullptr;
   }
 
-  void Execute(vtkObject *caller, unsigned long event, void*) override{
+  void Execute(vtkObject *caller, unsigned long event, void* val) override{
     vtkMRMLDisplayableNode* dispNode =
         vtkMRMLDisplayableNode::SafeDownCast(caller);
 
@@ -39,7 +38,7 @@ public:
       return;
 
     if (event == vtkMRMLDisplayableNode::DisplayModifiedEvent){
-      Logic->filter(dispNode);
+      Logic->filter(dispNode, true);
     }
   }
 
@@ -137,7 +136,7 @@ void vtkSlicerSceneFilterLogic::setAttributeFilter(
       attrValue.empty())
     return;
 
-  filter();
+  filter(false);
 }
 
 //----------------------------------------------------------------------------
@@ -146,10 +145,13 @@ void vtkSlicerSceneFilterLogic::setDomainFilter(const std::string& domain)
   h5geo::sr::setDomain(domain);
 
   h5geo::Domain domainEnum = h5geo::sr::getDomainEnum();
-  filter();
+  // invoke event first so that nodes could apply transformations
+  // and change the domain
   InvokeEvent(
         vtkSlicerSceneFilterLogic::DomainChangedEvent,
         static_cast<void*>(&domainEnum));
+  // now filter
+  filter(false);
 }
 
 //----------------------------------------------------------------------------
@@ -159,7 +161,7 @@ std::string vtkSlicerSceneFilterLogic::getDomainFilter()
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerSceneFilterLogic::filter()
+void vtkSlicerSceneFilterLogic::filter(bool hideOnly)
 {
   // important or app may fail to load
   if (!GetMRMLScene()){
@@ -177,12 +179,14 @@ void vtkSlicerSceneFilterLogic::filter()
     if (!dispNode)
       continue;
 
-    filter(dispNode);
+    filter(dispNode, hideOnly);
   }
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerSceneFilterLogic::filter(vtkMRMLDisplayableNode* node)
+void vtkSlicerSceneFilterLogic::filter(
+    vtkMRMLDisplayableNode* node,
+    bool hideOnly)
 {
   if (!node)
     return;
@@ -201,7 +205,8 @@ void vtkSlicerSceneFilterLogic::filter(vtkMRMLDisplayableNode* node)
        this->Internal->attributeValue == attrVal) &&
       (domain == "ANY" ||
        nodeDomain == domain)){
-    if (!node->GetDisplayVisibility()){
+    if (!node->GetDisplayVisibility() &&
+        !hideOnly){
       node->SetDisplayVisibility(true);
       node->InvokeEvent(
             vtkMRMLDisplayableNode::DisplayModifiedEvent,

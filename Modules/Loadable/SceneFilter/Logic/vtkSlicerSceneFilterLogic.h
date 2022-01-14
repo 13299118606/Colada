@@ -53,8 +53,8 @@ public:
   void setDomainFilter(const std::string& domain);
   std::string getDomainFilter();
 
-  void filter();
-  void filter(vtkMRMLDisplayableNode* node);
+  void filter(bool hideOnly);
+  void filter(vtkMRMLDisplayableNode* node, bool hideOnly);
 
   enum
   {
