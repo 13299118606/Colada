@@ -85,7 +85,7 @@ QIcon qSlicerSpatialReferenceModule::icon() const
 //-----------------------------------------------------------------------------
 QStringList qSlicerSpatialReferenceModule::categories() const
 {
-  return QStringList() << "Seismic";
+  return QStringList() << "Colada";
 }
 
 //-----------------------------------------------------------------------------

@@ -82,7 +82,7 @@ QIcon qSlicerSceneFilterModule::icon() const
 //-----------------------------------------------------------------------------
 QStringList qSlicerSceneFilterModule::categories() const
 {
-  return QStringList() << "Seismic";
+  return QStringList() << "Colada";
 }
 
 //-----------------------------------------------------------------------------

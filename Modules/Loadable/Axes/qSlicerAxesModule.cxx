@@ -106,7 +106,7 @@ QIcon qSlicerAxesModule::icon() const
 //-----------------------------------------------------------------------------
 QStringList qSlicerAxesModule::categories() const
 {
-  return QStringList() << "Seismic";
+  return QStringList() << "Colada";
 }
 
 //-----------------------------------------------------------------------------
