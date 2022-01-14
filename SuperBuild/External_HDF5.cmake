@@ -111,6 +111,9 @@ endif()
 
 ExternalProject_Message(${proj} "HDF5_ROOT: ${HDF5_ROOT}")
 ExternalProject_Message(${proj} "HDF5_DIR: ${HDF5_DIR}")
+ExternalProject_Message(${proj} "HDF5_RUNTIME_DIR: ${HDF5_RUNTIME_DIR}")
+ExternalProject_Message(${proj} "HDF5_INCLUDE_DIR: ${HDF5_INCLUDE_DIR}")
+ExternalProject_Message(${proj} "HDF5_C_LIBRARY: ${HDF5_C_LIBRARY}")
 
 #-----------------------------------------------------------------------------
 # Launcher setting specific to build tree
@@ -121,7 +124,7 @@ if(UNIX)
   set(_library_output_subdir lib)
 endif()
 set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
-  ${EP_BINARY_DIR}/${_library_output_subdir}/<CMAKE_CFG_INTDIR>
+  ${EP_INSTALL_DIR}/${_library_output_subdir}/<CMAKE_CFG_INTDIR>
   )
 mark_as_superbuild(
   VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD

@@ -42,7 +42,6 @@
 #include "util.h"
 
 // h5geo includes
-#define H5GEO_USE_GDAL
 #include <h5geo/h5core.h>
 
 // GDAL includes

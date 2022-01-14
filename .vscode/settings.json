@@ -4,5 +4,6 @@
     "*.tcc": "cpp",
     "qwidget": "cpp",
     "cstdlib": "cpp"
-  }
+  },
+  "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, AlignConsecutiveDeclarations: true }",
 }

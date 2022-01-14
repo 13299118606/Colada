@@ -279,9 +279,9 @@ set(Slicer_EXTENSION_SOURCE_DIRS
   ${Colada_SOURCE_DIR}/Modules/Loadable/SpatialReference
   ${Colada_SOURCE_DIR}/Modules/Loadable/Zoom
   ${Colada_SOURCE_DIR}/Modules/Scripted/Home
-  ${Colada_SOURCE_DIR}/Modules/Extensions/Seismic
-  ${Colada_SOURCE_DIR}/Modules/Extensions/Maps
-  ${Colada_SOURCE_DIR}/Modules/Extensions/Wells
+  # ${Colada_SOURCE_DIR}/Modules/Extensions/Seismic
+  # ${Colada_SOURCE_DIR}/Modules/Extensions/Maps
+  # ${Colada_SOURCE_DIR}/Modules/Extensions/Wells
   )
 
 # Add remote extension source directories

@@ -6,11 +6,8 @@ set(${KIT}_EXPORT_DIRECTIVE "VTK_SLICER_${MODULE_NAME_UPPER}_MODULE_LOGIC_EXPORT
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${h5gt_INCLUDE_DIR}
-  ${h5geo_INCLUDE_DIR}
   ${Eigen3_INCLUDE_DIR}
-  ${units_INCLUDE_DIR}
   ${magic_enum_INCLUDE_DIR}
-  ${vtkEigen_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -20,9 +17,7 @@ set(${KIT}_SRCS
 
 set(${KIT}_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
-  ${units_LIBRARY}
-  ${h5geo_LIBRARY}
-  vtkEigen
+  h5geo
   )
 
 #-----------------------------------------------------------------------------

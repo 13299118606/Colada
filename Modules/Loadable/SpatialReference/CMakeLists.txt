@@ -13,10 +13,7 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${qColadaApp_INCLUDE_DIRS}
   ${qSlicerUnitsModuleWidgets_INCLUDE_DIRS}
   ${Eigen3_INCLUDE_DIR}
-  ${units_INCLUDE_DIR}
   ${h5gt_INCLUDE_DIR}
-  ${h5geo_INCLUDE_DIR}
-  ${GDAL_INCLUDE_DIR}
   )
 
 set(MODULE_SRCS
@@ -38,8 +35,7 @@ set(MODULE_UI_SRCS
 set(MODULE_TARGET_LIBRARIES
   qColadaApp
   qSlicerUnitsModuleWidgets
-  ${units_LIBRARY}
-  ${h5geo_LIBRARY}
+  h5geo
   )
 
 set(MODULE_RESOURCES

@@ -31,16 +31,23 @@ SlicerReadApplicationProperties()
 set(${PROJECT_NAME}_FOLDER "App-${PROJECT_NAME}")
 
 find_package(OpenMP REQUIRED) # Colada needs OpenMP
-# find_package(ZLIB REQUIRED)
-# find_package(units REQUIRED CONFIG)  # based on units_DIR
-# find_package(HDF5 REQUIRED CONFIG)  # based on HDF5_DIR
-# find_package(h5geo REQUIRED CONFIG)  # based on h5geo_DIR
-# find_package(GDAL REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(units REQUIRED CONFIG)  # based on units_DIR
+find_package(HDF5 REQUIRED CONFIG)  # based on HDF5_DIR
+find_package(GDAL REQUIRED)
 
-# # GDAL::GDAL depends on many libs (TIFF, GEOS etc). Here we are linking them
-# if(DEFINED GDAL_LIBS)
-#   target_link_libraries(GDAL::GDAL INTERFACE ${GDAL_LIBS})
-# endif()
+# GDAL::GDAL depends on many libs (TIFF, GEOS etc). Here we are linking them
+if(DEFINED GDAL_LIBS)
+  target_link_libraries(GDAL::GDAL INTERFACE ${GDAL_LIBS})
+endif()
+
+# Before finding 'h5geo' all its deps must be found (defined in 'h5geo-targets.cmake'):
+# hdf5::hdf5-shared
+# units::units
+# GDAL::GDAL
+# and tbb (but it is defined by library path)
+# Linking to 'h5geo' is equal to link to listed above targets as well
+find_package(h5geo REQUIRED CONFIG)  # based on h5geo_DIR
 
 # --------------------------------------------------------------------------
 # Application library
@@ -170,11 +177,8 @@ set(APPLIB_RESOURCES
 set(APPLIB_TARGET_LIBRARIES
   # ColadaCore  # this may be useful when splitting qColadaApp by few subprojects
   OpenMP::OpenMP_CXX
-  ${h5geo_LIBRARY}
-  ${GDAL_LIBRARY}
-  ${units_LIBRARY}
+  h5geo
   ${julia_LIBRARY}
-  ${HDF5_C_LIBRARY}
   )
 
 if(WIN32)
@@ -182,14 +186,10 @@ if(WIN32)
 endif()
 
 set(APPLIB_DIRS 
-  ${h5geo_INCLUDE_DIR}
-  ${units_INCLUDE_DIR}
-  ${GDAL_INCLUDE_DIR}
   ${Eigen3_INCLUDE_DIR}
   ${h5gt_INCLUDE_DIR}
   ${magic_enum_INCLUDE_DIR}
   ${julia_INCLUDE_DIR}
-  ${HDF5_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 

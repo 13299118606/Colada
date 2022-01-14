@@ -118,7 +118,6 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     endforeach()
   endif()
 
-
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
     GIT_REPOSITORY "${Slicer_${proj}_GIT_REPOSITORY}"
@@ -153,8 +152,7 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DITK_INSTALL_NO_DEVELOPMENT:BOOL=ON
       -DITK_USE_SYSTEM_HDF5:BOOL=ON
       -DHDF5_EXTERNAL_LIB_PREFIX:STRING=hdf5::
-      -DHDF5_DIR:PATH=${HDF5_DIR}
-      -DHDF5_ROOT:PATH=${HDF5_ROOT}   # without HDF5_ROOT ITK can't find it
+      -DHDF5_ROOT:PATH=${HDF5_ROOT}
       -DCMAKE_POLICY_DEFAULT_CMP0074:STRING=NEW 
       -DKWSYS_USE_MD5:BOOL=ON # Required by SlicerExecutionModel
       -DITK_WRAPPING:BOOL=OFF #${BUILD_SHARED_LIBS} ## HACK:  QUICK CHANGE

@@ -6,6 +6,15 @@ set(MODULE_TITLE ${MODULE_NAME})
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
 
 #-----------------------------------------------------------------------------
+# h5geo requires its deps to be found first
+find_package(OpenMP REQUIRED) # Colada needs OpenMP
+find_package(ZLIB REQUIRED)
+find_package(units REQUIRED CONFIG)  # based on units_DIR
+find_package(HDF5 REQUIRED CONFIG)  # based on HDF5_DIR
+find_package(GDAL REQUIRED)
+find_package(h5geo REQUIRED CONFIG)  # based on h5geo_DIR
+
+#-----------------------------------------------------------------------------
 add_subdirectory(Logic)
 add_subdirectory(Widgets)
 
