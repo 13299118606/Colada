@@ -5,6 +5,7 @@ from h5geopy import h5geo
 from welly import Well
 import os, slicer, ctk
 import numpy as np
+import logging
 
 
 class ReadWriteWellParam(h5geo.WellParam):
@@ -39,6 +40,12 @@ class qColadaLasReader(qColadaReader):
     Returns:
         qColadaReader: object instance
     """
+    # lasio logger must be set higher than DEBUG as Slicer's
+    # DEBUG log handler writes output to the file that leads
+    # to the memory consumption
+    lasio_logger = logging.getLogger('lasio')
+    lasio_logger.setLevel(logging.WARNING)
+
     wellTableView = None
     wellHrzHeader = None
     wellVertHeader = None
@@ -560,7 +567,6 @@ class qColadaLasReader(qColadaReader):
                 progressDialog.setValue(row)
                 try:
                     h5wellCnt = h5geo.createWellContainerByName(p_w.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
-
                     if not h5wellCnt:
                         errMsg = 'Can`t open or create: ' + p_w.saveFile + '''
                         Possible reasons:
