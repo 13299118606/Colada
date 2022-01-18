@@ -61,6 +61,7 @@ void qCRSWidgetPrivate::setupUi(QWidget* q) {
   model = new QStandardItemModel(proxy);
   proxy->setSourceModel(model);
   tableView->setModel(proxy);
+  tableView->setDragEnabled(true);
   txtBrowser = new QTextBrowser();
   txtBrowser->setObjectName("TextBrowser");
   txtBrowser->setReadOnly(true);

@@ -104,6 +104,14 @@ set(APPLIB_SRCS
   SegyRead.h
   SegyRead.cxx
 
+  qH5SurveyTypeComboBox.h
+  qH5SurveyTypeComboBox.cxx
+  qH5SeisDataTypeComboBox.h
+  qH5SeisDataTypeComboBox.cxx
+  qH5DomainComboBox.h
+  qH5DomainComboBox.cxx
+  qH5CreateFlagComboBox.h
+  qH5CreateFlagComboBox.cxx
   qH5ItemDropLineEdit.h
   qH5ItemDropLineEdit.cxx
   qCopyPasteTableView.h
@@ -152,6 +160,10 @@ set(APPLIB_MOC_SRCS
 
   qColadaGainWidget.h
 
+  qH5SurveyTypeComboBox.h
+  qH5SeisDataTypeComboBox.h
+  qH5DomainComboBox.h
+  qH5CreateFlagComboBox.h
   qH5ItemDropLineEdit.h
   qCopyPasteTableView.h
   qScienceSpinBox.h

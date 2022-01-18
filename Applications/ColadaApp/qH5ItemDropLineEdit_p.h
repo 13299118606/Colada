@@ -1,5 +1,5 @@
-#ifndef __qCRSDropTableView_p_h
-#define __qCRSDropTableView_p_h
+#ifndef __qH5ItemDropLineEdit_p_h
+#define __qH5ItemDropLineEdit_p_h
 
 #include "qH5ItemDropLineEdit.h"
 
