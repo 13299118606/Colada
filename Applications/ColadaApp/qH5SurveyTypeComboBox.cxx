@@ -40,12 +40,34 @@ qH5SurveyTypeComboBox::~qH5SurveyTypeComboBox() {
 
 }
 
+bool qH5SurveyTypeComboBox::setH5SurveyType(unsigned survType){
+  auto seisSurvType_opt =
+      magic_enum::enum_cast<h5geo::SurveyType>(survType);
+
+  if (!seisSurvType_opt.has_value())
+    return false;
+
+  for (int i = 0; i < this->count(); i++){
+    auto opt =
+        magic_enum::enum_cast<h5geo::SurveyType>(
+          this->itemText(i).toStdString());
+    if (!opt.has_value())
+      continue;
+
+    if (opt.value() == seisSurvType_opt.value()){
+      this->setCurrentIndex(i);
+      return true;
+    }
+  }
+  return false;
+}
+
 unsigned qH5SurveyTypeComboBox::getH5SurveyType()
 {
-  auto seisCreateType_opt =
+  auto seisSurvType_opt =
       magic_enum::enum_cast<h5geo::SurveyType>(this->currentText().toStdString());
-  if (seisCreateType_opt.has_value())
-    return static_cast<unsigned>(seisCreateType_opt.value());
+  if (seisSurvType_opt.has_value())
+    return static_cast<unsigned>(seisSurvType_opt.value());
 
   return 0;
 }

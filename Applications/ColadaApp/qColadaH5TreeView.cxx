@@ -140,7 +140,7 @@ bool qColadaH5TreeView::addContainer(const QString &fileName) {
   qColadaH5ProxyModel *proxyModel =
       qobject_cast<qColadaH5ProxyModel *>(model());
   if (!proxyModel){
-    qCritical() << "qColadaH5TreeView::addContainer: proxy model not found";
+    qCritical() << Q_FUNC_INFO << "proxy model not found";
     return false;
   }
 
@@ -148,13 +148,13 @@ bool qColadaH5TreeView::addContainer(const QString &fileName) {
       static_cast<qColadaH5Model *>(proxyModel->sourceModel());
 
   if (!srcModel){
-    qCritical() << "qColadaH5TreeView::addContainer: source model not found";
+    qCritical() << Q_FUNC_INFO << "Source model not found";
     return false;
   }
 
   qColadaH5Item *root = srcModel->getRootItem();
   if (!srcModel->addH5File(fileName)){
-    qWarning() << "qColadaH5TreeView::addContainer: unable to add the file: " << fileName;
+    qWarning() << Q_FUNC_INFO << "Unable to add the file: " << fileName;
     return false;
   }
   return true;
@@ -164,7 +164,7 @@ bool qColadaH5TreeView::removeContainer(const QString &fileName) {
   qColadaH5ProxyModel *proxyModel =
       qobject_cast<qColadaH5ProxyModel *>(model());
   if (!proxyModel){
-    qCritical() << "qColadaH5TreeView::removeContainer: proxy model not found";
+    qCritical() << Q_FUNC_INFO << "Proxy model not found";
     return false;
   }
 
@@ -172,22 +172,21 @@ bool qColadaH5TreeView::removeContainer(const QString &fileName) {
       static_cast<qColadaH5Model *>(proxyModel->sourceModel());
 
   if (!srcModel){
-    qCritical() << "qColadaH5TreeView::removeContainer: source model not found";
+    qCritical() << Q_FUNC_INFO << "Source model not found";
     return false;
   }
 
   qColadaH5Item *root = srcModel->getRootItem();
   if (!srcModel->removeH5File(fileName)){
-    qWarning() << "qColadaH5TreeView::removeContainer: unable to remove the file: " << fileName;
+    qWarning() << Q_FUNC_INFO << "Unable to remove the file: " << fileName;
     return false;
   }
   return true;
 }
 
 bool qColadaH5TreeView::refreshContainer(const QString &fileName) {
-  if (removeContainer(fileName))
-    return addContainer(fileName);
-  return false;
+  removeContainer(fileName);
+  return addContainer(fileName);
 }
 
 void qColadaH5TreeView::onAddContainer() {
@@ -205,8 +204,7 @@ void qColadaH5TreeView::onRemoveContainer() {
   auto* selectedModel = this->selectionModel();
 
   if (!selectedModel){
-    qCritical() << "qColadaH5TreeView::onRemoveContainer: " <<
-                   "selected model is missing";
+    qCritical() << Q_FUNC_INFO << "Selected model is missing";
     return;
   }
 
@@ -240,8 +238,7 @@ void qColadaH5TreeView::onRefreshContainer() {
   auto* selectedModel = this->selectionModel();
 
   if (!selectedModel){
-    qCritical() << "qColadaH5TreeView::onRefreshContainer: " <<
-                   "selected model is missing";
+    qCritical() << Q_FUNC_INFO << "Selected model is missing";
     return;
   }
 
@@ -264,8 +261,7 @@ void qColadaH5TreeView::onExpandSelected() {
   auto* selectedModel = this->selectionModel();
 
   if (!selectedModel){
-    qCritical() << "qColadaH5TreeView::onExpandSelected: " <<
-                   "selected model is missing";
+    qCritical() << Q_FUNC_INFO << "Selected model is missing";
     return;
   }
 
@@ -280,8 +276,7 @@ void qColadaH5TreeView::onCollapseSelected() {
   auto* selectedModel = this->selectionModel();
 
   if (!selectedModel){
-    qCritical() << "qColadaH5TreeView::onCollapseSelected: " <<
-                   "selected model is missing";
+    qCritical() << Q_FUNC_INFO << "Selected model is missing";
     return;
   }
 

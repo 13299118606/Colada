@@ -13,6 +13,9 @@
 #include <QTableView>
 #include <QDebug>
 
+// CTK includes
+#include <ctkPathLineEdit.h>
+
 qH5ItemDropLineEditPrivate::qH5ItemDropLineEditPrivate(qH5ItemDropLineEdit &q)
     : q_ptr(&q) {}
 
@@ -21,17 +24,24 @@ qH5ItemDropLineEditPrivate::~qH5ItemDropLineEditPrivate() {}
 void qH5ItemDropLineEditPrivate::init() {
   Q_Q(qH5ItemDropLineEdit);
   this->gridLayout = new QGridLayout(q);
-  this->containerLineEdit = new QLineEdit(q);
+
+  this->containerPathLineEdit = new ctkPathLineEdit(q);
   this->objectLineEdit = new QLineEdit(q);
 
-  this->gridLayout->addWidget(this->containerLineEdit, 0, 0);
-  this->gridLayout->addWidget(this->objectLineEdit, 0, 1);
+  // adds widget to grid layout
+  q->setOrientation(Qt::Vertical);
 
-  this->containerLineEdit->setPlaceholderText("Container...");
+  QLineEdit* containerLineEdit = q->getH5ContainerLineEdit();
+  if (!containerLineEdit){
+    qCritical() << Q_FUNC_INFO << "Unable to find container line edit";
+    return;
+  }
+
+  containerLineEdit->setPlaceholderText("Container...");
   this->objectLineEdit->setPlaceholderText("Object name...");
 
-  this->containerLineEdit->setReadOnly(true);
-  this->objectLineEdit->setReadOnly(true);
+  containerLineEdit->setReadOnly(false);
+  this->objectLineEdit->setReadOnly(false);
 
   q->setAcceptDrops(true);
 
@@ -59,8 +69,10 @@ qH5ItemDropLineEdit::~qH5ItemDropLineEdit() {
 void qH5ItemDropLineEdit::setOrientation(Qt::Orientation orientation) {
   Q_D(qH5ItemDropLineEdit);
   if (orientation == Qt::Vertical){
+    d->gridLayout->addWidget(d->containerPathLineEdit, 0, 0);
     d->gridLayout->addWidget(d->objectLineEdit, 1, 0);
   } else if (orientation == Qt::Horizontal){
+    d->gridLayout->addWidget(d->containerPathLineEdit, 0, 0);
     d->gridLayout->addWidget(d->objectLineEdit, 0, 1);
   }
 }
@@ -99,7 +111,7 @@ void qH5ItemDropLineEdit::dropEvent(QDropEvent *event) {
 
 void qH5ItemDropLineEdit::setH5Container(const QString &name){
   Q_D(qH5ItemDropLineEdit);
-  d->containerLineEdit->setText(name);
+  d->containerPathLineEdit->setCurrentPath(name);
 }
 
 void qH5ItemDropLineEdit::setH5Object(const QString& name){
@@ -109,13 +121,21 @@ void qH5ItemDropLineEdit::setH5Object(const QString& name){
 
 void qH5ItemDropLineEdit::setH5Data(const QString& container, const QString& object){
   Q_D(qH5ItemDropLineEdit);
-  d->containerLineEdit->blockSignals(true);
+  QLineEdit* containerLineEdit = this->getH5ContainerLineEdit();
+  if (!containerLineEdit){
+    qCritical() << Q_FUNC_INFO << "Unable to find container line edit";
+    return;
+  }
+
+  d->containerPathLineEdit->blockSignals(true);
+  containerLineEdit->blockSignals(true);
   d->objectLineEdit->blockSignals(true);
 
-  d->containerLineEdit->setText(container);
+  d->containerPathLineEdit->setCurrentPath(container);
   d->objectLineEdit->setText(object);
 
-  d->containerLineEdit->blockSignals(false);
+  d->containerPathLineEdit->blockSignals(false);
+  containerLineEdit->blockSignals(false);
   d->objectLineEdit->blockSignals(false);
 
   emit h5ItemChanged(container, object);
@@ -123,7 +143,7 @@ void qH5ItemDropLineEdit::setH5Data(const QString& container, const QString& obj
 
 QString qH5ItemDropLineEdit::h5Container(){
   Q_D(qH5ItemDropLineEdit);
-  return d->containerLineEdit->text();
+  return d->containerPathLineEdit->currentPath();
 }
 
 QString qH5ItemDropLineEdit::h5Object(){
@@ -131,9 +151,14 @@ QString qH5ItemDropLineEdit::h5Object(){
   return d->objectLineEdit->text();
 }
 
+ctkPathLineEdit* qH5ItemDropLineEdit::getH5ContainerPathLineEdit(){
+  Q_D(qH5ItemDropLineEdit);
+  return d->containerPathLineEdit;
+}
+
 QLineEdit* qH5ItemDropLineEdit::getH5ContainerLineEdit(){
   Q_D(qH5ItemDropLineEdit);
-  return d->containerLineEdit;
+  return d->containerPathLineEdit->findChild<QLineEdit*>();
 }
 
 QLineEdit* qH5ItemDropLineEdit::getH5ObjectLineEdit(){
@@ -152,5 +177,5 @@ void qH5ItemDropLineEdit::onH5ObjectLineEditChanged(
     const QString& name)
 {
   Q_D(qH5ItemDropLineEdit);
-  emit h5ItemChanged(d->containerLineEdit->text(), name);
+  emit h5ItemChanged(d->containerPathLineEdit->currentPath(), name);
 }

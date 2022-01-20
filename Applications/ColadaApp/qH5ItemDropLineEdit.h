@@ -8,6 +8,7 @@
 #include "qColadaAppExport.h"
 
 class qH5ItemDropLineEditPrivate;
+class ctkPathLineEdit;
 class QLineEdit;
 
 class Q_COLADA_APP_EXPORT qH5ItemDropLineEdit : public QWidget {
@@ -18,8 +19,7 @@ public:
   virtual ~qH5ItemDropLineEdit() override;
 
 public slots:
-  /// \brief setOrientation Default orientation is horizontal
-  /// (i.e. both line edits are set in the first row of a grid layout).
+  /// \brief setOrientation Default orientation is vertical
   /// \param orientation
   void setOrientation(Qt::Orientation orientation);
 
@@ -31,6 +31,7 @@ public slots:
   QString h5Container();
   QString h5Object();
 
+  ctkPathLineEdit* getH5ContainerPathLineEdit();
   QLineEdit* getH5ContainerLineEdit();
   QLineEdit* getH5ObjectLineEdit();
 

@@ -565,7 +565,7 @@ H5Seis *SegyRead::readTracesInHeap(
   progressDialog.setValue(progressDialog.maximum());
   progressDialog.setLabelText("Finalizing (calculating boundary)...");
   // calculate border of area
-  if (!seis->Finalize()){
+  if (!seis->updateBoundary()){
     errMsg = p.readFile + ": Unable to calculate and write boundary. Check INLINE, XLINE, CDP_X, CDP_Y headers";
     seis->Delete();
     return nullptr;

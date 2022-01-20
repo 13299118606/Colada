@@ -40,12 +40,34 @@ qH5SeisDataTypeComboBox::~qH5SeisDataTypeComboBox() {
 
 }
 
+bool qH5SeisDataTypeComboBox::setH5SeisDataType(unsigned dtype){
+  auto seisDataType_opt =
+      magic_enum::enum_cast<h5geo::SeisDataType>(dtype);
+
+  if (!seisDataType_opt.has_value())
+    return false;
+
+  for (int i = 0; i < this->count(); i++){
+    auto opt =
+        magic_enum::enum_cast<h5geo::SeisDataType>(
+          this->itemText(i).toStdString());
+    if (!opt.has_value())
+      continue;
+
+    if (opt.value() == seisDataType_opt.value()){
+      this->setCurrentIndex(i);
+      return true;
+    }
+  }
+  return false;
+}
+
 unsigned qH5SeisDataTypeComboBox::getH5SeisDataType()
 {
-  auto seisCreateType_opt =
+  auto seisDataType_opt =
       magic_enum::enum_cast<h5geo::SeisDataType>(this->currentText().toStdString());
-  if (seisCreateType_opt.has_value())
-    return static_cast<unsigned>(seisCreateType_opt.value());
+  if (seisDataType_opt.has_value())
+    return static_cast<unsigned>(seisDataType_opt.value());
 
   return 0;
 }

@@ -37,6 +37,28 @@ qH5CreateFlagComboBox::~qH5CreateFlagComboBox() {
 
 }
 
+bool qH5CreateFlagComboBox::setH5Flag(unsigned flag){
+  auto createType_opt =
+      magic_enum::enum_cast<h5geo::CreationType>(flag);
+
+  if (!createType_opt.has_value())
+    return false;
+
+  for (int i = 0; i < this->count(); i++){
+    auto opt =
+        magic_enum::enum_cast<h5geo::CreationType>(
+          this->itemText(i).toStdString());
+    if (!opt.has_value())
+      continue;
+
+    if (opt.value() == createType_opt.value()){
+      this->setCurrentIndex(i);
+      return true;
+    }
+  }
+  return false;
+}
+
 void qH5CreateFlagComboBox::setH5FlagsToOpen(){
   this->clear();
   this->addH5Flag(static_cast<unsigned>(h5geo::CreationType::OPEN));

@@ -18,6 +18,7 @@ public:
   virtual ~qH5DomainComboBox() override;
 
 public slots:
+  bool setH5Domain(unsigned domain);
   unsigned getH5Domain();
 
 protected:

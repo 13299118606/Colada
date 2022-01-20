@@ -18,6 +18,7 @@ public:
   virtual ~qH5SeisDataTypeComboBox() override;
 
 public slots:
+  bool setH5SeisDataType(unsigned dtype);
   unsigned getH5SeisDataType();
 
 protected:

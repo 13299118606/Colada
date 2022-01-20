@@ -18,6 +18,7 @@ public:
   virtual ~qH5SurveyTypeComboBox() override;
 
 public slots:
+  bool setH5SurveyType(unsigned survType);
   unsigned getH5SurveyType();
 
 protected:

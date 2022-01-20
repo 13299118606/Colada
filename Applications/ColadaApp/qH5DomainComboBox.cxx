@@ -40,12 +40,35 @@ qH5DomainComboBox::~qH5DomainComboBox() {
 
 }
 
+bool qH5DomainComboBox::setH5Domain(unsigned domain)
+{
+  auto domain_opt =
+      magic_enum::enum_cast<h5geo::Domain>(domain);
+
+  if (!domain_opt.has_value())
+    return false;
+
+  for (int i = 0; i < this->count(); i++){
+    auto opt =
+        magic_enum::enum_cast<h5geo::Domain>(
+          this->itemText(i).toStdString());
+    if (!opt.has_value())
+      continue;
+
+    if (opt.value() == domain_opt.value()){
+      this->setCurrentIndex(i);
+      return true;
+    }
+  }
+  return false;
+}
+
 unsigned qH5DomainComboBox::getH5Domain()
 {
-  auto seisCreateType_opt =
+  auto domain_opt =
       magic_enum::enum_cast<h5geo::Domain>(this->currentText().toStdString());
-  if (seisCreateType_opt.has_value())
-    return static_cast<unsigned>(seisCreateType_opt.value());
+  if (domain_opt.has_value())
+    return static_cast<unsigned>(domain_opt.value());
 
   return 0;
 }

@@ -3,6 +3,7 @@
 
 #include "qH5ItemDropLineEdit.h"
 
+class ctkPathLineEdit;
 class QLineEdit;
 class QHBoxLayout;
 class QGridLayout;
@@ -21,7 +22,8 @@ public:
   virtual void init();
 
 protected:
-  QLineEdit* containerLineEdit, *objectLineEdit;
+  ctkPathLineEdit* containerPathLineEdit;
+  QLineEdit *objectLineEdit;
   QGridLayout* gridLayout;
 };
 

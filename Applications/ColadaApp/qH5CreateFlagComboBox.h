@@ -21,6 +21,7 @@ public slots:
   void addH5Flag(unsigned flag);
   void removeH5Flag(unsigned flag);
 
+  bool setH5Flag(unsigned flag);
   /// OPEN, OPEN_OR_CREATE
   void setH5FlagsToOpen();
   /// CREATE, CREATE_OR_OVERWRITE, CREATE_UNDER_NEW_NAME
