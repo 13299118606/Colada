@@ -114,6 +114,8 @@ set(APPLIB_SRCS
   qH5CreateFlagComboBox.cxx
   qH5ItemDropLineEdit.h
   qH5ItemDropLineEdit.cxx
+  qH5SeisSortWidget.h
+  qH5SeisSortWidget.cxx
   qCopyPasteTableView.h
   qCopyPasteTableView.cxx
   qComboBoxDelegate.h
@@ -167,6 +169,7 @@ set(APPLIB_MOC_SRCS
   qH5DomainComboBox.h
   qH5CreateFlagComboBox.h
   qH5ItemDropLineEdit.h
+  qH5SeisSortWidget.h
   qCopyPasteTableView.h
   qScienceSpinBox.h
   qComboBoxDelegate.h

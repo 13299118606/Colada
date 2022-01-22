@@ -109,7 +109,7 @@ class GeoObjectInfoWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     objName = self.ui.h5ItemDropLineEdit.h5Object()
     pm.executeString("from h5gtpy import h5gt")
     pm.executeString("from h5geopy import h5geo")
-    pm.executeString(varName+"=h5geo.openObject(h5geo.openContainerByName('"+cntName+"').getH5File().getGroup('/'))")
+    pm.executeString(varName+"=h5geo.openObject(h5geo.openContainerByName('"+cntName+"').getH5File().getGroup('"+objName+"'))")
     pm.executeString("print('Created variable: " + varName + " (" + objName
       + ") -> " + varName + "')")
     # Switch focus to the Python console so that the user can start typing immediately

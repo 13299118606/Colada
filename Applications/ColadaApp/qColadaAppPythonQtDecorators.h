@@ -157,6 +157,11 @@ Q_DECLARE_METATYPE(std::vector<double>)
 
 
 void initqColadaAppPythonQtDecorators() {
+  // These types must be manually registered to bind HDF5 id
+  // 'size_t' already registered as 'qulonglong' (see Slicer log)
+  qRegisterMetaType<uint64_t>("uint64_t");
+  qRegisterMetaType<int64_t>("int64_t");
+  qRegisterMetaType<ptrdiff_t>("ptrdiff_t");
   PythonQt::self()->addDecorators(new qColadaAppPythonQtDecorators);
 }
 
