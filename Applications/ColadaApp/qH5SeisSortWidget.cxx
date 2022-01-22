@@ -93,7 +93,10 @@ QWidget* qH5SeisSortWidget::createWidgetPair(){
 
 void qH5SeisSortWidget::setSeis(H5Seis* seis){
   Q_D(qH5SeisSortWidget);
-  d->seis.reset(dynamic_cast<H5Seis*>(seis->clone()));
+  if (seis)
+    d->seis.reset(dynamic_cast<H5Seis*>(seis->clone()));
+  else
+    d->seis = nullptr;
   this->updateWidgets();
 }
 
