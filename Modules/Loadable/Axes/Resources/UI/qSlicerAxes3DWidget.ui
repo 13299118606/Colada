@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>583</width>
-    <height>1273</height>
+    <width>331</width>
+    <height>380</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -81,6 +81,9 @@
     <widget class="ctkCollapsibleGroupBox" name="generalSettingsCollapsibleGroupBox">
      <property name="title">
       <string>General settings</string>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="2">
@@ -431,6 +434,9 @@
      <property name="title">
       <string>Axes</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+     </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="xAxisLabel_2">
@@ -676,6 +682,9 @@
     <widget class="ctkCollapsibleGroupBox" name="axesLabelsSettingsCollapsibleGroupBox">
      <property name="title">
       <string>Axes labels</string>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
@@ -1027,6 +1036,9 @@
     <widget class="ctkCollapsibleGroupBox" name="axesTitlesCollapsibleGroupBox">
      <property name="title">
       <string>Axes titles</string>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_3">
       <item row="0" column="0">
@@ -1484,6 +1496,9 @@
      <property name="title">
       <string>Grid</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+     </property>
      <layout class="QFormLayout" name="formLayout_4">
       <item row="0" column="0">
        <widget class="QLabel" name="label">
@@ -1727,6 +1742,9 @@
      <property name="title">
       <string>Inner grid</string>
      </property>
+     <property name="collapsed">
+      <bool>true</bool>
+     </property>
      <layout class="QFormLayout" name="formLayout_5">
       <item row="0" column="0">
        <widget class="QLabel" name="label_4">
@@ -1963,6 +1981,9 @@
     <widget class="ctkCollapsibleGroupBox" name="gridpolysCollapsibleGroupBox">
      <property name="title">
       <string>Grid polys</string>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_6">
       <item row="0" column="0">
