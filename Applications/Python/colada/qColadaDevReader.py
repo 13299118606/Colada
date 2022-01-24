@@ -792,7 +792,7 @@ class qColadaDevReader(qColadaReader):
                         if (p_w.wellCreateType != h5geo.CreationType.CREATE and
                                 p_w.wellCreateType != h5geo.CreationType.CREATE_OR_OVERWRITE and
                                 p_w.wellCreateType != h5geo.CreationType.CREATE_UNDER_NEW_NAME):
-                            h5well = h5wellCnt.getWellByUWI(p_w.uwi)
+                            h5well = h5wellCnt.openWellByUWI(p_w.uwi)
                             if not h5well and p_w.wellCreateType == h5geo.CreationType.OPEN_OR_CREATE:
                                 h5well = h5wellCnt.createWell(p_w.wellName, p_w, p_w.wellCreateType)
                         else:
