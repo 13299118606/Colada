@@ -21,7 +21,6 @@ public:
 
 public slots:
   void setSeis(H5Seis* seis);
-  bool setSeisFromGroupId(ptrdiff_t seisGroupId);
   /// Called each time seis is changed
   void updateWidgets();
   void updateRangeWidget(ctkRangeWidget* rangeWidget);
@@ -30,8 +29,6 @@ public slots:
   void addKeysModelToComboBox(QComboBox* combo);
   void onSortComboCurrentTextChanged(const QString &text);
 
-  H5Seis* getSeis();
-  ptrdiff_t getSeisGroupId();
   QStringList getHeadersLimits(QList<double>& minList, QList<double>& maxList);
 
 

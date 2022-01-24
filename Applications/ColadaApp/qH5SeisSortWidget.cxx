@@ -91,39 +91,25 @@ QWidget* qH5SeisSortWidget::createWidgetPair(){
   return widget;
 }
 
-void qH5SeisSortWidget::setSeis(H5Seis* seis){
+void qH5SeisSortWidget::setSeis(H5Seis* seis)
+{
   Q_D(qH5SeisSortWidget);
-  if (seis)
-    d->seis.reset(dynamic_cast<H5Seis*>(seis->clone()));
-  else
-    d->seis = nullptr;
-  this->updateWidgets();
-}
-
-bool qH5SeisSortWidget::setSeisFromGroupId(ptrdiff_t seisGroupId){
-  Q_D(qH5SeisSortWidget);
-  try {
-    h5gt::Group group = h5gt::Group::FromId(seisGroupId);
-    d->seis.reset(h5geo::openSeis(group));
-  }  catch (h5gt::Exception& err) {
-    d->seis.reset();
-    return false;
+  if (!seis){
+    return;
   }
+
+  d->traceHeadersMin = seis->getTraceHeaderMin();
+  d->traceHeadersMax = seis->getTraceHeaderMax();
+  d->pKeyNames = seis->getPKeyNames();
+
   this->updateWidgets();
-  if (d->seis)
-    return true;
-  return false;
 }
 
 void qH5SeisSortWidget::updateWidgets(){
   Q_D(qH5SeisSortWidget);
   d->pKeyComboBox->clear();
-  if (!d->seis){
-    return;
-  }
 
-  std::vector<std::string> pKeyNames = d->seis->getPKeyNames();
-  for (const auto& name : pKeyNames)
+  for (const auto& name : d->pKeyNames)
     d->pKeyComboBox->addItem(QString::fromStdString(name));
   d->pKeyComboBox->model()->sort(0, Qt::AscendingOrder);
 
@@ -143,7 +129,7 @@ void qH5SeisSortWidget::updateWidgets(){
 
 void qH5SeisSortWidget::updateRangeWidget(ctkRangeWidget* rangeWidget){
   Q_D(qH5SeisSortWidget);
-  if (!rangeWidget || !d->seis)
+  if (!rangeWidget)
     return;
 
   QWidget* w = qobject_cast<QWidget*>(rangeWidget->parent());
@@ -155,8 +141,12 @@ void qH5SeisSortWidget::updateRangeWidget(ctkRangeWidget* rangeWidget){
     return;
 
   std::string key = combo->currentText().toStdString();
-  double keyMin = d->seis->getTraceHeaderMin(key);
-  double keyMax = d->seis->getTraceHeaderMax(key);
+  double keyMin = NAN, keyMax = NAN;
+  if (d->traceHeadersMin.count(key) > 0)
+    keyMin = d->traceHeadersMin.at(key);
+
+  if (d->traceHeadersMax.count(key) > 0)
+    keyMax = d->traceHeadersMax.at(key);
 
   rangeWidget->setRange(keyMin, keyMax);
   rangeWidget->setValues(keyMin, keyMax);
@@ -210,7 +200,7 @@ void qH5SeisSortWidget::onSortComboCurrentTextChanged(const QString &text){
   Q_D(qH5SeisSortWidget);
   qCompletableComboBox* combo =
       qobject_cast<qCompletableComboBox*>(sender());
-  if (!combo || !d->seis)
+  if (!combo)
     return;
 
   QWidget* w = qobject_cast<QWidget*>(combo->parent());
@@ -226,18 +216,6 @@ void qH5SeisSortWidget::onSortComboCurrentTextChanged(const QString &text){
     return;
 
   this->updateRangeWidget(rangeWidget);
-}
-
-H5Seis* qH5SeisSortWidget::getSeis(){
-  Q_D(qH5SeisSortWidget);
-  return d->seis.get();
-}
-
-ptrdiff_t qH5SeisSortWidget::getSeisGroupId(){
-  Q_D(qH5SeisSortWidget);
-  if (!d->seis)
-    return -1;
-  return d->seis->getObjG().getId();
 }
 
 QStringList qH5SeisSortWidget::getHeadersLimits(

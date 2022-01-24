@@ -10,10 +10,7 @@ class QVBoxLayout;
 class QToolButton;
 class qCompletableComboBox;
 class ctkRangeWidget;
-class H5Seis;
-namespace h5geo {
-struct ObjectDeleter;
-}
+class qH5ItemDropLineEdit;
 
 class Q_COLADA_APP_EXPORT qH5SeisSortWidgetPrivate {
   Q_DECLARE_PUBLIC(qH5SeisSortWidget);
@@ -33,8 +30,8 @@ public:
   qCompletableComboBox* pKeyComboBox;
   ctkRangeWidget* pKeyRangeWidget;
   QToolButton* addSortBtn, *removeSortBtn;
-//  H5Seis* seis;
-  std::unique_ptr<H5Seis, h5geo::ObjectDeleter> seis;
+  std::vector<std::string> pKeyNames;
+  std::map<std::string, double> traceHeadersMin, traceHeadersMax;
 };
 
 #endif

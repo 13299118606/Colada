@@ -16,6 +16,21 @@
 // CTK includes
 #include <ctkPathLineEdit.h>
 
+// h5geo includes
+#include<h5geo/h5seiscontainer.h>
+#include <h5geo/h5seis.h>
+#include <h5geo/h5mapcontainer.h>
+#include <h5geo/h5map.h>
+#include <h5geo/h5wellcontainer.h>
+#include <h5geo/h5well.h>
+#include <h5geo/h5devcurve.h>
+#include <h5geo/h5logcurve.h>
+#include <h5geo/h5points.h>
+
+// h5gt includes
+#include <h5gt/H5File.hpp>
+#include <h5gt/H5Group.hpp>
+
 qH5ItemDropLineEditPrivate::qH5ItemDropLineEditPrivate(qH5ItemDropLineEdit &q)
     : q_ptr(&q) {}
 
@@ -64,6 +79,26 @@ qH5ItemDropLineEdit::qH5ItemDropLineEdit(qH5ItemDropLineEditPrivate *pimpl, QWid
 
 qH5ItemDropLineEdit::~qH5ItemDropLineEdit() {
 
+}
+
+H5BaseContainer* qH5ItemDropLineEdit::openGeoContainer(){
+  Q_D(qH5ItemDropLineEdit);
+  return h5geo::openContainerByName(h5Container().toStdString());
+}
+
+H5BaseObject* qH5ItemDropLineEdit::openGeoObject(){
+  Q_D(qH5ItemDropLineEdit);
+  H5BaseCnt_ptr cnt(openGeoContainer());
+  if (!cnt)
+    return nullptr;
+
+  auto file = cnt->getH5File();
+  std::string objName = h5Object().toStdString();
+  if (!file.hasObject(objName, h5gt::ObjectType::Group))
+    return nullptr;
+
+  auto group = file.getGroup(objName);
+  return h5geo::openObject(group);
 }
 
 void qH5ItemDropLineEdit::setOrientation(Qt::Orientation orientation) {

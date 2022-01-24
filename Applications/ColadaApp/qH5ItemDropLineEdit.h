@@ -10,6 +10,8 @@
 class qH5ItemDropLineEditPrivate;
 class ctkPathLineEdit;
 class QLineEdit;
+class H5BaseObject;
+class H5BaseContainer;
 
 class Q_COLADA_APP_EXPORT qH5ItemDropLineEdit : public QWidget {
   Q_OBJECT
@@ -19,6 +21,12 @@ public:
   virtual ~qH5ItemDropLineEdit() override;
 
 public slots:
+  /// Open container. The user is responsible for deleting it
+  H5BaseContainer* openGeoContainer();
+
+  /// Open object. The user is responsible for deleting it
+  H5BaseObject* openGeoObject();
+
   /// \brief setOrientation Default orientation is vertical
   /// \param orientation
   void setOrientation(Qt::Orientation orientation);
