@@ -178,7 +178,7 @@ bool qColadaH5TreeView::removeContainer(const QString &fileName) {
 
   qColadaH5Item *root = srcModel->getRootItem();
   if (!srcModel->removeH5File(fileName)){
-    qWarning() << Q_FUNC_INFO << "Unable to remove the file: " << fileName;
+    qInfo() << Q_FUNC_INFO << "Unable to remove the file: " << fileName;
     return false;
   }
   return true;

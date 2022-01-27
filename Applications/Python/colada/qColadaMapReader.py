@@ -389,6 +389,7 @@ class qColadaMapReader(qColadaReader):
                 self.mapModel.verticalHeaderItem(row).setText(str(row + 1))
 
             self.updateMapTableRow(row)
+            slicer.app.processEvents()
         QtGui.QApplication.restoreOverrideCursor()
 
     def onRemoveToolBtnClicked(self):
@@ -425,6 +426,7 @@ class qColadaMapReader(qColadaReader):
                 p_s = self.getReadWriteMapParamFromTable(row)
                 progressDialog.setLabelText("Reading: " + p_s.readFile)
                 progressDialog.setValue(row)
+                slicer.app.processEvents()
                 try:
                     h5mapCnt = h5geo.createMapContainerByName(p_s.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
 

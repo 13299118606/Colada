@@ -527,6 +527,7 @@ class qColadaLasReader(qColadaReader):
                 self.wellModel.verticalHeaderItem(row).setText(str(row + 1))
 
             self.updateWellTableRow(row)
+            slicer.app.processEvents()
         QtGui.QApplication.restoreOverrideCursor()
 
     def onRemoveToolBtnClicked(self):
@@ -565,6 +566,7 @@ class qColadaLasReader(qColadaReader):
                 p_w = self.getReadWriteWellParamFromTable(row)
                 progressDialog.setLabelText("Reading: " + p_w.readFile)
                 progressDialog.setValue(row)
+                slicer.app.processEvents()
                 try:
                     h5wellCnt = h5geo.createWellContainerByName(p_w.saveFile, h5geo.CreationType.OPEN_OR_CREATE)
                     if not h5wellCnt:
