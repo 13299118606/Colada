@@ -36,7 +36,7 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "v5.2.1"
+    "4f68349370abaaee7ee9799a19c4d99f3d914aec"
     QUIET
     )
 
@@ -118,6 +118,7 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     endforeach()
   endif()
 
+  
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
     GIT_REPOSITORY "${Slicer_${proj}_GIT_REPOSITORY}"
@@ -226,5 +227,18 @@ endif()
 
 mark_as_superbuild(
   VARS ITK_DIR:PATH
+  LABELS "FIND_PACKAGE"
+  )
+
+# Set Eigen dirs to be used in Colada dependencies
+set(Eigen3_ROOT ${EP_SOURCE_DIR}/Modules/ThirdParty/Eigen3/src/itkeigen)
+set(Eigen3_DIR ${Eigen3_ROOT})
+set(Eigen3_INCLUDE_DIR ${Eigen3_ROOT})  # needed to find Eigen in h5geo
+
+mark_as_superbuild(
+  VARS
+    Eigen3_ROOT:PATH
+    Eigen3_DIR:PATH
+    Eigen3_INCLUDE_DIR:PATH
   LABELS "FIND_PACKAGE"
   )

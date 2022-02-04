@@ -4,6 +4,5 @@ matplotlib  # devito and welly depends on it
 devito
 wellpathpy  # welly depends on it
 welly
-# pint  # units conversion
 cppguts
 pythonguts

@@ -15,8 +15,8 @@ include(FetchContent)
 if(NOT DEFINED slicersources_SOURCE_DIR)
   # Download Slicer sources and set variables slicersources_SOURCE_DIR and slicersources_BINARY_DIR
   FetchContent_Populate(slicersources
-    GIT_REPOSITORY git://github.com/Slicer/Slicer	# git://github.com/Slicer/Slicer
-    GIT_TAG        "c72d890515ccca70e4173dfcedd370e197c44ae9"   # "1d0816b9c254e1fbf61901d6ec6a238b8e1b5c19"
+    GIT_REPOSITORY https://github.com/jamesobutler/Slicer	# git://github.com/Slicer/Slicer
+    GIT_TAG        "1c1e7faa5c4b515aa160d2d1df5b9befb5e48b72"   # "c72d890515ccca70e4173dfcedd370e197c44ae9"
     GIT_PROGRESS   1
     )
 else()
@@ -71,7 +71,6 @@ include(ExternalProjectDependency)
 # Additional Slicer dependencies looked up in EXTERNAL_PROJECT_ADDITIONAL_DIR
 set(Slicer_ADDITIONAL_DEPENDENCIES
   GDAL
-  Eigen3
   h5geo
   h5gt
   HDF5
@@ -331,7 +330,7 @@ coladaMacroEditcpp(
   SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/MRMLLogic/vtkMRMLSliceLogic.cxx
   DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Logic/vtkMRMLSliceLogic.cxx
   CXX_STANDARD ${CMAKE_CXX_STANDARD}
-  OVERWRITE
+  # OVERWRITE
   OLDFILE_DELETE
 )
 
@@ -341,7 +340,7 @@ coladaMacroEditcpp(
   SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/MRMLCore/vtkMRMLAbstractViewNode.cxx
   DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/Core/vtkMRMLAbstractViewNode.cxx
   CXX_STANDARD ${CMAKE_CXX_STANDARD}
-  OVERWRITE
+  # OVERWRITE
   OLDFILE_DELETE
 )
 
@@ -351,7 +350,7 @@ coladaMacroEditcpp(
   SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/MRMLDisplayableManager/vtkMRMLCameraWidget.cxx
   DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Libs/MRML/DisplayableManager/vtkMRMLCameraWidget.cxx
   CXX_STANDARD ${CMAKE_CXX_STANDARD}
-  OVERWRITE
+  # OVERWRITE
   OLDFILE_DELETE
 )
 
@@ -361,7 +360,7 @@ coladaMacroEditcpp(
   SRC_FILE ${CMAKE_SOURCE_DIR}/EditSourceCode/ViewControllers/qSlicerViewControllersModule.cxx
   DEST_FILE ${CMAKE_BINARY_DIR}/slicersources-src/Modules/Loadable/ViewControllers/qSlicerViewControllersModule.cxx
   CXX_STANDARD ${CMAKE_CXX_STANDARD}
-  OVERWRITE
+  # OVERWRITE
   OLDFILE_DELETE
 )
 

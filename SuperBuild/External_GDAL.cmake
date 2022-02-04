@@ -27,9 +27,9 @@ if(NOT Slicer_USE_SYSTEM_${proj})
   set(EP_INSTALL_DIR ${CMAKE_BINARY_DIR}/${proj}-install)
 
   if(WIN32)
-    set(GDAL_URL "https://download.lfd.uci.edu/pythonlibs/y2rycu7g/cp36/GDAL-3.1.4-cp36-cp36m-win_amd64.whl")  # https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal
+    set(GDAL_URL "https://download.lfd.uci.edu/pythonlibs/x6hvwk7i/GDAL-3.4.1-cp39-cp39-win_amd64.whl")  # https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal
   elseif(UNIX)
-    set(GDAL_URL "https://master.dl.sourceforge.net/project/gdal-wheels-for-linux/GDAL-3.1.4-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl?viasf=1")  # https://sourceforge.net/projects/gdal-wheels-for-linux/files/
+    set(GDAL_URL "https://master.dl.sourceforge.net/project/gdal-wheels-for-linux/GDAL-3.4.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl?viasf=1")  # https://sourceforge.net/projects/gdal-wheels-for-linux/files/
   endif()
 
   ExternalProject_Add(${proj}

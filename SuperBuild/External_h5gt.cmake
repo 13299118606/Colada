@@ -1,8 +1,8 @@
 
 set(proj h5gt)
 
-# Set dependency list
-set(${proj}_DEPENDENCIES Eigen3 zlib HDF5 python)
+# Set dependency list (ITK brings up Eigen lib)
+set(${proj}_DEPENDENCIES ITK zlib HDF5 python)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
