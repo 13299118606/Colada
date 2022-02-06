@@ -44,6 +44,7 @@ public:
 
 protected:
   virtual void setup();
+  virtual void setupSliceAndViewNodes();
 
 public slots:
   void onThreeDViewCreated(QWidget* view);

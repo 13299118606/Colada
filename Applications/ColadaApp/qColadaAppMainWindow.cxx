@@ -167,7 +167,6 @@ void qColadaAppMainWindowPrivate::setupUi(QMainWindow * mainWindow)
 
   // Setup Colada UI
   setupStatusBar(mainWindow);
-  setupSliceNodes(mainWindow);
   setupColadaStyles(mainWindow);
 }
 
@@ -179,128 +178,6 @@ void qColadaAppMainWindowPrivate::setupStatusBar(QMainWindow* mainWindow) {
 
   StatusBar->addWidget(currentProjectLabel);
   StatusBar->addWidget(currentCRSLabel);
-}
-
-void qColadaAppMainWindowPrivate::setupSliceNodes(QMainWindow * mainWindow)
-{
-  Q_Q(qColadaAppMainWindow);
-  std::vector<std::string> axesNames({"-X", "X", "-Y", "Y", "-Z", "Z"});
-  std::vector<std::string> orientationPresetOld({"Axial", "Sagittal", "Coronal"});
-  std::vector<std::string> orientationPresetNew({"XY", "YZ", "XZ"});
-  std::vector<std::string> defaultOrientations({"XY", "YZ", "XZ"});
-
-  // Default View nodes
-  vtkSmartPointer<vtkMRMLNode> dViewNode =
-      this->LayoutManager->mrmlScene()->GetDefaultNodeByClass("vtkMRMLViewNode");
-  if (!dViewNode)
-  {
-    vtkMRMLNode *node = this->LayoutManager->mrmlScene()->CreateNodeByClass("vtkMRMLViewNode");
-    dViewNode.TakeReference(node);
-    this->LayoutManager->mrmlScene()->AddDefaultNode(dViewNode);
-  }
-  vtkMRMLViewNode *defaultViewNode = vtkMRMLViewNode::SafeDownCast(dViewNode);
-  defaultViewNode->DisableModifiedEventOn();
-
-  for (size_t i = 0; i < axesNames.size(); i++)
-    defaultViewNode->SetAxisLabel(
-          i, axesNames[i].c_str());
-
-  // Default Slice nodes
-  vtkSmartPointer<vtkMRMLNode> dSliceNode =
-      this->LayoutManager->mrmlScene()->GetDefaultNodeByClass("vtkMRMLSliceNode");
-  if (!dSliceNode)
-  {
-    vtkMRMLNode *node = this->LayoutManager->mrmlScene()->CreateNodeByClass("vtkMRMLSliceNode");
-    dSliceNode.TakeReference(node);
-    this->LayoutManager->mrmlScene()->AddDefaultNode(dSliceNode);
-  }
-  vtkMRMLSliceNode *defaultSliceNode = vtkMRMLSliceNode::SafeDownCast(dSliceNode);
-  defaultSliceNode->DisableModifiedEventOn();
-
-  for (size_t i = 0; i < axesNames.size(); i++)
-    defaultSliceNode->SetAxisLabel(
-          i, axesNames[i].c_str());
-
-  defaultSliceNode->SetDefaultOrientation(defaultOrientations[0].c_str());
-  for (size_t i = 0; i < orientationPresetOld.size(); i++){
-    if (defaultSliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
-      defaultSliceNode->RemoveSliceOrientationPreset(
-            orientationPresetOld[i]);
-    }
-
-    if (!defaultSliceNode->HasSliceOrientationPreset(orientationPresetNew[i])){
-      defaultSliceNode->AddSliceOrientationPreset(
-            orientationPresetNew[i],
-            GenerateOrientationMatrix(orientationPresetNew[i]));
-    }
-  }
-  defaultSliceNode->DisableModifiedEventOff();
-
-  // View nodes
-  for (int j = 0; j < this->LayoutManager->threeDViewCount(); j++)
-    for (int i = 0; i < axesNames.size(); i++)
-      this->LayoutManager->threeDWidget(j)->mrmlViewNode()->SetAxisLabel(
-          i, axesNames[i].c_str());
-
-  // Slice nodes
-  size_t ii = 0;
-  for (const QString& sliceViewName : this->LayoutManager->sliceViewNames()){
-    vtkMRMLSliceNode *sliceNode = this->LayoutManager->
-        sliceWidget(sliceViewName)->mrmlSliceNode();
-
-    for (int i = 0; i < axesNames.size(); i++)
-      sliceNode->SetAxisLabel(i, axesNames[i].c_str());
-
-    for (size_t i = 0; i < orientationPresetOld.size(); i++){
-      if (sliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
-        sliceNode->RemoveSliceOrientationPreset(
-              orientationPresetOld[i]);
-      }
-
-      if (!sliceNode->HasSliceOrientationPreset(orientationPresetNew[i])){
-        sliceNode->AddSliceOrientationPreset(
-              orientationPresetNew[i],
-              GenerateOrientationMatrix(orientationPresetNew[i]));
-      }
-    }
-
-    if (ii < defaultOrientations.size())
-      sliceNode->SetDefaultOrientation(defaultOrientations[ii].c_str());
-    else
-      sliceNode->SetDefaultOrientation(defaultOrientations[0].c_str());
-    ii++;
-  }
-
-  // Replace layout description with new presets
-  vtkMRMLLayoutNode* layoutNode =  vtkMRMLLayoutNode::SafeDownCast(
-    this->LayoutManager->mrmlScene()->GetSingletonNode("vtkMRMLLayoutNode","vtkMRMLLayoutNode"));
-  if(!layoutNode){
-    qCritical() << "qColadaAppMainWindowPrivate::setupSliceNodes: layoutNode not found!";
-    return;
-  }
-
-  for(int i = 1 ; i < 36; i++)
-  {
-    if (i == 5 || i == 11 || i == 13 || i == 18 || i == 20)
-    {
-      continue;
-    }
-
-    std::string layoutDescription = layoutNode->GetLayoutDescription(i);
-    std::vector<std::string>::const_iterator it;
-    std::vector<std::string>::const_iterator jt;
-    for(it = orientationPresetOld.begin(), jt = orientationPresetNew.begin();
-        it != orientationPresetOld.end() && jt != orientationPresetNew.end(); ++it, ++jt)
-    {
-      size_t found = layoutDescription.find(*it);
-      while (found!=std::string::npos)
-      {
-        layoutDescription.replace(found, it->size(), *jt);
-        found = layoutDescription.find(*it);
-      }
-    }
-    layoutNode->SetLayoutDescription(i, layoutDescription.c_str());
-  }
 }
 
 void qColadaAppMainWindowPrivate::setupColadaStyles(QMainWindow * mainWindow)
@@ -323,47 +200,6 @@ void qColadaAppMainWindowPrivate::setupColadaStyles(QMainWindow * mainWindow)
 
   q->connect(settingsStylesPanel, &qSlicerSettingsStylesPanel::currentStyleChanged,
              q, &qColadaAppMainWindow::onCurrentStyleChanged);
-}
-
-vtkSmartPointer<vtkMatrix3x3> qColadaAppMainWindowPrivate::GenerateOrientationMatrix(const std::string& name)
-{
-  if (name.compare("XY") == 0 || name.compare("YX") == 0)
-    return GenerateXYOrientationMatrix();
-  else if (name.compare("XZ") == 0 || name.compare("ZX") == 0)
-    return GenerateXZOrientationMatrix();
-  else if (name.compare("YZ") == 0 || name.compare("ZY") == 0)
-    return GenerateYZOrientationMatrix();
-  else
-    return vtkSmartPointer<vtkMatrix3x3>::New();
-}
-
-vtkSmartPointer<vtkMatrix3x3> qColadaAppMainWindowPrivate::GenerateXYOrientationMatrix()
-{
-  vtkSmartPointer<vtkMatrix3x3> mtx = vtkSmartPointer<vtkMatrix3x3>::New();
-  return mtx;
-}
-
-vtkSmartPointer<vtkMatrix3x3> qColadaAppMainWindowPrivate::GenerateXZOrientationMatrix()
-{
-  vtkSmartPointer<vtkMatrix3x3> mtx = vtkSmartPointer<vtkMatrix3x3>::New();
-  mtx->SetElement(0,0,1);
-  mtx->SetElement(1,1,0);
-  mtx->SetElement(2,2,0);
-  mtx->SetElement(1,2,-1);
-  mtx->SetElement(2,1,1);
-  return mtx;
-}
-
-vtkSmartPointer<vtkMatrix3x3> qColadaAppMainWindowPrivate::GenerateYZOrientationMatrix()
-{
-  vtkSmartPointer<vtkMatrix3x3> mtx = vtkSmartPointer<vtkMatrix3x3>::New();
-  mtx->SetElement(0,0,0);
-  mtx->SetElement(1,1,0);
-  mtx->SetElement(2,2,0);
-  mtx->SetElement(0,2,-1);
-  mtx->SetElement(1,0,1);
-  mtx->SetElement(2,1,1);
-  return mtx;
 }
 
 

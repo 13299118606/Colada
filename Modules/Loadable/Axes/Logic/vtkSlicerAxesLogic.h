@@ -49,6 +49,14 @@ public:
   vtkTypeMacro(vtkSlicerAxesLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
 
+  void OverwriteAxesLabelsAndPresetsToXYZ(
+      vtkMRMLNode* node, const std::string& defaultOrientation = "");
+
+  static vtkSmartPointer<vtkMatrix3x3> GenerateOrientationMatrix(const std::string& name);
+  static vtkSmartPointer<vtkMatrix3x3> GenerateXYOrientationMatrix();
+  static vtkSmartPointer<vtkMatrix3x3> GenerateXZOrientationMatrix();
+  static vtkSmartPointer<vtkMatrix3x3> GenerateYZOrientationMatrix();
+
 protected:
   vtkSlicerAxesLogic();
   virtual ~vtkSlicerAxesLogic();
@@ -60,10 +68,6 @@ protected:
   virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* node);
   virtual void OnMRMLSceneNodeRemoved(vtkMRMLNode* node);
 
-  vtkSmartPointer<vtkMatrix3x3> GenerateOrientationMatrix(const std::string& name);
-  vtkSmartPointer<vtkMatrix3x3> GenerateXYOrientationMatrix();
-  vtkSmartPointer<vtkMatrix3x3> GenerateXZOrientationMatrix();
-  vtkSmartPointer<vtkMatrix3x3> GenerateYZOrientationMatrix();
 private:
 
   vtkSlicerAxesLogic(const vtkSlicerAxesLogic&); // Not implemented

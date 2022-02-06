@@ -112,7 +112,7 @@ QStringList qSlicerAxesModule::categories() const
 //-----------------------------------------------------------------------------
 QStringList qSlicerAxesModule::dependencies() const
 {
-  return QStringList();
+  return QStringList() << "DataProbe";
 }
 
 //-----------------------------------------------------------------------------

@@ -77,40 +77,38 @@ void vtkSlicerAxesLogic::UpdateFromMRMLScene()
 void vtkSlicerAxesLogic
 ::OnMRMLSceneNodeAdded(vtkMRMLNode* node)
 {
-  if (!node || !this->GetMRMLScene())
-  {
+  this->OverwriteAxesLabelsAndPresetsToXYZ(node);
+}
+
+void vtkSlicerAxesLogic
+::OverwriteAxesLabelsAndPresetsToXYZ(
+    vtkMRMLNode* node, const std::string& defaultOrientation)
+{
+  if (!node)
     return;
-  }
 
   std::vector<std::string> axesNames({"-X", "X", "-Y", "Y", "-Z", "Z"});
   std::vector<std::string> orientationPresetOld({"Axial", "Sagittal", "Coronal"});
   std::vector<std::string> orientationPresetNew({"XY", "YZ", "XZ"});
 
   //change axes label names
-  if (node->IsA("vtkMRMLViewNode"))
-  {
+  if (node->IsA("vtkMRMLViewNode")){
     vtkMRMLViewNode *viewNode =
         vtkMRMLViewNode::SafeDownCast(node);
 
     viewNode->DisableModifiedEventOn();
-
     for (size_t i = 0; i < axesNames.size(); i++)
-      viewNode->SetAxisLabel(
-            i, axesNames[i].c_str());
-
+      viewNode->SetAxisLabel(i, axesNames[i].c_str());
     viewNode->DisableModifiedEventOff();
   }
 
-  if (node->IsA("vtkMRMLSliceNode"))
-  {
+  if (node->IsA("vtkMRMLSliceNode")){
     vtkMRMLSliceNode *sliceNode =
         vtkMRMLSliceNode::SafeDownCast(node);
 
     sliceNode->DisableModifiedEventOn();
-
     for (size_t i = 0; i < axesNames.size(); i++)
-      sliceNode->SetAxisLabel(
-            i, axesNames[i].c_str());
+      sliceNode->SetAxisLabel(i, axesNames[i].c_str());
 
     for (size_t i = 0; i < orientationPresetOld.size(); i++){
       if (sliceNode->HasSliceOrientationPreset(orientationPresetOld[i])){
@@ -119,12 +117,16 @@ void vtkSlicerAxesLogic
       }
 
       if (!sliceNode->HasSliceOrientationPreset(orientationPresetNew[i])){
+        vtkSmartPointer<vtkMatrix3x3> mtx = GenerateOrientationMatrix(orientationPresetNew[i]);
+        if (!mtx)
+          continue;
+
         sliceNode->AddSliceOrientationPreset(
-              orientationPresetNew[i],
-              GenerateOrientationMatrix(orientationPresetNew[i]));
+              orientationPresetNew[i], mtx);
       }
     }
-
+    if (!defaultOrientation.empty())
+      sliceNode->SetDefaultOrientation(defaultOrientation.c_str());
     sliceNode->DisableModifiedEventOff();
   }
 }

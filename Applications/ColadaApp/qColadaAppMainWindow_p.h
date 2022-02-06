@@ -51,13 +51,7 @@ public:
 
 protected:
   virtual void setupStatusBar(QMainWindow* mainWindow);
-  virtual void setupSliceNodes(QMainWindow * mainWindow);
   virtual void setupColadaStyles(QMainWindow * mainWindow);
-
-  vtkSmartPointer<vtkMatrix3x3> GenerateOrientationMatrix(const std::string& name);
-  vtkSmartPointer<vtkMatrix3x3> GenerateXYOrientationMatrix();
-  vtkSmartPointer<vtkMatrix3x3> GenerateXZOrientationMatrix();
-  vtkSmartPointer<vtkMatrix3x3> GenerateYZOrientationMatrix();
 
 public:
   QLabel *currentProjectLabel, *currentCRSLabel;

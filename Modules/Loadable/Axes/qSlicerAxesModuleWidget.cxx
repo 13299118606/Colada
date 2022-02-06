@@ -22,6 +22,7 @@
 // Slicer includes
 #include "qSlicerAxesModuleWidget.h"
 #include "ui_qSlicerAxesModuleWidget.h"
+#include "vtkSlicerAxesLogic.h"
 #include "qSlicerApplication.h"
 #include "qSlicerLayoutManager.h"
 
@@ -31,6 +32,8 @@
 // MRML includes
 #include "vtkMRMLScene.h"
 #include "vtkMRMLViewNode.h"
+#include "vtkMRMLSliceNode.h"
+#include "vtkMRMLLayoutNode.h"
 
 // MRMLQt includes
 #include "qMRMLSliceWidget.h"
@@ -38,6 +41,12 @@
 #include "qMRMLThreeDWidget.h"
 #include "qMRMLThreeDView.h"
 #include "qMRMLThreeDViewControllerWidget.h"
+#include "qMRMLLayoutManager.h"
+
+// magic_enum includes
+#include <magic_enum.hpp>
+
+constexpr auto slicerLayoutValues = magic_enum::enum_values<vtkMRMLLayoutNode::SlicerLayout>();
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
@@ -79,6 +88,8 @@ void qSlicerAxesModuleWidget::setup()
   d->setupUi(this);
   this->Superclass::setup();
 
+  this->setupSliceAndViewNodes();
+
   // add button to already created 3D widgets
   for (int i = 0; i < d->app->layoutManager()->threeDViewCount(); i++){
     qMRMLThreeDWidget* threeDWidget =
@@ -95,6 +106,94 @@ void qSlicerAxesModuleWidget::setup()
 
   connect(d->axes3DWidget, &qSlicerAxes3DWidget::axes3DVisibilityToggled,
           this, &qSlicerAxesModuleWidget::onAxes3DVisibilityToggled);
+}
+
+void qSlicerAxesModuleWidget::setupSliceAndViewNodes()
+{
+  Q_D(qSlicerAxesModuleWidget);
+  vtkSlicerAxesLogic* axesLogic = vtkSlicerAxesLogic::SafeDownCast(logic());
+  if(!axesLogic){
+    qCritical() << Q_FUNC_INFO << ": unable to get Axes logic!";
+    return;
+  }
+
+  if(!d->app->layoutManager()){
+    qCritical() << Q_FUNC_INFO << ": unable to get Layout manager!";
+    return;
+  }
+
+  if(!d->app->layoutManager()->mrmlScene()){
+    qCritical() << Q_FUNC_INFO << ": invalid Scene!";
+    return;
+  }
+
+  std::vector<std::string> axesNames({"-X", "X", "-Y", "Y", "-Z", "Z"});
+  std::vector<std::string> orientationPresetOld({"Axial", "Sagittal", "Coronal"});
+  std::vector<std::string> orientationPresetNew({"XY", "YZ", "XZ"});
+  std::vector<std::string> defaultOrientations({"XY", "YZ", "XZ"});
+
+  // Default View nodes
+  vtkSmartPointer<vtkMRMLNode> dViewNode =
+      d->app->layoutManager()->mrmlScene()->GetDefaultNodeByClass("vtkMRMLViewNode");
+  if (!dViewNode)
+  {
+    vtkMRMLNode *node = d->app->layoutManager()->mrmlScene()->CreateNodeByClass("vtkMRMLViewNode");
+    dViewNode.TakeReference(node);
+    d->app->layoutManager()->mrmlScene()->AddDefaultNode(dViewNode);
+  }
+  axesLogic->OverwriteAxesLabelsAndPresetsToXYZ(dViewNode);
+
+  // Default Slice nodes
+  vtkSmartPointer<vtkMRMLNode> dSliceNode =
+      d->app->layoutManager()->mrmlScene()->GetDefaultNodeByClass("vtkMRMLSliceNode");
+  if (!dSliceNode)
+  {
+    vtkMRMLNode *node = d->app->layoutManager()->mrmlScene()->CreateNodeByClass("vtkMRMLSliceNode");
+    dSliceNode.TakeReference(node);
+    d->app->layoutManager()->mrmlScene()->AddDefaultNode(dSliceNode);
+  }
+  axesLogic->OverwriteAxesLabelsAndPresetsToXYZ(dSliceNode, defaultOrientations[0]);
+
+  // View nodes
+  for (int j = 0; j < d->app->layoutManager()->threeDViewCount(); j++)
+    axesLogic->OverwriteAxesLabelsAndPresetsToXYZ(
+          d->app->layoutManager()->threeDWidget(j)->mrmlViewNode());
+
+  // Slice nodes
+  size_t ii = 0;
+  for (const QString& sliceViewName : d->app->layoutManager()->sliceViewNames()){
+    vtkMRMLSliceNode *sliceNode = d->app->layoutManager()->
+        sliceWidget(sliceViewName)->mrmlSliceNode();
+    std::string defaultOrientation = ii < defaultOrientations.size() ?
+          defaultOrientations[ii] : defaultOrientations[0];
+    axesLogic->OverwriteAxesLabelsAndPresetsToXYZ(sliceNode, defaultOrientation);
+    ii++;
+  }
+
+  // Replace layout description with new presets
+  vtkMRMLLayoutNode* layoutNode =  vtkMRMLLayoutNode::SafeDownCast(
+    d->app->layoutManager()->mrmlScene()->GetSingletonNode("vtkMRMLLayoutNode","vtkMRMLLayoutNode"));
+  if(!layoutNode){
+    qCritical() << Q_FUNC_INFO << ": layoutNode not found!";
+    return;
+  }
+
+  for (const auto& i : slicerLayoutValues){
+    std::string layoutDescription = layoutNode->GetLayoutDescription(i);
+    std::vector<std::string>::const_iterator it;
+    std::vector<std::string>::const_iterator jt;
+    for(it = orientationPresetOld.begin(), jt = orientationPresetNew.begin();
+        it != orientationPresetOld.end() && jt != orientationPresetNew.end(); ++it, ++jt)
+    {
+      size_t found = layoutDescription.find(*it);
+      while (found!=std::string::npos)
+      {
+        layoutDescription.replace(found, it->size(), *jt);
+        found = layoutDescription.find(*it);
+      }
+    }
+    layoutNode->SetLayoutDescription(i, layoutDescription.c_str());
+  }
 }
 
 void qSlicerAxesModuleWidget::addViewAxesToolButton(qMRMLThreeDWidget* threeDWidget)
