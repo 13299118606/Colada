@@ -57,6 +57,7 @@ public:
   ~vtkInternal();
 
   void ObserveExistingNodes();
+  void RemoveObserverFromNodes();
 
   vtkSlicerSceneFilterLogic* External;
   vtkSmartPointer<vtkSlicerSceneFilterLogicObserver> Observer;
@@ -73,7 +74,11 @@ vtkInternal(vtkSlicerSceneFilterLogic * external)
   this->Observer->Logic = this->External;
 }
 
-vtkSlicerSceneFilterLogic::vtkInternal::~vtkInternal(){}
+vtkSlicerSceneFilterLogic::vtkInternal::~vtkInternal()
+{
+  // necessary to prevent memory leaks
+  this->RemoveObserverFromNodes();
+}
 
 void vtkSlicerSceneFilterLogic::vtkInternal::ObserveExistingNodes()
 {
@@ -85,7 +90,7 @@ void vtkSlicerSceneFilterLogic::vtkInternal::ObserveExistingNodes()
     return;
   }
 
-  vtkCollection* nodes = this->External->GetMRMLScene()->GetNodesByClass("vtkMRMLDisplayableNode");
+  vtkCollection* nodes = this->External->GetMRMLScene()->GetNodes();
   vtkObject* object = nullptr;
   vtkCollectionSimpleIterator it;
   for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
@@ -102,6 +107,34 @@ void vtkSlicerSceneFilterLogic::vtkInternal::ObserveExistingNodes()
     dispNode->AddObserver(
           vtkMRMLDisplayableNode::DisplayModifiedEvent,
           this->Observer);
+  }
+}
+
+void vtkSlicerSceneFilterLogic::vtkInternal::RemoveObserverFromNodes()
+{
+  if (!this->External->GetMRMLScene()){
+    vtkErrorWithObjectMacro(
+          this->External,
+          "vtkSlicerSceneFilterLogic::vtkInternal::RemoveObserverFromNodes: " <<
+          "unable to get the scene");
+    return;
+  }
+
+  vtkCollection* nodes = this->External->GetMRMLScene()->GetNodes();
+  vtkObject* object = nullptr;
+  vtkCollectionSimpleIterator it;
+  for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
+  {
+    vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(object);
+    if (!dispNode)
+      continue;
+
+    if (!dispNode->HasObserver(
+          vtkMRMLDisplayableNode::DisplayModifiedEvent,
+          this->Observer))
+      continue;
+
+    dispNode->RemoveObserver(this->Observer);
   }
 }
 
@@ -156,7 +189,7 @@ void vtkSlicerSceneFilterLogic::setDomainFilter(const std::string& domain)
         vtkSlicerSceneFilterLogic::DomainChangedEvent,
         static_cast<void*>(&domainEnum));
 
-  vtkCollection* nodes = GetMRMLScene()->GetNodesByClass("vtkMRMLDisplayableNode");
+  vtkCollection* nodes = GetMRMLScene()->GetNodes();
   vtkObject* object = nullptr;
   vtkCollectionSimpleIterator it;
   for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
@@ -191,7 +224,7 @@ void vtkSlicerSceneFilterLogic::filter(bool hideOnly)
     return;
   }
 
-  vtkCollection* nodes = GetMRMLScene()->GetNodesByClass("vtkMRMLDisplayableNode");
+  vtkCollection* nodes = GetMRMLScene()->GetNodes();
   vtkObject* object = nullptr;
   vtkCollectionSimpleIterator it;
   for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
