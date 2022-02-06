@@ -127,14 +127,14 @@ QScrollBar:vertical
 QScrollBar::handle:horizontal
 {
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 0.5 #d7801a, stop: 1 #121212);
-  min-width: 20px;
+  min-width: 12px;
   border-radius: 2px;
 }
 
 QScrollBar::handle:vertical
 {
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #ffa02f, stop: 0.5 #d7801a, stop: 1 #121212);
-  min-height: 20px;
+  min-height: 12px;
   border-radius: 2px;
 }
 
