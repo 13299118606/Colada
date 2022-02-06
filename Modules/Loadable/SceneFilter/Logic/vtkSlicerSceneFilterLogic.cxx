@@ -31,6 +31,10 @@ public:
   }
 
   void Execute(vtkObject *caller, unsigned long event, void* val) override{
+    // very necessary to avoid segfault when closing the app
+    if (!Logic)
+      return;
+
     vtkMRMLDisplayableNode* dispNode =
         vtkMRMLDisplayableNode::SafeDownCast(caller);
 
@@ -67,8 +71,6 @@ vtkInternal(vtkSlicerSceneFilterLogic * external)
   this->External = external;
   this->Observer = vtkSmartPointer<vtkSlicerSceneFilterLogicObserver>::New();
   this->Observer->Logic = this->External;
-
-  this->ObserveExistingNodes();
 }
 
 vtkSlicerSceneFilterLogic::vtkInternal::~vtkInternal(){}
@@ -95,7 +97,7 @@ void vtkSlicerSceneFilterLogic::vtkInternal::ObserveExistingNodes()
     if (dispNode->HasObserver(
           vtkMRMLDisplayableNode::DisplayModifiedEvent,
           this->Observer))
-      return;
+      continue;
 
     dispNode->AddObserver(
           vtkMRMLDisplayableNode::DisplayModifiedEvent,
@@ -144,13 +146,32 @@ void vtkSlicerSceneFilterLogic::setDomainFilter(const std::string& domain)
 {
   h5geo::sr::setDomain(domain);
 
+  if (!GetMRMLScene())
+    return;
+
   h5geo::Domain domainEnum = h5geo::sr::getDomainEnum();
   // invoke event first so that nodes could apply transformations
   // and change the domain
   InvokeEvent(
         vtkSlicerSceneFilterLogic::DomainChangedEvent,
         static_cast<void*>(&domainEnum));
-  // now filter
+
+  vtkCollection* nodes = GetMRMLScene()->GetNodes();
+  vtkObject* object = nullptr;
+  vtkCollectionSimpleIterator it;
+  for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
+  {
+    vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(object);
+    if (!dispNode)
+      continue;
+
+    dispNode->ProcessMRMLEvents(
+          this->GetMRMLScene(),
+          vtkSlicerSceneFilterLogic::DomainChangedEvent,
+          static_cast<void*>(&domainEnum));
+  }
+
+  // now filter (show/hide) nodes with inapropriate domain
   filter(false);
 }
 
@@ -236,6 +257,10 @@ void vtkSlicerSceneFilterLogic::SetMRMLSceneInternal(vtkMRMLScene * newScene)
 void vtkSlicerSceneFilterLogic::RegisterNodes()
 {
   assert(this->GetMRMLScene() != 0);
+
+  // as this function is invoked when the scene is already added
+  // we can use it to observe existing nodes
+  this->Internal->ObserveExistingNodes();
 }
 
 //---------------------------------------------------------------------------

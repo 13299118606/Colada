@@ -35,6 +35,9 @@ public:
   }
 
   void Execute(vtkObject *caller, unsigned long event, void*) override{
+    if (!DisplayableManager)
+      return;
+
     vtkMRMLDisplayableNode* dispNode =
         vtkMRMLDisplayableNode::SafeDownCast(caller);
 
@@ -150,7 +153,11 @@ void vtkMRMLCaptionsDisplayableManager::vtkInternal::ReleaseObservedNode(vtkMRML
   if (!node)
     return;
 
+  if (ObservedNodes.count(node) < 1)
+    return;
+
   auto item = ObservedNodes[node];
+  node->RemoveObserver(item.second);
 
   // delete actor from renderer
   External->GetRenderer()->RemoveActor(item.first);

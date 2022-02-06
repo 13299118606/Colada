@@ -35,6 +35,10 @@ public:
   }
 
   void Execute(vtkObject *caller, unsigned long event, void*) override{
+    // very necessary to avoid segfault when closing the app
+    if (!DisplayableManager)
+      return;
+
     vtkMRMLDisplayableNode* dispNode =
         vtkMRMLDisplayableNode::SafeDownCast(caller);
 

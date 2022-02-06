@@ -58,7 +58,7 @@ public:
 
   enum
   {
-    DomainChangedEvent = 21000,
+    DomainChangedEvent = 21200,
   };
 
 protected:
