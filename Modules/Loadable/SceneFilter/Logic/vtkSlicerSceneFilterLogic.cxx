@@ -85,7 +85,7 @@ void vtkSlicerSceneFilterLogic::vtkInternal::ObserveExistingNodes()
     return;
   }
 
-  vtkCollection* nodes = this->External->GetMRMLScene()->GetNodes();
+  vtkCollection* nodes = this->External->GetMRMLScene()->GetNodesByClass("vtkMRMLDisplayableNode");
   vtkObject* object = nullptr;
   vtkCollectionSimpleIterator it;
   for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
@@ -156,7 +156,7 @@ void vtkSlicerSceneFilterLogic::setDomainFilter(const std::string& domain)
         vtkSlicerSceneFilterLogic::DomainChangedEvent,
         static_cast<void*>(&domainEnum));
 
-  vtkCollection* nodes = GetMRMLScene()->GetNodes();
+  vtkCollection* nodes = GetMRMLScene()->GetNodesByClass("vtkMRMLDisplayableNode");
   vtkObject* object = nullptr;
   vtkCollectionSimpleIterator it;
   for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
@@ -191,7 +191,7 @@ void vtkSlicerSceneFilterLogic::filter(bool hideOnly)
     return;
   }
 
-  vtkCollection* nodes = GetMRMLScene()->GetNodes();
+  vtkCollection* nodes = GetMRMLScene()->GetNodesByClass("vtkMRMLDisplayableNode");
   vtkObject* object = nullptr;
   vtkCollectionSimpleIterator it;
   for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
