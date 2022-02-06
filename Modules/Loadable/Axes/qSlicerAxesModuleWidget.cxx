@@ -179,6 +179,9 @@ void qSlicerAxesModuleWidget::setupSliceAndViewNodes()
   }
 
   for (const auto& i : slicerLayoutValues){
+    if (!layoutNode->IsLayoutDescription(i))
+      continue;
+
     std::string layoutDescription = layoutNode->GetLayoutDescription(i);
     std::vector<std::string>::const_iterator it;
     std::vector<std::string>::const_iterator jt;
