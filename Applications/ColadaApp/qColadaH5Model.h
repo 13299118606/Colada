@@ -91,8 +91,10 @@ public slots:
   /// return
   virtual bool canAddH5File(const h5gt::File& file) const;
 
-  qColadaH5Item* findH5File(const QString &fullName);
-  qColadaH5Item* findH5File(const h5gt::File& file);
+  qColadaH5Item* findItem(const QString &fullName);
+  qColadaH5Item* findItem(const h5gt::File& file);
+  qColadaH5Item* findItem(const h5gt::Group& objG);
+  qColadaH5Item* findItem(vtkMRMLNode* node);
 
   bool addH5File(const QString &fullName);
   bool addH5File(const h5gt::File& file);
@@ -115,10 +117,11 @@ public slots:
   QStringList mimeTypes() const override;
   QMimeData *mimeData(const QModelIndexList &indexes) const override;
 
+  /// Must be virtual to be able to reimplement for custom nodes
+  virtual std::optional<h5gt::Group> h5GroupFromNode(vtkMRMLNode* node);
+
   virtual void onMRMLSceneNodeAdded(vtkObject*, vtkObject* node);
   virtual void onMRMLSceneNodeRemoved(vtkObject*, vtkObject* node);
-
-  virtual qColadaH5Item* findItemByNode(vtkMRMLNode* node);
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

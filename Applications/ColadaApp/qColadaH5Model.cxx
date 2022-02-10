@@ -9,6 +9,9 @@
 #include "vtkMRMLScene.h"
 #include "vtkMRMLDisplayableNode.h"
 
+// VTK includes
+#include <vtkCollection.h>
+
 // h5gt includes
 #include <h5gt/H5File.hpp>
 #include <h5gt/H5Group.hpp>
@@ -278,7 +281,8 @@ qColadaH5Model::getIndexListToRoot(qColadaH5Item *item) const {
 }
 
 QList<QModelIndex> qColadaH5Model::getIndexListToRoot(
-    qColadaH5Item *item, const QList<qColadaH5Item *> &itemListToRoot) {
+    qColadaH5Item *item, const QList<qColadaH5Item *> &itemListToRoot)
+{
   if (itemListToRoot.isEmpty())
     return QList<QModelIndex>();
 
@@ -293,7 +297,8 @@ QList<QModelIndex> qColadaH5Model::getIndexListToRoot(
 }
 
 void qColadaH5Model::getFullChildIndexList(
-    qColadaH5Item *item, QList<QModelIndex> &fullChildIndexList) {
+    qColadaH5Item *item, QList<QModelIndex> &fullChildIndexList)
+{
   for (int i = 0; i < item->childCount(); i++) {
     QModelIndex childIndex = createIndex(i, 0, item->getChild(i));
     fullChildIndexList.push_back(childIndex);
@@ -301,8 +306,10 @@ void qColadaH5Model::getFullChildIndexList(
   }
 }
 
-void qColadaH5Model::getFullChildList(qColadaH5Item *item,
-                                      QList<qColadaH5Item *> &fullChildList) {
+void qColadaH5Model::getFullChildList(
+    qColadaH5Item *item,
+    QList<qColadaH5Item *> &fullChildList)
+{
   for (int i = 0; i < item->childCount(); i++) {
     fullChildList.push_back(item->getChild(i));
     getFullChildList(fullChildList.last(), fullChildList);
@@ -311,29 +318,70 @@ void qColadaH5Model::getFullChildList(qColadaH5Item *item,
 
 bool qColadaH5Model::canAddH5File(const h5gt::File& file) const { return true; }
 
-qColadaH5Item* qColadaH5Model::findH5File(const QString &fullName) {
+qColadaH5Item* qColadaH5Model::findItem(const QString &fullName)
+{
   try {
-    h5gt::File file(fullName.toStdString(), h5gt::File::ReadOnly);
-    return findH5File(file);
+    h5gt::File file(fullName.toStdString(), h5gt::File::ReadWrite);
+    return findItem(file);
   } catch (h5gt::Exception& err) {
-    qCritical() << "qColadaH5Model::findH5File: " << err.what();
+    qCritical() << Q_FUNC_INFO << err.what();
   }
   return nullptr;
 }
 
-qColadaH5Item* qColadaH5Model::findH5File(const h5gt::File& file) {
+qColadaH5Item* qColadaH5Model::findItem(const h5gt::File& file)
+{
   for (qColadaH5Item* child : getRootItem()->getChildren()){
-    if (!child->isGeoContainer())
+    H5BaseContainer* baseCnt = child->getGeoContainer();
+    if (!baseCnt)
       continue;
 
-    if (file == child->getGeoContainer()->getH5File())
+    if (file == baseCnt->getH5File())
       return child;
   }
   return nullptr;
 }
 
+qColadaH5Item* qColadaH5Model::findItem(const h5gt::Group& objG)
+{
+  qColadaH5Item* item = nullptr;
+  try {
+    auto file = h5gt::File::FromId(objG.getFileId(true));
+    item = this->findItem(file);
+    if (!item)
+      return nullptr;
+
+    QString objName = QString::fromStdString(objG.getPath());
+    QStringList objNameList = objName.split(QLatin1Char('/'), Qt::SkipEmptyParts);
+
+    this->fetchAllChildren(this->getIndex(item));
+    for (int i = 0; i < objNameList.count(); i++){
+      if (item)
+        item = item->getChildByName(objNameList[i]);
+      else
+        return nullptr;
+    }
+  } catch (h5gt::Exception& err) {
+    qCritical() << Q_FUNC_INFO << err.what();
+  }
+  return item;
+}
+
+qColadaH5Item* qColadaH5Model::findItem(vtkMRMLNode* node)
+{
+  Q_D(qColadaH5Model);
+  auto optG = h5GroupFromNode(node);
+  if (optG.has_value())
+    return this->findItem(optG.value());
+
+  return nullptr;
+}
+
 bool qColadaH5Model::addH5File(const QString &fullName)
 {
+  if (fullName.isEmpty())
+    return false;
+
   try {
     h5gt::FileAccessProps fapl;
     if (H5Fis_hdf5(fullName.toUtf8()) <= 0 ||
@@ -343,7 +391,7 @@ bool qColadaH5Model::addH5File(const QString &fullName)
     h5gt::File file(fullName.toStdString(), h5gt::File::ReadWrite);
     return addH5File(file);
   } catch (h5gt::Exception& err) {
-    qCritical() << "qColadaH5Model::addH5File: " << err.what();
+    qCritical() << Q_FUNC_INFO << err.what();
     return false;
   }
 }
@@ -354,7 +402,7 @@ bool qColadaH5Model::addH5File(const h5gt::File& file) {
     return false;
   }
 
-  if (findH5File(file)){
+  if (findItem(file)){
     return false;
   }
 
@@ -370,14 +418,14 @@ bool qColadaH5Model::addH5File(const h5gt::File& file) {
 }
 
 bool qColadaH5Model::removeH5File(const QString &fullName) {
-  qColadaH5Item* item = this->findH5File(fullName);
+  qColadaH5Item* item = this->findItem(fullName);
   if (item)
     return this->removeRow(item->getRow());
   return false;
 }
 
 bool qColadaH5Model::removeH5File(const h5gt::File& file) {
-  qColadaH5Item* item = this->findH5File(file);
+  qColadaH5Item* item = this->findItem(file);
   if (item)
     return this->removeRow(item->getRow());
   return false;
@@ -510,7 +558,7 @@ QMimeData *qColadaH5Model::mimeData(const QModelIndexList &indexes) const
       itemsSet << item;
       stack.push(item);
     } else {
-      qWarning("qColadaH5ItemModel::mimeData: No item associated with invalid index");
+      qWarning() << Q_FUNC_INFO << "No item associated with invalid index";
       return 0;
     }
   }
@@ -545,6 +593,39 @@ QMimeData *qColadaH5Model::mimeData(const QModelIndexList &indexes) const
   return data;
 }
 
+std::optional<h5gt::Group> qColadaH5Model::h5GroupFromNode(vtkMRMLNode* node)
+{
+  if (!node ||
+      !node->GetAttribute("GeoContainer") ||
+      !node->GetAttribute("GeoObject"))
+    return std::nullopt;
+
+  auto fileName = node->GetAttribute("GeoContainer");
+  if (!fileName)
+    return std::nullopt;
+
+  auto objName = node->GetAttribute("GeoObject");
+  if (!objName)
+    return std::nullopt;
+
+  try {
+    h5gt::FileAccessProps fapl;
+    if (H5Fis_hdf5(fileName) <= 0 ||
+        H5Fis_accessible(fileName, fapl.getId()) <= 0 )
+      return std::nullopt;
+
+    h5gt::File h5File(
+          fileName,
+          h5gt::File::ReadWrite, fapl);
+
+    if (h5File.hasObject(objName, h5gt::ObjectType::Group))
+      return h5File.getGroup(objName);
+  } catch (h5gt::Exception& err) {
+    qCritical() << Q_FUNC_INFO << err.what();
+  }
+  return std::nullopt;
+}
+
 void qColadaH5Model::onMRMLSceneNodeAdded(
     vtkObject*, vtkObject* node)
 {
@@ -553,7 +634,7 @@ void qColadaH5Model::onMRMLSceneNodeAdded(
   if (!dispNode)
     return;
 
-  qColadaH5Item* item = this->findItemByNode(dispNode);
+  qColadaH5Item* item = this->findItem(dispNode);
   if (!item)
     return;
 
@@ -566,74 +647,31 @@ void qColadaH5Model::onMRMLSceneNodeRemoved(
     vtkObject*, vtkObject* node)
 {
   Q_D(qColadaH5Model);
-  vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(node);
-  if (!dispNode)
+  vtkMRMLDisplayableNode* dispNodeRem = vtkMRMLDisplayableNode::SafeDownCast(node);
+  if (!dispNodeRem)
     return;
 
-  qColadaH5Item* item = this->findItemByNode(dispNode);
-  if (!item)
+  qColadaH5Item* itemRem = this->findItem(dispNodeRem);
+  if (!itemRem)
     return;
 
-  item->setCheckState(Qt::Unchecked);
-  QModelIndex index = getIndex(item);
-  emit dataChanged(index, index, {Qt::CheckStateRole});
-}
-
-qColadaH5Item* qColadaH5Model::findItemByNode(vtkMRMLNode* node)
-{
-  Q_D(qColadaH5Model);
-  if (!node)
-    return nullptr;
-
-  auto fileName = node->GetAttribute("GeoContainer");
-  if (!fileName)
-    return nullptr;
-
-  auto objName = node->GetAttribute("GeoObject");
-  if (!objName)
-    return nullptr;
-
-
-  h5gt::FileAccessProps fapl;
-  if (H5Fis_hdf5(fileName) <= 0 ||
-      H5Fis_accessible(fileName, fapl.getId()) <= 0 )
-    return nullptr;
-
-  h5gt::File h5File(
-        fileName,
-        h5gt::File::ReadOnly, fapl);
-
-  if (!h5File.hasObject(objName, h5gt::ObjectType::Group))
-    return nullptr;
-
-  QStringList objNameList = QString::fromStdString(objName).
-      split(QLatin1Char('/'), Qt::SkipEmptyParts); // '/' is hdf5 path delimiter
-
-  // 1) find container among children of root item
-  qColadaH5Item* item = nullptr;
-  QVector<qColadaH5Item *> children = d->rootItem->getChildren();
-  for (qColadaH5Item * child : children){
-    H5BaseContainer* baseCnt = child->getGeoContainer();
-    if (!baseCnt)
+  std::vector<vtkMRMLNode*> nodes;
+  d->app->mrmlScene()->GetNodesByClass("vtkMRMLDisplayableNode", nodes);
+  for (vtkMRMLNode* object : nodes){
+    vtkMRMLDisplayableNode* dispNodeExist = vtkMRMLDisplayableNode::SafeDownCast(object);
+    if (!dispNodeExist)
       continue;
 
-    if (h5File == baseCnt->getH5File()){
-      item = child;
-      break;
-    }
+    // if nodes with the same geo object exist on the scene then don't uncheck it
+    qColadaH5Item* itemExist = this->findItem(dispNodeExist);
+    if (!itemExist)
+      continue;
+
+    if (*itemRem == *itemExist)
+      return;
   }
 
-  if (!item)
-    return nullptr;
-
-  // 2) find item by gradually accessing childs
-  fetchAllChildren(this->getIndex(item));
-  for (int i = 0; i < objNameList.count(); i++){
-    if (item)
-      item = item->getChildByName(objNameList[i]);
-    else
-      return nullptr;
-  }
-
-  return item;
+  itemRem->setCheckState(Qt::Unchecked);
+  QModelIndex index = getIndex(itemRem);
+  emit dataChanged(index, index, {Qt::CheckStateRole});
 }
