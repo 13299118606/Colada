@@ -5,6 +5,7 @@
 #include <vtkMRMLScene.h>
 #include <vtkMRMLDisplayableNode.h>
 #include <vtkMRMLDisplayNode.h>
+#include <vtkMRMLVolumeNode.h>
 
 // VTK includes
 #include <vtkIntArray.h>
@@ -230,7 +231,9 @@ void vtkSlicerSceneFilterLogic::filter(bool hideOnly)
   for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
   {
     vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(object);
-    if (!dispNode)
+    // some nodes are not shown and they are used by Slicer
+    // even vtkMRMLModelNode can be such node ('Red Volume Slice' for example)
+    if (!dispNode || dispNode->GetHideFromEditors())
       continue;
 
     filter(dispNode, hideOnly);
