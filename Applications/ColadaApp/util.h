@@ -28,11 +28,9 @@ QString fileNameNoSpaceToolTipText();
 
 QStringList readTxtFileByLines(const QString &filePath);
 
-///
 /// \brief removeDir removes content of a dir. Returns 0 if fails
 /// \param dirName
 /// \return
-///
 bool removeDir(const QString &dirName);
 
 QString CRSName();
