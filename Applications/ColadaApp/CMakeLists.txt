@@ -104,6 +104,10 @@ set(APPLIB_SRCS
   SegyRead.h
   SegyRead.cxx
 
+  qH5ContainerTypeComboBox.h
+  qH5ContainerTypeComboBox.cxx
+  qH5ObjectTypeComboBox.h
+  qH5ObjectTypeComboBox.cxx
   qH5SurveyTypeComboBox.h
   qH5SurveyTypeComboBox.cxx
   qH5SeisDataTypeComboBox.h
@@ -164,6 +168,8 @@ set(APPLIB_MOC_SRCS
 
   qColadaGainWidget.h
 
+  qH5ContainerTypeComboBox.h
+  qH5ObjectTypeComboBox.h
   qH5SurveyTypeComboBox.h
   qH5SeisDataTypeComboBox.h
   qH5DomainComboBox.h

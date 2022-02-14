@@ -39,8 +39,14 @@ qH5ItemDropLineEditPrivate::~qH5ItemDropLineEditPrivate() {}
 void qH5ItemDropLineEditPrivate::init() {
   Q_Q(qH5ItemDropLineEdit);
   this->gridLayout = new QGridLayout(q);
+  this->gridLayout->setMargin(0);
 
   this->containerPathLineEdit = new ctkPathLineEdit(q);
+  this->containerPathLineEdit->setFilters(
+        this->containerPathLineEdit->filters() |
+        ctkPathLineEdit::Writable);
+  this->containerPathLineEdit->setNameFilters(
+        QStringList() << "hdf5 (*.h5 *.hdf5)" <<  "all (*.*)");
   this->objectLineEdit = new QLineEdit(q);
 
   // adds widget to grid layout
