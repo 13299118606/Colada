@@ -27,6 +27,8 @@ void qCRSDropLineEditPrivate::init() {
   this->HLayout->addWidget(this->AuthNameLineEdit);
   this->HLayout->addWidget(this->CodeLineEdit);
 
+  this->HLayout->setMargin(0);
+
   this->NameLineEdit->setPlaceholderText("Name...");
   this->AuthNameLineEdit->setPlaceholderText("Auth name...");
   this->CodeLineEdit->setPlaceholderText("Code...");
