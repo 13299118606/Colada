@@ -138,6 +138,8 @@ set(APPLIB_SRCS
   qPathEditDelegate.cxx
   qSharedListViews.h
   qSharedListViews.cxx
+  qSharedTableViews.h
+  qSharedTableViews.cxx
 
   qMRMLCompletableNodeComboBox.h
   qMRMLCompletableNodeComboBox.cxx
@@ -185,6 +187,7 @@ set(APPLIB_MOC_SRCS
   qLineEditDelegate.h
   qPathEditDelegate.h
   qSharedListViews.h
+  qSharedTableViews.h
 
   qMRMLCompletableNodeComboBox.h
 
