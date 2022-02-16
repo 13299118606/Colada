@@ -12,6 +12,7 @@ class QAbstractButton;
 class ctkPathLineEdit;
 class QLineEdit;
 class QComboBox;
+class qH5ContainerTypeComboBox;
 
 class Q_COLADA_APP_EXPORT qColadaH5FileDialog : public QDialog {
   Q_OBJECT
@@ -27,6 +28,7 @@ public:
   /// QDialog::Accepted is returned.
   /// \param parent
   /// \param h5File
+  /// \param containerType is a caset h5geo::ContainerType
   /// \param h5FileCreateType is a casted h5geo::CreationType
   /// \param h5Obj
   /// \param h5ObjCreateType is a casted h5geo::CreationType
@@ -34,11 +36,13 @@ public:
   static int getOpenH5FileDialog(
       QWidget *parent,
       QString& h5File,
+      unsigned& containerType,
       unsigned& h5FileCreateType,
       QString& h5Obj,
       unsigned& h5ObjCreateType);
 
 public slots:
+  qH5ContainerTypeComboBox* getH5ContainerTypeComboBox();
   ctkPathLineEdit* getH5FilePathLineEdit();
   QLineEdit* getH5ObjectLineEdit();
   QComboBox* getH5FileCreateTypeComboBox();
@@ -50,6 +54,8 @@ protected:
 
   explicit qColadaH5FileDialog(qColadaH5FileDialogPrivate *pimpl,
                                QWidget *parent);
+
+  void onCurrentH5FilePathChanged(const QString& path);
 
 private:
   Q_DECLARE_PRIVATE(qColadaH5FileDialog);

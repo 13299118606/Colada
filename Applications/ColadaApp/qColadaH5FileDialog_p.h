@@ -9,6 +9,7 @@ class QComboBox;
 class QLineEdit;
 class ctkPathLineEdit;
 class QDialogButtonBox;
+class qH5ContainerTypeComboBox;
 
 class Q_COLADA_APP_EXPORT qColadaH5FileDialogPrivate
 {
@@ -24,6 +25,7 @@ public:
 
     virtual void init();
 
+    qH5ContainerTypeComboBox* containerTypeCombo;
     QFormLayout* formLayout;
     ctkPathLineEdit* filePathLineEdit;
     QLineEdit* objNameLineEdit;

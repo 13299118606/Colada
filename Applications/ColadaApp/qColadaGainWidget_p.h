@@ -3,10 +3,9 @@
 
 // Colada includes
 #include "qColadaGainWidget.h"
-#include <qScienceSpinBox.h>
 
-// ctk includes
-#include <ctkDoubleSlider.h>
+class ctkDoubleSlider;
+class qScienceSpinBox;
 
 class Q_COLADA_APP_EXPORT qColadaGainWidgetPrivate {
   Q_DECLARE_PUBLIC(qColadaGainWidget);

@@ -1,6 +1,7 @@
 // Colada includes
 #include "qColadaH5FileDialog.h"
 #include "qColadaH5FileDialog_p.h"
+#include "qH5ContainerTypeComboBox.h"
 
 // Qt includes
 #include <QFormLayout>
@@ -15,6 +16,7 @@
 
 // h5geo includes
 #include <h5geo/h5core.h>
+#include <h5geo/h5basecontainer.h>
 
 // magic_enum includes
 #include <magic_enum.hpp>
@@ -29,6 +31,7 @@ void qColadaH5FileDialogPrivate::init() {
   Q_Q(qColadaH5FileDialog);
   this->formLayout = new QFormLayout(q);
 
+  this->containerTypeCombo = new qH5ContainerTypeComboBox(q);
   this->filePathLineEdit = new ctkPathLineEdit(q);
   this->fileCreateTypeCombo = new QComboBox(q);
   this->objNameLineEdit = new QLineEdit(q);
@@ -64,14 +67,17 @@ void qColadaH5FileDialogPrivate::init() {
   this->buttonBox->addButton(QDialogButtonBox::Ok);
   this->buttonBox->addButton(QDialogButtonBox::Cancel);
 
+  this->formLayout->addRow("Container Type:", this->containerTypeCombo);
   this->formLayout->addRow("Container:", this->filePathLineEdit);
   this->formLayout->addRow("Container creation type:", this->fileCreateTypeCombo);
   this->formLayout->addRow("Object:", this->objNameLineEdit);
   this->formLayout->addRow("Object creation type:", this->objCreateTypeCombo);
   this->formLayout->addRow(this->buttonBox);
 
-  QObject::connect(this->buttonBox, &QDialogButtonBox::clicked, q,
-                   &qColadaH5FileDialog::onButtonBoxClicked);
+  QObject::connect(this->filePathLineEdit, &ctkPathLineEdit::currentPathChanged,
+                   q, &qColadaH5FileDialog::onCurrentH5FilePathChanged);
+  QObject::connect(this->buttonBox, &QDialogButtonBox::clicked,
+                   q, &qColadaH5FileDialog::onButtonBoxClicked);
 }
 
 qColadaH5FileDialog::qColadaH5FileDialog(QWidget *parent)
@@ -98,6 +104,12 @@ void qColadaH5FileDialog::onButtonBoxClicked(QAbstractButton *button)
   }
 }
 
+qH5ContainerTypeComboBox* qColadaH5FileDialog::getH5ContainerTypeComboBox()
+{
+  Q_D(qColadaH5FileDialog);
+  return d->containerTypeCombo;
+}
+
 ctkPathLineEdit* qColadaH5FileDialog::getH5FilePathLineEdit(){
   Q_D(qColadaH5FileDialog);
   return d->filePathLineEdit;
@@ -121,6 +133,7 @@ QComboBox* qColadaH5FileDialog::getH5ObjectCreateTypeComboBox(){
 int qColadaH5FileDialog::getOpenH5FileDialog(
     QWidget *parent,
     QString& h5File,
+    unsigned& containerType,
     unsigned& h5FileCreateType,
     QString& h5Obj,
     unsigned& h5ObjCreateType)
@@ -130,6 +143,7 @@ int qColadaH5FileDialog::getOpenH5FileDialog(
     return QDialog::Rejected;
 
   h5File = dialog.getH5FilePathLineEdit()->currentPath();
+  containerType = static_cast<unsigned>(dialog.getH5ContainerTypeComboBox()->getH5ContainerType());
   auto h5FileCreateType_opt = magic_enum::enum_cast<h5geo::CreationType>(
         dialog.getH5FileCreateTypeComboBox()->currentText().toStdString());
   if (h5FileCreateType_opt)
@@ -141,4 +155,15 @@ int qColadaH5FileDialog::getOpenH5FileDialog(
     h5ObjCreateType = static_cast<unsigned>(h5ObjectCreateType_opt.value());
 
   return QDialog::Accepted;
+}
+
+void qColadaH5FileDialog::onCurrentH5FilePathChanged(const QString& path)
+{
+  Q_D(qColadaH5FileDialog);
+  H5BaseCnt_ptr cnt (h5geo::openBaseContainerByName(path.toStdString()));
+  if (!cnt)
+    return;
+
+  d->containerTypeCombo->setH5ContainerType(
+        static_cast<unsigned>(cnt->getContainerType()));
 }
