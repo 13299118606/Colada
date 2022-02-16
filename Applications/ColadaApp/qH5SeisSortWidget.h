@@ -29,6 +29,11 @@ public slots:
   void addKeysModelToComboBox(QComboBox* combo);
   void onSortComboCurrentTextChanged(const QString &text);
 
+  ctkRangeWidget* getNthRangeWidget(int n);
+  QComboBox* getNthComboBox(int n);
+  void setNumberOfSortKeys(int n);
+  int getNumberOfSortKeys();
+  bool setHeadersLimits(const QStringList& keys, QList<double>& minList, QList<double>& maxList);
   QStringList getHeadersLimits(QList<double>& minList, QList<double>& maxList);
 
 

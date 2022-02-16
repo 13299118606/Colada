@@ -94,13 +94,16 @@ QWidget* qH5SeisSortWidget::createWidgetPair(){
 void qH5SeisSortWidget::setSeis(H5Seis* seis)
 {
   Q_D(qH5SeisSortWidget);
-  if (!seis){
-    return;
+  if (seis){
+    d->traceHeadersMin = seis->getTraceHeaderMin();
+    d->traceHeadersMax = seis->getTraceHeaderMax();
+    d->pKeyNames = seis->getPKeyNames();
+  } else {
+    d->traceHeadersMin.clear();
+    d->traceHeadersMax.clear();
+    d->pKeyNames.clear();
+    this->setNumberOfSortKeys(1);
   }
-
-  d->traceHeadersMin = seis->getTraceHeaderMin();
-  d->traceHeadersMax = seis->getTraceHeaderMax();
-  d->pKeyNames = seis->getPKeyNames();
 
   this->updateWidgets();
 }
@@ -216,6 +219,76 @@ void qH5SeisSortWidget::onSortComboCurrentTextChanged(const QString &text){
     return;
 
   this->updateRangeWidget(rangeWidget);
+}
+
+ctkRangeWidget* qH5SeisSortWidget::getNthRangeWidget(int n)
+{
+  Q_D(qH5SeisSortWidget);
+  auto item = d->mainVLayout->itemAt(n);
+  if (!item)
+    return nullptr;
+
+  return item->widget()->findChild<ctkRangeWidget*>();
+}
+
+QComboBox* qH5SeisSortWidget::getNthComboBox(int n)
+{
+  Q_D(qH5SeisSortWidget);
+  auto item = d->mainVLayout->itemAt(n);
+  if (!item)
+    return nullptr;
+
+  return item->widget()->findChild<QComboBox*>();
+}
+
+void qH5SeisSortWidget::setNumberOfSortKeys(int n)
+{
+  Q_D(qH5SeisSortWidget);
+  n < 1 ? n = 1 : n = n;
+  int N = d->mainVLayout->count()-1;
+  if (N == n){
+    return;
+  } else if (N < n){
+    for (int i = 0; i < n-N; i++)
+      this->onAddSortBtnClicked(true);
+  } else if (N > n){
+    for (int i = 0; i < N-n; i++)
+      this->onRemoveSortBtnClicked(true);
+  }
+}
+
+int qH5SeisSortWidget::getNumberOfSortKeys()
+{
+  Q_D(qH5SeisSortWidget);
+  return d->mainVLayout->count();
+}
+
+bool qH5SeisSortWidget::setHeadersLimits(
+    const QStringList& keys, QList<double>& minList, QList<double>& maxList)
+{
+  Q_D(qH5SeisSortWidget);
+  if (keys.count() < 1)
+    return false;
+
+  if (keys.count() != minList.count() ||
+      keys.count() != maxList.count())
+    return false;
+
+  this->setNumberOfSortKeys(keys.count());
+  for (int i = 0; i < keys.count(); i++){
+    QComboBox* combo = this->getNthComboBox(i);
+    if (!combo)
+      continue;
+
+    combo->setCurrentText(keys[i]);
+
+    ctkRangeWidget* rangeWidget = this->getNthRangeWidget(i);
+    if (!rangeWidget)
+      continue;
+
+    rangeWidget->setValues(minList[i], maxList[i]);
+  }
+  return true;
 }
 
 QStringList qH5SeisSortWidget::getHeadersLimits(

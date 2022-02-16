@@ -87,7 +87,7 @@ void vtkSlicerSceneFilterLogic::vtkInternal::ObserveExistingNodes()
     vtkErrorWithObjectMacro(
           this->External,
           "vtkSlicerSceneFilterLogic::vtkInternal::ObserveExistingNodes: " <<
-          "unable to get the scene");
+          "Unable to get the Scene");
     return;
   }
 
@@ -117,7 +117,7 @@ void vtkSlicerSceneFilterLogic::vtkInternal::RemoveObserverFromNodes()
     vtkErrorWithObjectMacro(
           this->External,
           "vtkSlicerSceneFilterLogic::vtkInternal::RemoveObserverFromNodes: " <<
-          "unable to get the scene");
+          "Unable to get the Scene");
     return;
   }
 
@@ -190,21 +190,6 @@ void vtkSlicerSceneFilterLogic::setDomainFilter(const std::string& domain)
         vtkSlicerSceneFilterLogic::DomainChangedEvent,
         static_cast<void*>(&domainEnum));
 
-  vtkCollection* nodes = GetMRMLScene()->GetNodes();
-  vtkObject* object = nullptr;
-  vtkCollectionSimpleIterator it;
-  for (nodes->InitTraversal(it); (object = nodes->GetNextItemAsObject(it));)
-  {
-    vtkMRMLDisplayableNode* dispNode = vtkMRMLDisplayableNode::SafeDownCast(object);
-    if (!dispNode)
-      continue;
-
-    dispNode->ProcessMRMLEvents(
-          this->GetMRMLScene(),
-          vtkSlicerSceneFilterLogic::DomainChangedEvent,
-          static_cast<void*>(&domainEnum));
-  }
-
   // now filter (show/hide) nodes with inapropriate domain
   filter(false);
 }
@@ -221,7 +206,7 @@ void vtkSlicerSceneFilterLogic::filter(bool hideOnly)
   // important or app may fail to load
   if (!GetMRMLScene()){
     vtkErrorMacro("vtkSlicerSceneFilterLogic::filter: " <<
-                  "unable to get the scene");
+                  "Unable to get the Scene");
     return;
   }
 
