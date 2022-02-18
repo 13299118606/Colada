@@ -1,6 +1,7 @@
 // Colada includes
 #include "qColadaH5Model.h"
 #include "qColadaH5Model_p.h"
+#include "qColadaAppMainWindow.h"
 
 // Slicer includes
 #include "qSlicerApplication.h"
@@ -39,7 +40,13 @@ void qColadaH5ModelPrivate::init(const QString &title) {
 
   app = qSlicerApplication::application();
   if (!app){
-    qCritical() << "qColadaH5ModelPrivate::init: unable to get application instance";
+    qCritical() << Q_FUNC_INFO << ": Unable to get application instance";
+    return;
+  }
+
+  mainW = qobject_cast<qColadaAppMainWindow*>(app->mainWindow());
+  if (!mainW){
+    qCritical() << Q_FUNC_INFO << ": Unable to get mainwindow instance";
     return;
   }
 
@@ -47,6 +54,15 @@ void qColadaH5ModelPrivate::init(const QString &title) {
                  q, SLOT(onMRMLSceneNodeAdded(vtkObject*, vtkObject*)));
   q->qvtkConnect(app->mrmlScene(), vtkMRMLScene::NodeRemovedEvent,
                  q, SLOT(onMRMLSceneNodeRemoved(vtkObject*, vtkObject*)));
+
+  QObject::connect(mainW, &qColadaAppMainWindow::h5FileToBeAdded,
+                   q, &qColadaH5Model::onH5FileToBeAdded);
+  QObject::connect(mainW, &qColadaAppMainWindow::h5FileToBeRemoved,
+                   q, &qColadaH5Model::onH5FileToBeRemoved);
+  QObject::connect(mainW, &qColadaAppMainWindow::h5ObjectToBeAdded,
+                   q, &qColadaH5Model::onH5ObjectToBeAdded);
+  QObject::connect(mainW, &qColadaAppMainWindow::h5ObjectToBeRemoved,
+                   q, &qColadaH5Model::onH5ObjectToBeRemoved);
 }
 
 qColadaH5Model::qColadaH5Model(QObject *parent)
@@ -316,7 +332,14 @@ void qColadaH5Model::getFullChildList(
   }
 }
 
-bool qColadaH5Model::canAddH5File(const h5gt::File& file) const { return true; }
+bool qColadaH5Model::canAddH5File(const h5gt::File& file) {
+  return !findItem(file);
+}
+
+bool qColadaH5Model::canAddH5Object(const h5gt::Group& objG)
+{
+  return !findItem(objG);
+}
 
 qColadaH5Item* qColadaH5Model::findItem(const QString &fullName)
 {
@@ -377,18 +400,18 @@ qColadaH5Item* qColadaH5Model::findItem(vtkMRMLNode* node)
   return nullptr;
 }
 
-bool qColadaH5Model::addH5File(const QString &fullName)
+bool qColadaH5Model::addH5File(const QString &fileName)
 {
-  if (fullName.isEmpty())
+  if (fileName.isEmpty())
     return false;
 
   try {
     h5gt::FileAccessProps fapl;
-    if (H5Fis_hdf5(fullName.toUtf8()) <= 0 ||
-        H5Fis_accessible(fullName.toUtf8(), fapl.getId()) <= 0)
+    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
+        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
       return false;
 
-    h5gt::File file(fullName.toStdString(), h5gt::File::ReadWrite);
+    h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
     return addH5File(file);
   } catch (h5gt::Exception& err) {
     qCritical() << Q_FUNC_INFO << err.what();
@@ -398,13 +421,8 @@ bool qColadaH5Model::addH5File(const QString &fullName)
 
 bool qColadaH5Model::addH5File(const h5gt::File& file) {
   Q_D(qColadaH5Model);
-  if (!canAddH5File(file)){
+  if (!canAddH5File(file))
     return false;
-  }
-
-  if (findItem(file)){
-    return false;
-  }
 
   H5BaseContainer *baseCnt = h5geo::openBaseContainer(file);
   qColadaH5Item *fileItem = new qColadaH5Item(baseCnt, d->rootItem);
@@ -429,6 +447,103 @@ bool qColadaH5Model::removeH5File(const h5gt::File& file) {
   if (item)
     return this->removeRow(item->getRow());
   return false;
+}
+
+bool qColadaH5Model::addH5Object(
+    const QString& fileName, const QString& groupName)
+{
+  if (fileName.isEmpty() || groupName.isEmpty())
+    return false;
+
+  try {
+    h5gt::FileAccessProps fapl;
+    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
+        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+      return false;
+
+    h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
+    if (!file.hasObject(groupName.toStdString(), h5gt::ObjectType::Group))
+      return false;
+
+    h5gt::Group objG = file.getGroup(groupName.toStdString());
+    return addH5Object(objG);
+  } catch (h5gt::Exception& err) {
+    qCritical() << Q_FUNC_INFO << err.what();
+    return false;
+  }
+}
+
+bool qColadaH5Model::addH5Object(const h5gt::Group& objG)
+{
+  Q_D(qColadaH5Model);
+  if (!canAddH5Object(objG))
+    return false;
+
+  qColadaH5Item* parentItem = nullptr;
+  try {
+    h5gt::Group parentG = objG.getParent();
+    parentItem = this->findItem(parentG);
+  } catch (h5gt::Exception& err) {
+    qCritical() << Q_FUNC_INFO << err.what();
+    return false;
+  }
+
+  if (!parentItem)
+    return false;
+
+  QModelIndex parentIndex = this->getIndex(parentItem);
+  H5BaseObject *baseObj = h5geo::openBaseObject(objG);
+  if (!baseObj)
+    return false;
+
+  qColadaH5Item *item = new qColadaH5Item(baseObj, parentItem);
+
+  beginInsertRows(parentIndex, parentItem->childCount(),
+                  parentItem->childCount());
+  parentItem->insertChild(item, parentItem->childCount());
+  endInsertRows();
+  return true;
+}
+
+bool qColadaH5Model::removeH5Object(
+    const QString& fileName, const QString& groupName)
+{
+  if (fileName.isEmpty() || groupName.isEmpty())
+    return false;
+
+  try {
+    h5gt::FileAccessProps fapl;
+    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
+        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+      return false;
+
+    h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
+    if (!file.hasObject(groupName.toStdString(), h5gt::ObjectType::Group))
+      return false;
+
+    h5gt::Group objG = file.getGroup(groupName.toStdString());
+    return removeH5Object(objG);
+  } catch (h5gt::Exception& err) {
+    qCritical() << Q_FUNC_INFO << err.what();
+    return false;
+  }
+}
+
+bool qColadaH5Model::removeH5Object(const h5gt::Group& objG)
+{
+  qColadaH5Item* item = this->findItem(objG);
+  if (!item)
+    return false;
+
+  qColadaH5Item* parentItem = item->getParent();
+  if (!parentItem)
+    return false;
+
+  QModelIndex parentIndex = this->getIndex(parentItem);
+  if (!parentIndex.isValid())
+    return false;
+
+  return this->removeRow(item->getRow(), parentIndex);
 }
 
 void qColadaH5Model::releaseCheckState(qColadaH5Item *topLevelItem) {
@@ -674,4 +789,28 @@ void qColadaH5Model::onMRMLSceneNodeRemoved(
   itemRem->setCheckState(Qt::Unchecked);
   QModelIndex index = getIndex(itemRem);
   emit dataChanged(index, index, {Qt::CheckStateRole});
+}
+
+void qColadaH5Model::onH5FileToBeRemoved(
+    const QString& fileName)
+{
+  this->removeH5File(fileName);
+}
+
+void qColadaH5Model::onH5FileToBeAdded(
+    const QString& fileName)
+{
+  this->addH5File(fileName);
+}
+
+void qColadaH5Model::onH5ObjectToBeRemoved(
+    const QString& fileName, const QString& groupName)
+{
+  this->removeH5Object(fileName, groupName);
+}
+
+void qColadaH5Model::onH5ObjectToBeAdded(
+    const QString& fileName, const QString& groupName)
+{
+  this->addH5Object(fileName, groupName);
 }

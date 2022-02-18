@@ -89,17 +89,24 @@ public slots:
   /// brief Needs to be reimplemented by subclasses
   /// param file
   /// return
-  virtual bool canAddH5File(const h5gt::File& file) const;
+  virtual bool canAddH5File(const h5gt::File& file);
+  virtual bool canAddH5Object(const h5gt::Group& objG);
 
   qColadaH5Item* findItem(const QString &fullName);
   qColadaH5Item* findItem(const h5gt::File& file);
   qColadaH5Item* findItem(const h5gt::Group& objG);
   qColadaH5Item* findItem(vtkMRMLNode* node);
 
-  bool addH5File(const QString &fullName);
+  bool addH5File(const QString &fileName);
   bool addH5File(const h5gt::File& file);
-  bool removeH5File(const QString &fullName);
+  bool removeH5File(const QString &fileName);
   bool removeH5File(const h5gt::File& file);
+
+  bool addH5Object(const QString& fileName, const QString& groupName);
+  bool addH5Object(const h5gt::Group& objG);
+  bool removeH5Object(const QString& fileName, const QString& groupName);
+  bool removeH5Object(const h5gt::Group& objG);
+
   void releaseCheckState(qColadaH5Item *topLevelItem);
   void updateCheckState(qColadaH5Item *topLevelItem);
   void sendItemDataChanged(
@@ -122,6 +129,11 @@ public slots:
 
   virtual void onMRMLSceneNodeAdded(vtkObject*, vtkObject* node);
   virtual void onMRMLSceneNodeRemoved(vtkObject*, vtkObject* node);
+
+  virtual void onH5FileToBeAdded(const QString& fileName);
+  virtual void onH5FileToBeRemoved(const QString& fileName);
+  virtual void onH5ObjectToBeAdded(const QString& fileName, const QString& groupName);
+  virtual void onH5ObjectToBeRemoved(const QString& fileName, const QString& groupName);
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

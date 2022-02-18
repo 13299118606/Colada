@@ -269,3 +269,27 @@ void qColadaAppMainWindow::showEvent(QShowEvent *event){
   // if Colada style is in app settings we need to initialize stylesheet
   this->onCurrentStyleChanged(qSlicerApplication::application()->style()->objectName());
 }
+
+void qColadaAppMainWindow::emitH5FileToBeAdded(
+    const QString& fileName)
+{
+  emit h5FileToBeAdded(fileName);
+}
+
+void qColadaAppMainWindow::emitH5FileToBeRemoved(
+    const QString& fileName)
+{
+  emit h5FileToBeRemoved(fileName);
+}
+
+void qColadaAppMainWindow::emitH5ObjectToBeAdded(
+    const QString& fileName, const QString& groupName)
+{
+  emit h5ObjectToBeAdded(fileName, groupName);
+}
+
+void qColadaAppMainWindow::emitH5ObjectToBeRemoved(
+    const QString& fileName, const QString& groupName)
+{
+  emit h5ObjectToBeRemoved(fileName, groupName);
+}

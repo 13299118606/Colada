@@ -5,25 +5,27 @@
 #include "qColadaH5Model.h"
 
 class qSlicerApplication;
+class qColadaAppMainWindow;
 
 class Q_COLADA_APP_EXPORT qColadaH5ModelPrivate
 {
-	Q_DECLARE_PUBLIC(qColadaH5Model);
+  Q_DECLARE_PUBLIC(qColadaH5Model);
 
 protected:
-	qColadaH5Model* const q_ptr;
+  qColadaH5Model* const q_ptr;
 
 public:
-	typedef qColadaH5ModelPrivate Superclass;
-	qColadaH5ModelPrivate(qColadaH5Model& q);
-	virtual ~qColadaH5ModelPrivate();
+  typedef qColadaH5ModelPrivate Superclass;
+  qColadaH5ModelPrivate(qColadaH5Model& q);
+  virtual ~qColadaH5ModelPrivate();
 
-    virtual void init(const QString &title);
+  virtual void init(const QString &title);
 
 protected:
-    qColadaH5Item* rootItem;
-    QString headerData;
-    qSlicerApplication * app;
+  qColadaH5Item* rootItem;
+  QString headerData;
+  qSlicerApplication* app;
+  qColadaAppMainWindow* mainW;
 };
 
 #endif

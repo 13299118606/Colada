@@ -4,6 +4,10 @@
 #include "qColadaH5ItemDelegate.h"
 #include "qColadaH5ProxyModel.h"
 #include "qColadaH5Model.h"
+#include "qColadaAppMainWindow.h"
+
+// Slicer includes
+#include "qSlicerApplication.h"
 
 // Qt includes
 #include <QAction>
@@ -24,6 +28,18 @@ qColadaH5TreeViewPrivate::~qColadaH5TreeViewPrivate() {}
 
 void qColadaH5TreeViewPrivate::init() {
   Q_Q(qColadaH5TreeView);
+
+  app = qSlicerApplication::application();
+  if (!app){
+    qCritical() << Q_FUNC_INFO << ": Unable to get application instance";
+    return;
+  }
+
+  mainW = qobject_cast<qColadaAppMainWindow*>(app->mainWindow());
+  if (!mainW){
+    qCritical() << Q_FUNC_INFO << ": Unable to get mainwindow instance";
+    return;
+  }
 
   q->setSortingEnabled(true);
   q->setSelectionMode(QAbstractItemView::ExtendedSelection);

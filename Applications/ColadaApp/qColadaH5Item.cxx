@@ -139,14 +139,15 @@ bool qColadaH5Item::setData(const QString &newItemData) {
   return false;
 }
 
-qint64 qColadaH5Item::findRow(
-    QVector<qColadaH5Item *> itemList,
-    qColadaH5Item *item) const
+qint64 qColadaH5Item::findRow(qColadaH5Item *item)
 {
+  Q_D(qColadaH5Item);
   QVector<qColadaH5Item *>::Iterator it =
-      std::find(itemList.begin(), itemList.end(), item);
-  return std::distance(itemList.begin(),
-                       it); // should be the same as: it - itemList.begin()
+      std::find(d->childItems.begin(), d->childItems.end(), item);
+  if (it == d->childItems.end())
+    return -1;
+
+  return std::distance(d->childItems.begin(), it); // should be the same as: it - itemList.begin()
 }
 
 qColadaH5Item *qColadaH5Item::getChildByName(

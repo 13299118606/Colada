@@ -18,17 +18,17 @@ class H5BaseObject;
 
 class Q_COLADA_APP_EXPORT qColadaH5Item {
 public:
-  /// @brief Used in qColadaH5Model. To initialize `rootItem`
+  /// \brief Used in qColadaH5Model. To initialize `rootItem`
   /// pass `nullptr` to `itemData` and `parent`
-  /// @param itemData if 
-  /// @param parent 
+  /// \param itemData if
+  /// \param parent
   explicit qColadaH5Item(H5Base *itemData, qColadaH5Item *parent);
   virtual ~qColadaH5Item();
 
   int childCount() const;
   int childNumber() const;
-  /// @brief rowCount is not the same as childCount.
-  /// @return number of objects within Root/File/Group
+  /// \brief rowCount is not the same as childCount.
+  /// \return number of objects within Root/File/Group
   int rowCount() const;
   int columnCount() const;
 
@@ -39,18 +39,16 @@ public:
   bool removeChild(int position);
   bool removeChildren(int position, int count);
 
-  ///
   /// \brief hasChild
   /// \param name is a visible name (itemData)
   /// \return
-  ///
   bool hasChild(const QString &name) const;
   bool hasChildren() const;
 
   QString data() const;
   bool setData(const QString &newItemData);
 
-  qint64 findRow(QVector<qColadaH5Item *> itemList, qColadaH5Item *item) const;
+  qint64 findRow(qColadaH5Item *item);
 
   /// \brief returns nullptr if not exists
   /// \param name
@@ -83,8 +81,8 @@ public:
   // I NEED TO IMPLEMENT THIS CORRECTLY
   Qt::CheckState checkState() const;
   bool isEvenOneChildChecked();
-  /// @brief Trigger for canFetchMore() of a model
-  /// @return 
+  /// \brief Trigger for canFetchMore() of a model
+  /// \return
   bool isMapped() const;
 
   static QString fullName2ItemData(const QString &fullName);

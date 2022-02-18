@@ -4,19 +4,25 @@
 // Colada includes
 #include "qColadaH5TreeView.h"
 
+class qSlicerApplication;
+class qColadaAppMainWindow;
+
 class Q_COLADA_APP_EXPORT qColadaH5TreeViewPrivate
 {
-	Q_DECLARE_PUBLIC(qColadaH5TreeView);
+  Q_DECLARE_PUBLIC(qColadaH5TreeView);
 
 protected:
-	qColadaH5TreeView* const q_ptr;
+  qColadaH5TreeView* const q_ptr;
 
 public:
-	typedef qColadaH5TreeViewPrivate Superclass;
-	qColadaH5TreeViewPrivate(qColadaH5TreeView& q);
-	virtual ~qColadaH5TreeViewPrivate();
+  typedef qColadaH5TreeViewPrivate Superclass;
+  qColadaH5TreeViewPrivate(qColadaH5TreeView& q);
+  virtual ~qColadaH5TreeViewPrivate();
 
-	virtual void init();
+  virtual void init();
+
+  qSlicerApplication* app;
+  qColadaAppMainWindow* mainW;
 };
 
 #endif

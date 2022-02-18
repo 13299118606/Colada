@@ -44,6 +44,17 @@ public slots:
   void on_HelpAboutColadaAppAction_triggered();
   void onCurrentStyleChanged(const QString& name);
 
+  void emitH5FileToBeAdded(const QString& fileName);
+  void emitH5FileToBeRemoved(const QString& fileName);
+  void emitH5ObjectToBeAdded(const QString& fileName, const QString& groupName);
+  void emitH5ObjectToBeRemoved(const QString& fileName, const QString& groupName);
+
+signals:
+  void h5FileToBeRemoved(const QString& fileName);
+  void h5FileToBeAdded(const QString& fileName);
+  void h5ObjectToBeRemoved(const QString& fileName, const QString& groupName);
+  void h5ObjectToBeAdded(const QString& fileName, const QString& groupName);
+
 protected:
   void showEvent(QShowEvent *event) override;
 
