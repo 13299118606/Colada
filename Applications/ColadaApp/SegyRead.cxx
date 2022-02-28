@@ -100,7 +100,7 @@ void SegyRead::init(QString &errMsg) {
 }
 
 QString SegyRead::getSegyEndian() {
-  h5geo::SegyEndian endian;
+  h5geo::Endian endian;
   qint16_le dataFormatCode_le;
   qint16_be dataFormatCode_be;
 
@@ -109,9 +109,9 @@ QString SegyRead::getSegyEndian() {
   qFile.seek(3224);
   qFile.read(bit_cast<char *>(&dataFormatCode_be), 2);
   if (dataFormatCode_le > 0 && dataFormatCode_le <= 8) {
-    endian = h5geo::SegyEndian::Little;
+    endian = h5geo::Endian::Little;
   } else if (dataFormatCode_be > 0 && dataFormatCode_be <= 8) {
-    endian = h5geo::SegyEndian::Big;
+    endian = h5geo::Endian::Big;
   } else {
     return QString();
   }
@@ -119,7 +119,7 @@ QString SegyRead::getSegyEndian() {
   return QString::fromStdString(std::string{magic_enum::enum_name(endian)});
 }
 
-QString SegyRead::getSegyFormat(h5geo::SegyEndian endian) {
+QString SegyRead::getSegyFormat(h5geo::Endian endian) {
   h5geo::SegyFormat format;
   qint16_le dataFormatCode_le;
   qint16_be dataFormatCode_be;
@@ -130,9 +130,9 @@ QString SegyRead::getSegyFormat(h5geo::SegyEndian endian) {
   qFile.seek(3224);
   qFile.read(bit_cast<char *>(&dataFormatCode_be), 2);
 
-  if (endian == h5geo::SegyEndian::Little) {
+  if (endian == h5geo::Endian::Little) {
     dataFormatCode = dataFormatCode_le;
-  } else if (endian == h5geo::SegyEndian::Big) {
+  } else if (endian == h5geo::Endian::Big) {
     dataFormatCode = dataFormatCode_be;
   } else {
     return QString();
@@ -191,7 +191,7 @@ void SegyRead::readTxtHdr(char txtHdr[40][80], h5geo::TxtEncoding encoding) {
   }
 }
 
-void SegyRead::readBinHdr(double binHdr[30], h5geo::SegyEndian endian) {
+void SegyRead::readBinHdr(double binHdr[30], h5geo::Endian endian) {
   int binHdr4[3];
   qint16 binHdr2[27], binHdr2tmp[3];
 
@@ -206,10 +206,10 @@ void SegyRead::readBinHdr(double binHdr[30], h5geo::SegyEndian endian) {
   binHdr2[25] = binHdr2tmp[1];
   binHdr2[26] = binHdr2tmp[2];
 
-  if (endian == h5geo::SegyEndian::Little) {
+  if (endian == h5geo::Endian::Little) {
     qFromLittleEndian<qint32>(&binHdr4, std::size(binHdr4), &binHdr4);
     qFromLittleEndian<qint16>(&binHdr2, std::size(binHdr2), &binHdr2);
-  } else if (endian == h5geo::SegyEndian::Big) {
+  } else if (endian == h5geo::Endian::Big) {
     qFromBigEndian<qint32>(&binHdr4, std::size(binHdr4), &binHdr4);
     qFromBigEndian<qint16>(&binHdr2, std::size(binHdr2), &binHdr2);
   }
@@ -222,21 +222,21 @@ void SegyRead::readBinHdr(double binHdr[30], h5geo::SegyEndian endian) {
   }
 }
 
-double SegyRead::sampRate(h5geo::SegyEndian endian) {
+double SegyRead::sampRate(h5geo::Endian endian) {
   double binHdr[30];
   readBinHdr(binHdr, endian);
 
   return binHdr[5];
 }
 
-double SegyRead::nSamples(h5geo::SegyEndian endian) {
+double SegyRead::nSamples(h5geo::Endian endian) {
   double binHdr[30];
   readBinHdr(binHdr, endian);
 
   return binHdr[7];
 }
 
-quint64 SegyRead::nTraces(h5geo::SegyEndian endian) {
+quint64 SegyRead::nTraces(h5geo::Endian endian) {
   int nSamp = nSamples(endian);
 
   return (qFile.size() - 3600) / (nSamp * 4 + 240);
@@ -305,12 +305,12 @@ void SegyRead::readOnlyTraces(
 
   HDR.resize(p.maxTrc - p.minTrc + 1, 78);
   TRACE.resize(nSamp, p.maxTrc - p.minTrc + 1);
-  if (p.endian == h5geo::SegyEndian::Little) {
+  if (p.endian == h5geo::Endian::Little) {
     /* reads HDR and TRACE */
     readDataFromLE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
                    p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc,
                    mapHdr2origin);
-  } else if (p.endian == h5geo::SegyEndian::Big) {
+  } else if (p.endian == h5geo::Endian::Big) {
     /* reads HDR and TRACE */
     readDataFromBE(HDR, TRACE, memFile_qint32, memFile_qint16, memFile_float,
                    p.format, nSamp, bytesPerTrc, p.minTrc, p.maxTrc,
@@ -410,7 +410,7 @@ H5Seis *SegyRead::readTracesInHeap(
   progressDialog.setAutoClose(false);
 
   qint64 progress = 0;
-  if (p.endian == h5geo::SegyEndian::Little) {
+  if (p.endian == h5geo::Endian::Little) {
     /* OMP on Windows claims that iterator to be SIGNED INTEGER type */
 #pragma omp parallel for num_threads(p.nThread2use) private(HDR, TRACE, J)
     for (qint64 n = 0; n <= N; n++) {
@@ -462,7 +462,7 @@ H5Seis *SegyRead::readTracesInHeap(
       qFile.unmap(bit_cast<uchar *>(memFile_qint16));
       qFile.unmap(bit_cast<uchar *>(memFile_float));
     }
-  } else if (p.endian == h5geo::SegyEndian::Big) {
+  } else if (p.endian == h5geo::Endian::Big) {
 #pragma omp parallel for num_threads(p.nThread2use) private(HDR, TRACE, J)
     for (qint64 n = 0; n <= N; n++) {
       if (n < N) {

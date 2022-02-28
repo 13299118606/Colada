@@ -15,8 +15,8 @@ include(FetchContent)
 if(NOT DEFINED slicersources_SOURCE_DIR)
   # Download Slicer sources and set variables slicersources_SOURCE_DIR and slicersources_BINARY_DIR
   FetchContent_Populate(slicersources
-    GIT_REPOSITORY https://github.com/jamesobutler/Slicer	# git://github.com/Slicer/Slicer
-    GIT_TAG        "1c1e7faa5c4b515aa160d2d1df5b9befb5e48b72"   # "c72d890515ccca70e4173dfcedd370e197c44ae9"
+    GIT_REPOSITORY https://github.com/Slicer/Slicer	# git://github.com/Slicer/Slicer
+    GIT_TAG        "e5c5ad7801b81c99a0e37b44ce570e9acbfdb7f0"   # "1c1e7faa5c4b515aa160d2d1df5b9befb5e48b72"
     GIT_PROGRESS   1
     )
 else()
@@ -304,23 +304,23 @@ set(${extension_name}_SOURCE_DIR "${CMAKE_BINARY_DIR}/${extension_name}")
 FetchContent_Populate(${extension_name}
   SOURCE_DIR     ${${extension_name}_SOURCE_DIR}
   GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/SlicerRt/SlicerDebuggingTools
-  GIT_TAG        8f5436b8519e10163fd88a86f5641fe70fc6697d
+  GIT_TAG        ed9ff4edeeea96b28f7f47c90b745b01de8285b4
   GIT_PROGRESS   1
   QUIET
   )
 list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
 
 # SlicerJupyter
-# set(extension_name "SlicerJupyter")
-# set(${extension_name}_SOURCE_DIR "${CMAKE_BINARY_DIR}/${extension_name}")
-# FetchContent_Populate(${extension_name}
-#   SOURCE_DIR     ${${extension_name}_SOURCE_DIR}
-#   GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/Slicer/SlicerJupyter
-#   GIT_TAG        b282a2c819da1e3e4fe1ab6c419e2299f976720d
-#   GIT_PROGRESS   1
-#   QUIET
-#   )
-# list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
+#set(extension_name "SlicerJupyter")
+#set(${extension_name}_SOURCE_DIR "${CMAKE_BINARY_DIR}/${extension_name}")
+#FetchContent_Populate(${extension_name}
+#  SOURCE_DIR     ${${extension_name}_SOURCE_DIR}
+#  GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/Slicer/SlicerJupyter
+#  GIT_TAG        4c69a34746a273290f977a9823c8171498da865f
+#  GIT_PROGRESS   1
+#  QUIET
+#  )
+#list(APPEND Slicer_EXTENSION_SOURCE_DIRS ${${extension_name}_SOURCE_DIR})
 
 
 include(${CMAKE_SOURCE_DIR}/CMake/ColadaMacroEditSourceCode.cmake)

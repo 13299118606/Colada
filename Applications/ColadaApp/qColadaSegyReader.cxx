@@ -131,7 +131,7 @@ void qColadaSegyReaderPrivate::initTable() {
       tableView, tableHdrNames.indexOf("domain"));
   setComboDelegateFromEnumClass<h5geo::TxtEncoding>(
       tableView, tableHdrNames.indexOf("text encoding"));
-  setComboDelegateFromEnumClass<h5geo::SegyEndian>(
+  setComboDelegateFromEnumClass<h5geo::Endian>(
       tableView, tableHdrNames.indexOf("endianness"));
   setComboDelegateFromEnumClass<h5geo::SegyFormat>(
       tableView, tableHdrNames.indexOf("format"));
@@ -283,7 +283,7 @@ void qColadaSegyReader::updateRow(int proxy_row) {
 
   QString endianStr = segyRead.getSegyEndian();
   auto endian =
-      magic_enum::enum_cast<h5geo::SegyEndian>(endianStr.toStdString());
+      magic_enum::enum_cast<h5geo::Endian>(endianStr.toStdString());
   if (!endian.has_value()) {
     return;
   }
@@ -373,7 +373,7 @@ qColadaSegyReader::getReadOnlyParamFromTable(int proxy_row, QString &errMsg) {
             ->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("endianness")))
             .toString()
             .toStdString();
-  auto endian_opt = magic_enum::enum_cast<h5geo::SegyEndian>(str);
+  auto endian_opt = magic_enum::enum_cast<h5geo::Endian>(str);
   if (!endian_opt.has_value()) {
     errMsg = p.readFile + ": Inapropriate `endianness`!";
     return p;
@@ -509,7 +509,7 @@ qColadaSegyReader::getReadWriteParamFromTable(int proxy_row, QString &errMsg) {
           ->data(d->proxy->index(proxy_row, d->tableHdrNames.indexOf("endianness")))
           .toString()
           .toStdString();
-  auto endian_opt = magic_enum::enum_cast<h5geo::SegyEndian>(str);
+  auto endian_opt = magic_enum::enum_cast<h5geo::Endian>(str);
   if (!endian_opt.has_value()) {
     errMsg = p.readFile + ": Inapropriate `endianness`!";
     return p;

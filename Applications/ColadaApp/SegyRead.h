@@ -18,7 +18,7 @@ class SegyRead {
 public:
   struct ReadOnlyParam {
     QString readFile;
-    h5geo::SegyEndian endian;
+    h5geo::Endian endian;
     h5geo::SegyFormat format;
     std::string spatialReference, lengthUnits, temporalUnits, dataUnits;
     double binHdr[30]; // 30 is the number of binary headers
@@ -28,7 +28,7 @@ public:
   struct ReadWriteParam : SeisParam {
     QString readFile, saveFile, seisName;
     h5geo::TxtEncoding encoding;
-    h5geo::SegyEndian endian;
+    h5geo::Endian endian;
     h5geo::SegyFormat format;
     char txtHdr[40][80];
     double binHdr[30]; // 30 is the number of binary headers
@@ -40,15 +40,15 @@ public:
   virtual ~SegyRead();
 
   QString getSegyEndian();
-  QString getSegyFormat(h5geo::SegyEndian endian);
+  QString getSegyFormat(h5geo::Endian endian);
   QString getTxtEncoding();
 
   void readTxtHdr(char txtHdr[40][80], h5geo::TxtEncoding encoding);
-  void readBinHdr(double binHdr[30], h5geo::SegyEndian endian);
+  void readBinHdr(double binHdr[30], h5geo::Endian endian);
 
-  double sampRate(h5geo::SegyEndian endian);
-  double nSamples(h5geo::SegyEndian endian);
-  quint64 nTraces(h5geo::SegyEndian endian);
+  double sampRate(h5geo::Endian endian);
+  double nSamples(h5geo::Endian endian);
+  quint64 nTraces(h5geo::Endian endian);
 
   static void readOnlyTraces(
       Eigen::MatrixXd &HDR, Eigen::MatrixXf &TRACE,
