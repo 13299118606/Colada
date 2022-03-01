@@ -216,6 +216,7 @@ set(APPLIB_DIRS
   ${Eigen3_INCLUDE_DIR}
   ${h5gt_INCLUDE_DIR}
   ${magic_enum_INCLUDE_DIR}
+  ${mio_INCLUDE_DIR}
   ${julia_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )

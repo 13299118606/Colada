@@ -75,6 +75,7 @@ set(Slicer_ADDITIONAL_DEPENDENCIES
   h5gt
   HDF5
   magic_enum
+  mio
   python-packages
   julia
   julia-packages

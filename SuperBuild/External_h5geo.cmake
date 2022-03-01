@@ -2,7 +2,7 @@
 set(proj h5geo)
 
 # Set dependency list (ITK brings up Eigen lib)
-set(${proj}_DEPENDENCIES GDAL tbb ITK zlib HDF5 h5gt magic_enum python units)
+set(${proj}_DEPENDENCIES GDAL tbb ITK zlib HDF5 h5gt magic_enum mio python units)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
@@ -76,6 +76,7 @@ if(NOT DEFINED h5geo_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DHDF5_ROOT:PATH=${HDF5_ROOT}
       -Dh5gt_ROOT:PATH=${h5gt_ROOT}
       -Dmagic_enum_ROOT:PATH=${magic_enum_ROOT}
+      -Dmio_ROOT:PATH=${mio_ROOT}
       -Dunits_DIR:PATH=${units_DIR}
       -DPYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
     DEPENDS
