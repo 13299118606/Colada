@@ -12,11 +12,12 @@ if(Slicer_USE_SYSTEM_${proj})
 endif()
 
 # Sanity checks
-if(DEFINED magic_enum_DIR AND NOT EXISTS ${magic_enum_DIR})
-  message(FATAL_ERROR "magic_enum_DIR variable is defined but corresponds to nonexistent directory")
+if(DEFINED magic_enum_ROOT AND NOT EXISTS ${magic_enum_ROOT})
+  message(FATAL_ERROR "magic_enum_ROOT variable is defined but corresponds to nonexistent directory")
 endif()
 
-if(NOT DEFINED magic_enum_DIR AND NOT Slicer_USE_SYSTEM_${proj})
+if((NOT DEFINED magic_enum_ROOT
+    OR NOT DEFINED magic_enum_INCLUDE_DIR) AND NOT Slicer_USE_SYSTEM_${proj})
 
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
 
@@ -47,23 +48,18 @@ if(NOT DEFINED magic_enum_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
   set(magic_enum_ROOT ${EP_SOURCE_DIR})
-  set(magic_enum_DIR ${EP_SOURCE_DIR})
   set(magic_enum_INCLUDE_DIR ${EP_SOURCE_DIR}/include)
 
-  mark_as_superbuild(
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
+
+mark_as_superbuild(
   VARS
     magic_enum_ROOT:PATH
-    magic_enum_DIR:PATH
     magic_enum_INCLUDE_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
 
-else()
-  # The project is provided using magic_enum_DIR, nevertheless since other project may depend on magic_enum,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
-
 ExternalProject_Message(${proj} "magic_enum_ROOT: ${magic_enum_ROOT}")
-ExternalProject_Message(${proj} "magic_enum_DIR: ${magic_enum_DIR}")
 ExternalProject_Message(${proj} "magic_enum_INCLUDE_DIR: ${magic_enum_INCLUDE_DIR}")

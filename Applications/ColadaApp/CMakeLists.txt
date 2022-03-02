@@ -95,14 +95,9 @@ set(APPLIB_SRCS
   qColadaH5FileDialog.cxx
   qColadaReader.h
   qColadaReader.cxx
-  qColadaSegyReader.h
-  qColadaSegyReader.cxx
 
   qColadaGainWidget.cxx
   qColadaGainWidget.h
-
-  SegyRead.h
-  SegyRead.cxx
 
   qH5ContainerTypeComboBox.h
   qH5ContainerTypeComboBox.cxx
@@ -166,7 +161,6 @@ set(APPLIB_MOC_SRCS
   qColadaH5ProxyModel.h
   qColadaH5FileDialog.h
   qColadaReader.h
-  qColadaSegyReader.h
 
   qColadaGainWidget.h
 
@@ -205,6 +199,7 @@ set(APPLIB_TARGET_LIBRARIES
   # ColadaCore  # this may be useful when splitting qColadaApp by few subprojects
   OpenMP::OpenMP_CXX
   h5geo
+  units::units
   ${julia_LIBRARY}
   )
 

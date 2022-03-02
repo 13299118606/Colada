@@ -13,7 +13,7 @@
 #include <vtkObjectFactory.h>
 
 // h5geo includes
-#include <h5geo/h5core.h>
+#include <h5geo/h5util.h>
 
 // STD includes
 #include <cassert>

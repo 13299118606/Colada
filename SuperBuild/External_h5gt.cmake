@@ -24,7 +24,7 @@ if(NOT DEFINED h5gt_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_REPOSITORY
-    "${EP_GIT_PROTOCOL}://github.com/TierraColada/h5gt.git"
+    "${EP_GIT_PROTOCOL}://github.com/tierra-colada/h5gt.git"
     QUIET
     )
 
@@ -72,22 +72,20 @@ if(NOT DEFINED h5gt_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
   set(h5gt_ROOT ${EP_SOURCE_DIR})
-  set(h5gt_DIR ${EP_SOURCE_DIR})
+  set(h5gt_DIR ${EP_INSTALL_DIR}/lib/cmake/h5gt)
   set(h5gt_INCLUDE_DIR ${EP_SOURCE_DIR}/include)
+  
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
 
-  mark_as_superbuild(
+mark_as_superbuild(
   VARS
     h5gt_ROOT:PATH
     h5gt_DIR:PATH
     h5gt_INCLUDE_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
-  
-else()
-  # The project is provided using h5gt_DIR, nevertheless since other project may depend on h5gt,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
 
 ExternalProject_Message(${proj} "h5gt_ROOT: ${h5gt_ROOT}")
 ExternalProject_Message(${proj} "h5gt_DIR: ${h5gt_DIR}")

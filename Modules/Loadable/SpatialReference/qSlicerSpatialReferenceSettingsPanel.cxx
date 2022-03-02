@@ -42,7 +42,7 @@
 #include "util.h"
 
 // h5geo includes
-#include <h5geo/h5core.h>
+#include <h5geo/h5util.h>
 
 // GDAL includes
 #include <gdal/gdal.h>

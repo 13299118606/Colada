@@ -15,7 +15,7 @@
 #include <ctkFileDialog.h>
 
 // h5geo includes
-#include <h5geo/h5core.h>
+#include <h5geo/h5util.h>
 #include <h5geo/h5basecontainer.h>
 
 // magic_enum includes

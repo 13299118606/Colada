@@ -12,11 +12,12 @@ if(Slicer_USE_SYSTEM_${proj})
 endif()
 
 # Sanity checks
-if(DEFINED mio_DIR AND NOT EXISTS ${mio_DIR})
-  message(FATAL_ERROR "mio_DIR variable is defined but corresponds to nonexistent directory")
+if(DEFINED mio_ROOT AND NOT EXISTS ${mio_ROOT})
+  message(FATAL_ERROR "mio_ROOT variable is defined but corresponds to nonexistent directory")
 endif()
 
-if(NOT DEFINED mio_DIR AND NOT Slicer_USE_SYSTEM_${proj})
+if((NOT DEFINED mio_ROOT
+    OR NOT DEFINED mio_INCLUDE_DIR) AND NOT Slicer_USE_SYSTEM_${proj})
 
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
   set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
@@ -49,23 +50,18 @@ if(NOT DEFINED mio_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
   set(mio_ROOT ${EP_SOURCE_DIR})
-  set(mio_DIR ${EP_SOURCE_DIR})
   set(mio_INCLUDE_DIR ${EP_SOURCE_DIR}/include)
 
-  mark_as_superbuild(
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
+
+mark_as_superbuild(
   VARS
     mio_ROOT:PATH
-    mio_DIR:PATH
     mio_INCLUDE_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
 
-else()
-  # The project is provided using mio_DIR, nevertheless since other project may depend on mio,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
-
 ExternalProject_Message(${proj} "mio_ROOT: ${mio_ROOT}")
-ExternalProject_Message(${proj} "mio_DIR: ${mio_DIR}")
 ExternalProject_Message(${proj} "mio_INCLUDE_DIR: ${mio_INCLUDE_DIR}")

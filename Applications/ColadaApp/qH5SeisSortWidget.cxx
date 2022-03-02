@@ -1,6 +1,6 @@
 // h5geo includes must be included before _p.h private file
 // as it contains declaration on H5Seis_ptr
-#include <h5geo/h5core.h>
+#include <h5geo/h5util.h>
 #include <h5geo/h5seiscontainer.h>
 #include <h5geo/h5seis.h>
 

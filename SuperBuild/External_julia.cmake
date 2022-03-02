@@ -17,8 +17,8 @@ if(Slicer_USE_SYSTEM_${proj})
 endif()
 
 # Sanity checks
-if(DEFINED julia_DIR AND NOT EXISTS ${julia_DIR})
-  message(FATAL_ERROR "julia_DIR variable is defined but corresponds to nonexistent directory")
+if(DEFINED julia_ROOT AND NOT EXISTS ${julia_ROOT})
+  message(FATAL_ERROR "julia_ROOT variable is defined but corresponds to nonexistent directory")
 endif()
 
 set(julia_VER_MAJ 1)
@@ -29,21 +29,20 @@ set(julia_VER
   "${julia_VER_MAJ}.${julia_VER_MIN}.${julia_VER_PATCH}"  # MUST be qouted  "" to avoid semicolon delimiter
   )
   
-set(julia_DIR 
+set(julia_ROOT 
   ${CMAKE_BINARY_DIR}/julia-${julia_VER_MAJ}.${julia_VER_MIN}
   )
 
 # Variable expected by FindPython3 CMake module
-set(julia_ROOT ${julia_DIR})
-set(julia_INCLUDE_DIR ${julia_DIR}/include)
+set(julia_INCLUDE_DIR ${julia_ROOT}/include)
 # `mark_as_superbuild` must not contain LIST (i.e. one file/dir per var)
 if(WIN32)
-  set(julia_LIBRARY "${julia_DIR}/lib/libjulia.dll.a")
-  set(julia_openlibm_LIBRARY "${julia_DIR}/lib/libopenlibm.dll.a")
-  set(julia_EXECUTABLE "${julia_DIR}/bin/julia.exe")
+  set(julia_LIBRARY "${julia_ROOT}/lib/libjulia.dll.a")
+  set(julia_openlibm_LIBRARY "${julia_ROOT}/lib/libopenlibm.dll.a")
+  set(julia_EXECUTABLE "${julia_ROOT}/bin/julia.exe")
 else()
-  set(julia_LIBRARY "${julia_DIR}/lib/libjulia.so")
-  set(julia_EXECUTABLE "${julia_DIR}/bin/julia")
+  set(julia_LIBRARY "${julia_ROOT}/lib/libjulia.so")
+  set(julia_EXECUTABLE "${julia_ROOT}/bin/julia")
 endif()
 
 if(NOT EXISTS ${julia_EXECUTABLE} AND NOT Slicer_USE_SYSTEM_${proj})
@@ -66,10 +65,15 @@ if(NOT EXISTS ${julia_EXECUTABLE} AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
-  mark_as_superbuild(
+else()
+  # The project is provided using julia_ROOT, nevertheless since other project may depend on julia,
+  # let's add an 'empty' one
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
+
+mark_as_superbuild(
   VARS
     julia_ROOT:PATH
-    julia_DIR:PATH
     julia_INCLUDE_DIR:PATH
     julia_LIBRARY:FILEPATH
     julia_EXECUTABLE:FILEPATH
@@ -84,12 +88,6 @@ if(NOT EXISTS ${julia_EXECUTABLE} AND NOT Slicer_USE_SYSTEM_${proj})
       )
   endif()
 
-else()
-  # The project is provided using julia_DIR, nevertheless since other project may depend on julia,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
-
 ExternalProject_Message(${proj} "julia_ROOT: ${julia_ROOT}")
 ExternalProject_Message(${proj} "julia_INCLUDE_DIR: ${julia_INCLUDE_DIR}")
 ExternalProject_Message(${proj} "julia_LIBRARY: ${julia_LIBRARY}")
@@ -99,7 +97,7 @@ ExternalProject_Message(${proj} "julia_EXECUTABLE: ${julia_EXECUTABLE}")
 # Slicer Launcher setting specific to build tree
 # library paths
 set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
-  ${julia_DIR}/lib
+  ${julia_ROOT}/lib
   )
 mark_as_superbuild(
   VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
@@ -108,7 +106,7 @@ mark_as_superbuild(
 
 # paths
 set(${proj}_PATHS_LAUNCHER_BUILD 
-  ${julia_DIR}/bin
+  ${julia_ROOT}/bin
   )
 mark_as_superbuild(
   VARS ${proj}_PATHS_LAUNCHER_BUILD

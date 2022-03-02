@@ -15,8 +15,11 @@
 // Slicer includes
 #include "qSlicerApplication.h"
 
+// units includes
+#include <units/units.hpp>
+
 // h5geo includes
-#include <h5geo/h5core.h>
+#include <h5geo/h5util.h>
 
 // GDAL includes
 #include <gdal/gdal.h>

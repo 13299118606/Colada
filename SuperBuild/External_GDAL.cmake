@@ -58,7 +58,13 @@ if(NOT Slicer_USE_SYSTEM_${proj})
     )
   endif()
 
-  mark_as_superbuild(
+else()
+  # The project is provided using GDAL_DIR, nevertheless since other project may depend on GDAL,
+  # let's add an 'empty' one
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
+
+mark_as_superbuild(
   VARS
     GDAL_INCLUDE_DIR:PATH
     GDAL_LIBRARY:FILEPATH  
@@ -67,12 +73,6 @@ if(NOT Slicer_USE_SYSTEM_${proj})
     GDAL_LIBS_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
-
-else()
-  # The project is provided using GDAL_DIR, nevertheless since other project may depend on GDAL,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
 
 ExternalProject_Message(${proj} "GDAL_INCLUDE_DIR: ${GDAL_INCLUDE_DIR}")
 ExternalProject_Message(${proj} "GDAL_LIBRARY: ${GDAL_LIBRARY}")

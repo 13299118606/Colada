@@ -93,7 +93,13 @@ if(NOT DEFINED HDF5_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     endif()
   endif()
 
-  mark_as_superbuild(
+else()
+  # The project is provided using HDF5_DIR, nevertheless since other project may depend on HDF5,
+  # let's add an 'empty' one
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
+
+mark_as_superbuild(
   VARS
     HDF5_ROOT:PATH
     HDF5_DIR:PATH
@@ -102,12 +108,6 @@ if(NOT DEFINED HDF5_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     HDF5_C_LIBRARY:FILEPATH
   LABELS "FIND_PACKAGE"
   )
-
-else()
-  # The project is provided using HDF5_DIR, nevertheless since other project may depend on HDF5,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
 
 ExternalProject_Message(${proj} "HDF5_ROOT: ${HDF5_ROOT}")
 ExternalProject_Message(${proj} "HDF5_DIR: ${HDF5_DIR}")

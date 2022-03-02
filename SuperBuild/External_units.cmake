@@ -74,8 +74,14 @@ if(NOT DEFINED units_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   else()
     set(units_LIBRARY ${EP_INSTALL_DIR}/lib/libunits.so)
   endif()
+  
+else()
+  # The project is provided using units_DIR, nevertheless since other project may depend on units,
+  # let's add an 'empty' one
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
 
-  mark_as_superbuild(
+mark_as_superbuild(
   VARS
     units_ROOT:PATH
     units_DIR:PATH
@@ -83,12 +89,6 @@ if(NOT DEFINED units_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     units_LIBRARY:FILEPATH
   LABELS "FIND_PACKAGE"
   )
-  
-else()
-  # The project is provided using units_DIR, nevertheless since other project may depend on units,
-  # let's add an 'empty' one
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
 
 ExternalProject_Message(${proj} "units_ROOT: ${units_ROOT}")
 ExternalProject_Message(${proj} "units_DIR: ${units_DIR}")
