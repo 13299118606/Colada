@@ -4,7 +4,11 @@
 #include "qCRSDropTableView.h"
 #include "qCRSWidget.h"
 
+// Slicer includes
+#include "qSlicerApplication.h"
+
 // Qt includes
+#include <QDebug>
 #include <QLayout>
 #include <QLineEdit>
 #include <QSortFilterProxyModel>
@@ -42,6 +46,11 @@ void qColadaReaderPrivate::initVars(){};
 void qColadaReaderPrivate::initTable(){};
 
 void qColadaReaderPrivate::setupUi(QDialog *q) {
+  app = qSlicerApplication::application();
+  if (!app){
+    qCritical() << Q_FUNC_INFO << ": Unable to get application instance";
+  }
+
   tableView = new qCRSDropTableView();
   tableView->setObjectName("TableView");
   tableView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -92,6 +101,7 @@ void qColadaReaderPrivate::setupUi(QDialog *q) {
   buttonBox->addButton(QDialogButtonBox::Cancel);
 
   QWidget *widget = new QWidget();
+  widget->setObjectName("TableWidget");
   QVBoxLayout *vLayout = new QVBoxLayout(widget);
   vLayout->setContentsMargins(0, 0, 0, 0);
   vLayout->addWidget(tableView);
@@ -106,13 +116,13 @@ void qColadaReaderPrivate::setupUi(QDialog *q) {
 
   vSplitter = new QSplitter(Qt::Vertical);
   vSplitter->setObjectName("VSplitter");
-  vSplitter->setOpaqueResize(false);
+//  vSplitter->setOpaqueResize(false);
   vSplitter->addWidget(widget);
   vSplitter->addWidget(crsWidget);
 
   mainSplitter = new QSplitter(Qt::Horizontal);
   mainSplitter->setObjectName("MainSplitter");
-  mainSplitter->setOpaqueResize(false);
+//  mainSplitter->setOpaqueResize(false);
   mainSplitter->addWidget(vSplitter);
 
   QVBoxLayout *mainVLayout = new QVBoxLayout(q);

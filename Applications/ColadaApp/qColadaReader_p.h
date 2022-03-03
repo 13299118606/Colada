@@ -12,6 +12,7 @@ class QStandardItemModel;
 class QToolButton;
 class QDialogButtonBox;
 class QSplitter;
+class qSlicerApplication;
 
 class Q_COLADA_APP_EXPORT qColadaReaderPrivate {
   Q_DECLARE_PUBLIC(qColadaReader);
@@ -30,6 +31,7 @@ public:
   virtual void setupUi(QDialog *q);
 
 public:
+  qSlicerApplication* app;
   qCRSDropTableView *tableView;
   qCRSWidget *crsWidget;
   ctkCheckableHeaderView *hrzHeader, *vertHeader;

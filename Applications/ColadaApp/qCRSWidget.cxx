@@ -69,7 +69,7 @@ void qCRSWidgetPrivate::setupUi(QWidget* q) {
 
   splitter = new QSplitter(Qt::Horizontal);
   splitter->setObjectName("Splitter");
-  splitter->setOpaqueResize(false);
+//  splitter->setOpaqueResize(false);
   splitter->addWidget(tableView);
   splitter->addWidget(txtBrowser);
 
