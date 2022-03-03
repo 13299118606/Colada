@@ -3,6 +3,7 @@
 #include "qColadaReader_p.h"
 #include "qCRSDropTableView.h"
 #include "qCRSWidget.h"
+#include "qColadaAppMainWindow.h"
 
 // Slicer includes
 #include "qSlicerApplication.h"
@@ -26,6 +27,8 @@ qColadaReaderPrivate::~qColadaReaderPrivate() {}
 
 void qColadaReaderPrivate::init() {
   Q_Q(qColadaReader);
+  // must be deleted after it is closed (prevent memory leak)
+  q->setAttribute(Qt::WA_DeleteOnClose);
   q->setWindowFlags(
       q->windowFlags() &
       ~Qt::WindowContextHelpButtonHint & // removes question '?' sign
@@ -49,6 +52,11 @@ void qColadaReaderPrivate::setupUi(QDialog *q) {
   app = qSlicerApplication::application();
   if (!app){
     qCritical() << Q_FUNC_INFO << ": Unable to get application instance";
+  }
+
+  mainW = qobject_cast<qColadaAppMainWindow*>(app->mainWindow());
+  if (!mainW){
+    qCritical() << Q_FUNC_INFO << ": Unable to get mainwindow";
   }
 
   tableView = new qCRSDropTableView();
