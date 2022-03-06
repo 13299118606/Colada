@@ -42,9 +42,6 @@ void qH5ItemDropLineEditPrivate::init() {
   this->gridLayout->setMargin(0);
 
   this->containerPathLineEdit = new ctkPathLineEdit(q);
-  this->containerPathLineEdit->setFilters(
-        this->containerPathLineEdit->filters() |
-        ctkPathLineEdit::Writable);
   this->containerPathLineEdit->setNameFilters(
         QStringList() << "hdf5 (*.h5 *.hdf5)" <<  "all (*.*)");
   this->objectLineEdit = new QLineEdit(q);
