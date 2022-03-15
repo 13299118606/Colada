@@ -81,7 +81,7 @@ if(NOT DEFINED ${proj}_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
   set(${proj}_DIR ${EP_BINARY_DIR})
-  set(${proj}_INCLUDE_DIR ${EP_INSTALL_DIR}/include/sqlite3)
+  set(${proj}_INCLUDE_DIR ${EP_INSTALL_DIR}/include)
   if(WIN32)
     set(${proj}_LIBRARY ${EP_INSTALL_DIR}/lib/sqlite3.lib)
     set(${proj}_EXE ${EP_INSTALL_DIR}/bin/sqlite3.exe)
