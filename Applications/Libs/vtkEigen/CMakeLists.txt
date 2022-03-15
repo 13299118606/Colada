@@ -16,9 +16,8 @@ endif()
 # --------------------------------------------------------------------------
 
 #
-# Eigen3
+# Eigen3_INCLUDE_DIR is defined in External_ITK.cmake
 #
-find_package(Eigen3 REQUIRED)
 
 # # --------------------------------------------------------------------------
 # # Include dirs

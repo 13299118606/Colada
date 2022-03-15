@@ -110,7 +110,7 @@ if(NOT DEFINED PROJ_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   # envvars
   set(${proj}_ENVVARS_LAUNCHER_BUILD
-    "PROJ_LIB=${EP_INSTALL_DIR}/share/data/proj"
+    "PROJ_LIB=${EP_INSTALL_DIR}/share/proj"
     )
   mark_as_superbuild(
     VARS ${proj}_ENVVARS_LAUNCHER_BUILD
@@ -118,7 +118,7 @@ if(NOT DEFINED PROJ_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     )
 
   set(${proj}_ENVVARS_LAUNCHER_INSTALLED
-    "PROJ_LIB=<APPLAUNCHER_SETTINGS_DIR>/../share/data/proj"
+    "PROJ_LIB=<APPLAUNCHER_SETTINGS_DIR>/../share/proj"
     )
   mark_as_superbuild(
     VARS ${proj}_ENVVARS_LAUNCHER_INSTALLED
