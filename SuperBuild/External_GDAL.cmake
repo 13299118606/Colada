@@ -2,7 +2,7 @@
 set(proj GDAL)
 
 # Set dependency list (ITK brings up Eigen lib)
-set(${proj}_DEPENDENCIES zlib HDF5 sqlite GEOS PROJ)
+set(${proj}_DEPENDENCIES zlib HDF5 sqlite GEOS PROJ python-numpy)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
