@@ -99,15 +99,6 @@ if(NOT DEFINED PROJ_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     LABELS "PATHS_LAUNCHER_BUILD"
     )
 
-  # pythonpath
-  set(${proj}_PYTHONPATH_LAUNCHER_BUILD
-    ${EP_INSTALL_DIR}/${_lib_subdir}
-    )
-  mark_as_superbuild(
-    VARS ${proj}_PYTHONPATH_LAUNCHER_BUILD
-    LABELS "PYTHONPATH_LAUNCHER_BUILD"
-    )
-
   # envvars
   set(${proj}_ENVVARS_LAUNCHER_BUILD
     "PROJ_LIB=${EP_INSTALL_DIR}/share/proj"

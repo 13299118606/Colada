@@ -99,8 +99,9 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     set(_lib_subdir bin)
   endif()
 
-  # library paths
+  # library paths (tbb lib added here because in External_tbb.cmake they are not added)
   set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD 
+    ${TBB_LIB_DIR}
     ${EP_INSTALL_DIR}/${_lib_subdir}
     )
   mark_as_superbuild(
@@ -113,15 +114,6 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   mark_as_superbuild(
     VARS ${proj}_PATHS_LAUNCHER_BUILD
     LABELS "PATHS_LAUNCHER_BUILD"
-    )
-
-  # pythonpath
-  set(${proj}_PYTHONPATH_LAUNCHER_BUILD
-    ${EP_INSTALL_DIR}/${_lib_subdir}
-    )
-  mark_as_superbuild(
-    VARS ${proj}_PYTHONPATH_LAUNCHER_BUILD
-    LABELS "PYTHONPATH_LAUNCHER_BUILD"
     )
 
   # envvars

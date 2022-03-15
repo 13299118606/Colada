@@ -36,16 +36,6 @@ find_package(units REQUIRED CONFIG)  # based on units_DIR
 find_package(HDF5 REQUIRED CONFIG)  # based on HDF5_DIR
 find_package(GDAL REQUIRED)
 
-# GDAL::GDAL depends on many libs (TIFF, GEOS etc). Here we are linking them
-# if(DEFINED GDAL_LIBS)
-#   target_link_libraries(GDAL::GDAL INTERFACE ${GDAL_LIBS})
-# endif()
-
-# Before finding 'h5geo' all its deps must be found (defined in 'h5geo-targets.cmake'):
-# hdf5::hdf5-shared
-# units::units
-# GDAL::GDAL
-# and tbb (but it is defined by library path)
 # Linking to 'h5geo' is equal to link to listed above targets as well
 find_package(h5geo REQUIRED CONFIG)  # based on h5geo_DIR
 

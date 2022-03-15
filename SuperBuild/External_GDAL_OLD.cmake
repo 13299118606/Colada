@@ -102,16 +102,6 @@ mark_as_superbuild(
   LABELS "ENVVARS_LAUNCHER_BUILD"
   )
 
-# pythonpath (add GDAL libs dir to PythonSlicer launcher build settings)
-set(${proj}_PYTHONPATH_LAUNCHER_BUILD
-  ${GDAL_LIBS_DIR}
-  )
-mark_as_superbuild(
-  VARS ${proj}_PYTHONPATH_LAUNCHER_BUILD
-  LABELS "PYTHONPATH_LAUNCHER_BUILD"
-  )
-
-
 #-----------------------------------------------------------------------------
 # Launcher setting specific to install tree
 

@@ -84,15 +84,6 @@ if(NOT DEFINED GEOS_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     LABELS "LIBRARY_PATHS_LAUNCHER_BUILD"
     )
 
-  # pythonpath
-  set(${proj}_PYTHONPATH_LAUNCHER_BUILD
-    ${EP_INSTALL_DIR}/${_lib_subdir}
-    )
-  mark_as_superbuild(
-    VARS ${proj}_PYTHONPATH_LAUNCHER_BUILD
-    LABELS "PYTHONPATH_LAUNCHER_BUILD"
-    )
-
   # paths
   set(${proj}_PATHS_LAUNCHER_BUILD ${EP_INSTALL_DIR}/bin)
   mark_as_superbuild(
