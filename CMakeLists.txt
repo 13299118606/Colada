@@ -67,11 +67,13 @@ include(ExternalProjectDependency)
 # Additional Slicer dependencies looked up in EXTERNAL_PROJECT_ADDITIONAL_DIR
 set(Slicer_ADDITIONAL_DEPENDENCIES
   GDAL
+  GEOS
   h5geo
   h5gt
   HDF5
   magic_enum
   mio
+  PROJ
   python-packages
   julia
   julia-packages
