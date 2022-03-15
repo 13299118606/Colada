@@ -1,8 +1,8 @@
 
-set(proj GDAL)
+set(proj PROJ)
 
 # Set dependency list (ITK brings up Eigen lib)
-set(${proj}_DEPENDENCIES zlib HDF5 sqlite GEOS PROJ)
+set(${proj}_DEPENDENCIES python sqlite)
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
@@ -12,11 +12,11 @@ if(Slicer_USE_SYSTEM_${proj})
 endif()
 
 # Sanity checks
-if(DEFINED GDAL_DIR AND NOT EXISTS ${GDAL_DIR})
-  message(FATAL_ERROR "GDAL_DIR variable is defined but corresponds to nonexistent directory")
+if(DEFINED PROJ_DIR AND NOT EXISTS ${PROJ_DIR})
+  message(FATAL_ERROR "PROJ_DIR variable is defined but corresponds to nonexistent directory")
 endif()
 
-if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
+if(NOT DEFINED PROJ_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
   set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
@@ -24,13 +24,13 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_REPOSITORY
-    "${EP_GIT_PROTOCOL}://github.com/OSGeo/gdal.git"
+    "${EP_GIT_PROTOCOL}://github.com/OSGeo/PROJ.git"
     QUIET
     )
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "68ceec0be4541da11cf9860141fb6aeae22f95e4"
+    "9.0.0"
     QUIET
     )
 
@@ -54,43 +54,27 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DADDITIONAL_CXX_FLAGS:STRING=${ADDITIONAL_CXX_FLAGS}
       -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
       # Lib settings
+      -DENABLE_TIFF:BOOL=OFF 
+      -DENABLE_CURL:BOOL=OFF 
+      -DBUILD_PROJSYNC:BOOL=OFF 
+      -DRUN_NETWORK_DEPENDENT_TESTS:BOOL=OFF 
       -DBUILD_TESTING:BOOL=OFF 
-      -DZLIB_ROOT:PATH=${ZLIB_ROOT}
-      -DPROJ_DIR:PATH=${PROJ_DIR}
-      -DGEOS_DIR:PATH=${GEOS_DIR}
-      -DHDF5_ROOT:PATH=${HDF5_ROOT}
-      -DSQLite3_INCLUDE_DIR:PATH=${sqlite_INCLUDE_DIR}
-      -DSQLite3_LIBRARY:PATH=${sqlite_LIBRARY}
-      -DSQLite3_HAS_RTREE:BOOL=ON 
-      -DSQLite3_HAS_COLUMN_METADATA:BOOL=ON 
-      # GDAL uses CMAKE's findPython (Python_EXECUTABLE) while h5gt and h5geo use pybind11 (PYTHON_EXECUTABLE)
-      -DPython_EXECUTABLE:PATH=${PYTHON_EXECUTABLE}
+      -DSQLITE3_INCLUDE_DIR:PATH=${sqlite_INCLUDE_DIR}
+      -DSQLITE3_LIBRARY:PATH=${sqlite_LIBRARY}
+      -DEXE_SQLITE3:FILEPATH=${sqlite_EXE}
+      -DPython_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
     DEPENDS
       ${${proj}_DEPENDENCIES}
-    )
-  
-  # copy site-packages from GDAL subdir to Slicer's python
-  ExternalProject_Add(${proj}-copy-site-packages
-    SOURCE_DIR ${EP_SOURCE_DIR}
-    BINARY_DIR ${EP_BINARY_DIR}
-    INSTALL_DIR ${EP_INSTALL_DIR}
-    DOWNLOAD_COMMAND ""
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    # https://cmake.org/cmake/help/latest/manual/cmake.1.html#command-line-tool-mode
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory 
-      ${EP_INSTALL_DIR}/lib/python${Slicer_REQUIRED_PYTHON_VERSION_DOT}/site-packages
-      ${python_DIR}/${PYTHON_SITE_PACKAGES_SUBDIR}
-    DEPENDS ${proj}
     )
 
   ExternalProject_GenerateProjectDescription_Step(${proj})
 
-  set(GDAL_ROOT ${EP_INSTALL_DIR})
-  set(GDAL_DIR ${EP_INSTALL_DIR}/lib/cmake/gdal)
+  set(PROJ_DIR ${EP_INSTALL_DIR}/lib/cmake/proj)
   if(WIN32)
+    list(APPEND GDAL_LIBS "${EP_INSTALL_DIR}/lib/proj.lib")
     list(APPEND GDAL_RUNTIME_DIRS "${EP_INSTALL_DIR}/bin")
   else()
+    list(APPEND GDAL_LIBS "${EP_INSTALL_DIR}/lib/libproj.so")
     list(APPEND GDAL_RUNTIME_DIRS "${EP_INSTALL_DIR}/lib")
   endif()
 
@@ -126,7 +110,7 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   # envvars
   set(${proj}_ENVVARS_LAUNCHER_BUILD
-    "GDAL_DATA=${EP_INSTALL_DIR}/share/gdal"
+    "PROJ_LIB=${EP_INSTALL_DIR}/share/data/proj"
     )
   mark_as_superbuild(
     VARS ${proj}_ENVVARS_LAUNCHER_BUILD
@@ -134,7 +118,7 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     )
 
   set(${proj}_ENVVARS_LAUNCHER_INSTALLED
-    "GDAL_DATA=<APPLAUNCHER_SETTINGS_DIR>/../share/gdal"
+    "PROJ_LIB=<APPLAUNCHER_SETTINGS_DIR>/../share/data/proj"
     )
   mark_as_superbuild(
     VARS ${proj}_ENVVARS_LAUNCHER_INSTALLED
@@ -142,17 +126,15 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     )
 
 else()
-  # The project is provided using GDAL_DIR, nevertheless since other project may depend on GDAL,
+  # The project is provided using PROJ_DIR, nevertheless since other project may depend on PROJ,
   # let's add an 'empty' one
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()
 
 mark_as_superbuild(
   VARS
-    GDAL_ROOT:PATH
-    GDAL_DIR:PATH
+  PROJ_DIR:PATH
   LABELS "FIND_PACKAGE"
   )
 
-ExternalProject_Message(${proj} "GDAL_ROOT: ${GDAL_ROOT}")
-ExternalProject_Message(${proj} "GDAL_DIR: ${GDAL_DIR}")
+ExternalProject_Message(${proj} "PROJ_DIR: ${PROJ_DIR}")

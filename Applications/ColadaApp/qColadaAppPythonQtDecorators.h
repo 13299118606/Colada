@@ -25,8 +25,8 @@
 #include <QRegularExpression>
 
 // GDAL includes - need to be included for MOC
-#include <gdal/gdal.h>
-#include <gdal/gdal_priv.h>
+#include <gdal.h>
+#include <gdal_priv.h>
 
 // units includes
 #include <units/units.hpp>

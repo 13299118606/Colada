@@ -19,8 +19,8 @@
 #include <ctkSearchBox.h>
 
 // GDAL includes
-#include <gdal/gdal.h>
-#include <gdal/gdal_priv.h>
+#include <gdal.h>
+#include <gdal_priv.h>
 
 // units includes
 #include <units/units.hpp>

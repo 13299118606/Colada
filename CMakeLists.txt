@@ -23,11 +23,7 @@ else()
   set(slicersources_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/slicersources-subbuild)
 endif()
 
-# copy external HDF5, VTK, ITK, CTK to Slicer sources
-# configure_file(
-#   "${CMAKE_CURRENT_SOURCE_DIR}/CMake/External_HDF5.cmake" 
-#   "${slicersources_SOURCE_DIR}/SuperBuild/External_HDF5.cmake" COPYONLY
-#   )
+# copy externals to Slicer sources
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/CMake/External_VTK.cmake" 
     "${slicersources_SOURCE_DIR}/SuperBuild/External_VTK.cmake" COPYONLY
@@ -40,10 +36,10 @@ configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/CMake/External_CTK.cmake" 
   "${slicersources_SOURCE_DIR}/SuperBuild/External_CTK.cmake" COPYONLY
   )
-#configure_file(
-#  "${CMAKE_CURRENT_SOURCE_DIR}/CMake/SuperBuild.cmake" 
-#  "${slicersources_SOURCE_DIR}/SuperBuild.cmake" COPYONLY
-#  )
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/CMake/External_sqlite.cmake" 
+  "${slicersources_SOURCE_DIR}/SuperBuild/External_sqlite.cmake" COPYONLY
+  )
 
 # macOS initialization
 set(CMAKE_MODULE_PATH ${slicersources_SOURCE_DIR}/CMake ${CMAKE_MODULE_PATH})
