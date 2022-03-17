@@ -13,7 +13,7 @@ class ReadWriteMapParam(h5geo.MapParam):
     saveFile = ''
     mapName = ''
     mapCreateType = ''
-    depthMult = -1
+    depthMult = 1
     xNorth = False
 
 
@@ -60,7 +60,7 @@ class qColadaMapReader(qColadaReader):
     mapTableHdrNames = [
         "read file", "save to", "CRS",
         "map name", "map create",
-        "domain", "length units", "data units",
+        "domain", "length units", "temporal units", "data units",
         "x0", "y0", "x1", "y1", "x2", "y2", "nx", "ny",
         "depth mult",
         "XNorth"]
@@ -68,13 +68,13 @@ class qColadaMapReader(qColadaReader):
     mapTableHdrTips = [
         "Read file", "Container where to save data", "Coordinate reference system",
         "Map name", "Creation type for map",
-        "Domain", "Length units", "Data units",
+        "Domain", "Length units", "Temporal units", "Data units",
         "Top left point: x", "Top left point: y",
         "Top right point: x", "Top right point: y",
         "Bottom left point: x", "Bottom left point: y",
         "Number of x points",
         "Number of y points",
-        "Depth multiplier: downwards is negative (usually -1)",
+        "Depth multiplier: downwards is negative (1 or -1)",
         "`X` axis points to the North? checked - True, unchecked - False"]
 
     def __init__(self, parent=None):
@@ -223,6 +223,10 @@ class qColadaMapReader(qColadaReader):
         p.lengthUnits = tmp if tmp else ''
 
         tmp = self.mapProxy.data(
+            self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("temporal units")))
+        p.temporalUnits = tmp if tmp else ''
+
+        tmp = self.mapProxy.data(
             self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("data units")))
         p.dataUnits = tmp if tmp else ''
 
@@ -262,7 +266,7 @@ class qColadaMapReader(qColadaReader):
             self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("depth mult")))
         p.depthMult = int(tmp) if tmp else 1
 
-        tmp = self.mapTableView.item(m_row, self.mapTableHdrNames.index("XNorth")).checkState()
+        tmp = self.mapModel.item(m_row, self.mapTableHdrNames.index("XNorth")).checkState()
         p.xNorth = True if tmp == Qt.Qt.Checked else False
 
         return p
@@ -340,7 +344,8 @@ class qColadaMapReader(qColadaReader):
         self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("domain")),
             str(h5geo.Domain.TVDSS).rsplit('.', 1)[-1])
         self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("length units")), 'meter')
-        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("depth mult")), str(-1))
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("temporal units")), 'ms')
+        self.mapProxy.setData(self.mapProxy.index(m_proxy_row, self.mapTableHdrNames.index("depth mult")), str(1))
 
         m_row = self.mapProxy.mapToSource(self.mapProxy.index(m_proxy_row, 0)).row()
 
