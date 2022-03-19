@@ -57,8 +57,6 @@ set(APPLIB_SRCS
   qColadaDarkStyle.h
   qColadaLightStyle.cxx
   qColadaLightStyle.h
-  qColadaApplication.cxx
-  qColadaApplication.h
   qCRSDropLineEdit.h
   qCRSDropLineEdit.cxx
   qCRSDropTableView.h
@@ -138,7 +136,6 @@ set(APPLIB_MOC_SRCS
   qColadaDarkStyle.h
   qColadaLightStyle.h
 
-  qColadaApplication.h
   qCRSDropLineEdit.h
   qCRSDropTableView.h
   qCRSWidget.h
