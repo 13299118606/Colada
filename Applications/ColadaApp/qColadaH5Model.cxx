@@ -29,6 +29,9 @@
 #include <QStack>
 #include <QDebug>
 
+// stl
+#include <limits>
+
 qColadaH5ModelPrivate::qColadaH5ModelPrivate(qColadaH5Model &q) : q_ptr(&q) {}
 
 qColadaH5ModelPrivate::~qColadaH5ModelPrivate() {}
@@ -400,7 +403,7 @@ qColadaH5Item* qColadaH5Model::findItem(vtkMRMLNode* node)
   return nullptr;
 }
 
-bool qColadaH5Model::addH5File(const QString &fileName)
+bool qColadaH5Model::insertH5File(const QString &fileName, int row)
 {
   if (fileName.isEmpty())
     return false;
@@ -412,27 +415,42 @@ bool qColadaH5Model::addH5File(const QString &fileName)
       return false;
 
     h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
-    return addH5File(file);
+    return insertH5File(file, row);
   } catch (h5gt::Exception& err) {
     qCritical() << Q_FUNC_INFO << err.what();
     return false;
   }
 }
 
-bool qColadaH5Model::addH5File(const h5gt::File& file) {
+bool qColadaH5Model::insertH5File(const h5gt::File& file, int row)
+{
   Q_D(qColadaH5Model);
   if (!canAddH5File(file))
     return false;
 
-  H5BaseContainer *baseCnt = h5geo::openBaseContainer(file);
+  if (row < 0)
+    row = 0;
+
+  if (row > d->rootItem->childCount())
+    row = d->rootItem->childCount();
+
+  H5BaseContainer *baseCnt = h5geo::openContainer(file);
   qColadaH5Item *fileItem = new qColadaH5Item(baseCnt, d->rootItem);
   QModelIndex rootIndex = QModelIndex(); // index for ROOT
 
-  beginInsertRows(rootIndex, d->rootItem->childCount(),
-                  d->rootItem->childCount());
-  d->rootItem->insertChild(fileItem, d->rootItem->childCount());
+  beginInsertRows(rootIndex, row, row);
+  bool val = d->rootItem->insertChild(fileItem, row);
   endInsertRows();
-  return true;
+  return val;
+}
+
+bool qColadaH5Model::addH5File(const QString &fileName)
+{
+  return this->insertH5File(fileName, std::numeric_limits<int>::max());
+}
+
+bool qColadaH5Model::addH5File(const h5gt::File& file) {
+  return this->insertH5File(file, std::numeric_limits<int>::max());
 }
 
 bool qColadaH5Model::removeH5File(const QString &fullName) {
@@ -449,8 +467,8 @@ bool qColadaH5Model::removeH5File(const h5gt::File& file) {
   return false;
 }
 
-bool qColadaH5Model::addH5Object(
-    const QString& fileName, const QString& groupName)
+bool qColadaH5Model::insertH5Object(
+    const QString& fileName, const QString& groupName, int row)
 {
   if (fileName.isEmpty() || groupName.isEmpty())
     return false;
@@ -466,14 +484,14 @@ bool qColadaH5Model::addH5Object(
       return false;
 
     h5gt::Group objG = file.getGroup(groupName.toStdString());
-    return addH5Object(objG);
+    return insertH5Object(objG, row);
   } catch (h5gt::Exception& err) {
     qCritical() << Q_FUNC_INFO << err.what();
     return false;
   }
 }
 
-bool qColadaH5Model::addH5Object(const h5gt::Group& objG)
+bool qColadaH5Model::insertH5Object(const h5gt::Group& objG, int row)
 {
   Q_D(qColadaH5Model);
   if (!canAddH5Object(objG))
@@ -491,18 +509,34 @@ bool qColadaH5Model::addH5Object(const h5gt::Group& objG)
   if (!parentItem)
     return false;
 
+  if (row < 0)
+    row = 0;
+
+  if (row > parentItem->childCount())
+    row = parentItem->childCount();
+
   QModelIndex parentIndex = this->getIndex(parentItem);
-  H5BaseObject *baseObj = h5geo::openBaseObject(objG);
+  H5BaseObject *baseObj = h5geo::openObject(objG);
   if (!baseObj)
     return false;
 
   qColadaH5Item *item = new qColadaH5Item(baseObj, parentItem);
 
-  beginInsertRows(parentIndex, parentItem->childCount(),
-                  parentItem->childCount());
-  parentItem->insertChild(item, parentItem->childCount());
+  beginInsertRows(parentIndex, row, row);
+  bool val = parentItem->insertChild(item, row);
   endInsertRows();
-  return true;
+  return val;
+}
+
+bool qColadaH5Model::addH5Object(
+    const QString& fileName, const QString& groupName)
+{
+  return insertH5Object(fileName, groupName, std::numeric_limits<int>::max());
+}
+
+bool qColadaH5Model::addH5Object(const h5gt::Group& objG)
+{
+  return insertH5Object(objG, std::numeric_limits<int>::max());
 }
 
 bool qColadaH5Model::removeH5Object(
@@ -563,6 +597,9 @@ void qColadaH5Model::updateCheckState(qColadaH5Item *topLevelItem) {
 void qColadaH5Model::sendItemDataChanged(
     qColadaH5Item* item, const QVector<int> &roles)
 {
+  if (!item)
+    return;
+
   int row = item->getRow();
   if (row < 0) // if this is a root item
     emit dataChanged(QModelIndex(), QModelIndex(), roles);
@@ -575,6 +612,9 @@ void qColadaH5Model::sendItemDataChanged(
 void qColadaH5Model::sendAllChildDataChanged(
     qColadaH5Item *topLevelItem, const QVector<int> &roles)
 {
+  if (!topLevelItem)
+    return;
+
   QList<QModelIndex> fullChildIndexList;
   getFullChildIndexList(topLevelItem, fullChildIndexList);
   for (const QModelIndex& index : fullChildIndexList){
@@ -586,6 +626,9 @@ void qColadaH5Model::sendAllItemsToRootDataChanged(
     qColadaH5Item *lowLevelItem,
     const QVector<int> &roles)
 {
+  if (!lowLevelItem)
+    return;
+
   QList<QModelIndex> indexListToRoot = getIndexListToRoot(lowLevelItem);
   for (int i = 0; i < indexListToRoot.count(); i++) {
     emit dataChanged(indexListToRoot[i], indexListToRoot[i], roles);

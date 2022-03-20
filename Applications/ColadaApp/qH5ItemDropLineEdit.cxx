@@ -123,7 +123,8 @@ void qH5ItemDropLineEdit::dragEnterEvent(QDragEnterEvent *event) {
 
 void qH5ItemDropLineEdit::dropEvent(QDropEvent *event) {
   Q_D(qH5ItemDropLineEdit);
-  const QMimeData *mime = event->mimeData();
+  if (!event)
+    return;
 
   qColadaH5TreeView *sourceTreeView = qobject_cast<qColadaH5TreeView *>(event->source());
   if (!sourceTreeView ||
@@ -134,10 +135,9 @@ void qH5ItemDropLineEdit::dropEvent(QDropEvent *event) {
   if (typeList.isEmpty())
     return;
 
-  if (!mime->hasFormat(typeList.last())){
-    qWarning() << "qH5ItemDropLineEdit::dropEvent: mime doesn have format named: " << typeList.last();
+  const QMimeData *mime = event->mimeData();
+  if (!mime || !mime->hasFormat(typeList.last()))
     return;
-  }
 
   QString fileName, objectName;
   QByteArray encodedData = mime->data(typeList.last());

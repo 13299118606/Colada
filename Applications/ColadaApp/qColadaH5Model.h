@@ -87,8 +87,6 @@ public slots:
   qColadaH5Item *getRootItem() const;
 
   /// brief Needs to be reimplemented by subclasses
-  /// param file
-  /// return
   virtual bool canAddH5File(const h5gt::File& file);
   virtual bool canAddH5Object(const h5gt::Group& objG);
 
@@ -97,11 +95,17 @@ public slots:
   qColadaH5Item* findItem(const h5gt::Group& objG);
   qColadaH5Item* findItem(vtkMRMLNode* node);
 
+  /// if 'row < 0' prepend; if 'row > childCount()' append
+  bool insertH5File(const QString &fileName, int row);
+  bool insertH5File(const h5gt::File& file, int row);
   bool addH5File(const QString &fileName);
   bool addH5File(const h5gt::File& file);
   bool removeH5File(const QString &fileName);
   bool removeH5File(const h5gt::File& file);
 
+  /// if 'row < 0' prepend; if 'row > childCount()' append
+  bool insertH5Object(const QString& fileName, const QString& groupName, int row);
+  bool insertH5Object(const h5gt::Group& objG, int row);
   bool addH5Object(const QString& fileName, const QString& groupName);
   bool addH5Object(const h5gt::Group& objG);
   bool removeH5Object(const QString& fileName, const QString& groupName);
