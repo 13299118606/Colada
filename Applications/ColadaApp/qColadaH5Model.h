@@ -125,6 +125,10 @@ public slots:
   void setCheckStateForItemStair(qColadaH5Item *item,
                                  Qt::CheckState checkState);
 
+  /// When fetching items at the time when some nodes already added
+  /// we need to init checkstate for the items
+  void initItemsCheckState(const QVector<qColadaH5Item*>& items);
+
   QStringList mimeTypes() const override;
   QMimeData *mimeData(const QModelIndexList &indexes) const override;
 

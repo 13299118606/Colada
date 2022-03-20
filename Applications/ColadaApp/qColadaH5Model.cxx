@@ -687,6 +687,29 @@ void qColadaH5Model::setCheckStateForItemStair(
   }
 }
 
+void qColadaH5Model::initItemsCheckState(const QVector<qColadaH5Item*>& items)
+{
+  Q_D(qColadaH5Model);
+  std::vector<vtkMRMLNode*> nodes;
+  d->app->mrmlScene()->GetNodesByClass("vtkMRMLDisplayableNode", nodes);
+  for (vtkMRMLNode* node : nodes){
+    std::optional<h5gt::Group> nodeGroupOpt = h5GroupFromNode(node);
+    if (!nodeGroupOpt.has_value())
+      continue;
+
+    for (qColadaH5Item* item : items){
+      H5BaseObject* obj = item->getGeoObject();
+      if (!obj)
+        continue;
+
+      if (obj->getObjG() == nodeGroupOpt.value()){
+        item->setCheckState(Qt::Checked);
+        break;
+      }
+    }
+  }
+}
+
 static inline QString qColadaH5ModelDataListMimeType()
 {
   return QStringLiteral("application/x-qcoladah5modeldatalist");

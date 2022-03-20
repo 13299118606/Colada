@@ -85,6 +85,10 @@ public:
   /// \return
   bool isMapped() const;
 
+  /// h5gt LinkType
+  void setLinkType(int val);
+  int getLinkType();
+
   static QString fullName2ItemData(const QString &fullName);
 
   // only write to stream is possible. We cant read from stream and set the data to item

@@ -285,16 +285,24 @@ bool qColadaH5Item::isEvenOneChildChecked() {
 }
 
 bool qColadaH5Item::isMapped() const { 
-  Q_D(const qColadaH5Item); 
+  Q_D(const qColadaH5Item);
   return d->mapped;
+}
+
+void qColadaH5Item::setLinkType(int val){
+  Q_D(qColadaH5Item);
+  d->linkType = val;
+}
+
+int qColadaH5Item::getLinkType(){
+  Q_D(qColadaH5Item);
+  return d->linkType;
 }
 
 QString qColadaH5Item::fullName2ItemData(const QString &fullName) {
   return fullName.mid(fullName.lastIndexOf("/") + 1);
 }
 
-#include <QDebug>
-#include <QDataStream>
 void qColadaH5Item::write(QDataStream &out) const
 {
   Q_D(const qColadaH5Item);
@@ -312,8 +320,8 @@ void qColadaH5Item::write(QDataStream &out) const
 
 QDataStream &operator<<(QDataStream &out, const qColadaH5Item &item)
 {
-    item.write(out);
-    return out;
+  item.write(out);
+  return out;
 }
 
 bool qColadaH5Item::operator==(const qColadaH5Item &another) const {
