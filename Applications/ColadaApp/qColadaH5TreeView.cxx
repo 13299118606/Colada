@@ -81,20 +81,32 @@ qColadaH5TreeView::qColadaH5TreeView(qColadaH5TreeViewPrivate *pimpl, QWidget *p
 qColadaH5TreeView::~qColadaH5TreeView() {}
 
 void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
-  QAction *checkedOnlyAct = menu->addAction("Show checked only");
-  checkedOnlyAct->setCheckable(true);
-
   qColadaH5ProxyModel *proxyModel =
       qobject_cast<qColadaH5ProxyModel *>(model());
-  if (proxyModel)
-    checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
-  else
-    checkedOnlyAct->setDisabled(true);
 
-  menu->addSeparator();
-
+  QAction *checkedOnlyAct = menu->addAction("Show Checked only");
+  checkedOnlyAct->setCheckable(true);
+  checkedOnlyAct->setChecked(proxyModel->isShowCheckedOnly());
   connect(checkedOnlyAct, &QAction::toggled,
           proxyModel, &qColadaH5ProxyModel::setShowCheckedItemsOnly);
+  menu->addSeparator();
+
+  QAction *hardLinksAct = menu->addAction("Show Hard links");
+  hardLinksAct->setCheckable(true);
+  hardLinksAct->setChecked(proxyModel->isShowHardLinkItems());
+  connect(hardLinksAct, &QAction::toggled,
+          proxyModel, &qColadaH5ProxyModel::setShowHardLinkItems);
+  QAction *softLinksAct = menu->addAction("Show Soft links");
+  softLinksAct->setCheckable(true);
+  softLinksAct->setChecked(proxyModel->isShowSoftLinkItems());
+  connect(softLinksAct, &QAction::toggled,
+          proxyModel, &qColadaH5ProxyModel::setShowSoftLinkItems);
+  QAction *externalLinksAct = menu->addAction("Show External links");
+  externalLinksAct->setCheckable(true);
+  externalLinksAct->setChecked(proxyModel->isShowExternalLinkItems());
+  connect(externalLinksAct, &QAction::toggled,
+          proxyModel, &qColadaH5ProxyModel::setShowExternalLinkItems);
+  menu->addSeparator();
 
   QAction *expandSelectedAct = menu->addAction("Expand");
   connect(expandSelectedAct, &QAction::triggered,
@@ -111,7 +123,6 @@ void qColadaH5TreeView::fillHdrMenu(QMenu *menu, const QPoint &pos) {
   QAction *collapseAllAct = menu->addAction("Collapse all");
   connect(collapseAllAct, &QAction::triggered,
           this, &QTreeView::collapseAll);
-
   menu->addSeparator();
 }
 

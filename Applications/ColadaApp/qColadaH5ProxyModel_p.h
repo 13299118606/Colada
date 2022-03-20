@@ -17,6 +17,9 @@ public:
 
 private:
   bool showCheckedOnlyFlag = false;
+  bool showHardLinks = true;
+  bool showSoftLinks = true;
+  bool showExternalLinks = true;
 };
 
 #endif
