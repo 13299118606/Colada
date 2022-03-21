@@ -289,29 +289,48 @@ bool qColadaH5Item::isMapped() const {
   return d->mapped;
 }
 
-void qColadaH5Item::setLinkType(int val){
-  Q_D(qColadaH5Item);
-  d->linkType = val;
-}
-
 int qColadaH5Item::getLinkType(){
   Q_D(qColadaH5Item);
-  return d->linkType;
+  if (!this->isGeoObject() && !this->isGeoContainer())
+    return -1;
+
+  if (this->isGeoContainer())
+    return static_cast<int>(h5gt::LinkType::Hard);
+
+  if (!d->parentItem)
+    return -1;
+
+  std::string objName = data().toStdString();
+  if (d->parentItem->isGeoContainer()){
+    h5gt::File file = d->parentItem->getGeoContainer()->getH5File();
+    if (!file.exist(objName))
+      return -1;
+
+    return static_cast<int>(file.getLinkType(objName));
+  } else if (d->parentItem->isGeoObject()){
+    h5gt::Group group = d->parentItem->getGeoObject()->getObjG();
+    if (!group.exist(objName))
+      return -1;
+
+    return static_cast<int>(group.getLinkType(objName));
+  } else {
+    return -1;
+  }
 }
 
 bool qColadaH5Item::isLinkTypeHard(){
   Q_D(qColadaH5Item);
-  return static_cast<h5gt::LinkType>(d->linkType) == h5gt::LinkType::Hard;
+  return static_cast<h5gt::LinkType>(getLinkType()) == h5gt::LinkType::Hard;
 }
 
 bool qColadaH5Item::isLinkTypeSoft(){
   Q_D(qColadaH5Item);
-  return static_cast<h5gt::LinkType>(d->linkType) == h5gt::LinkType::Soft;
+  return static_cast<h5gt::LinkType>(getLinkType()) == h5gt::LinkType::Soft;
 }
 
 bool qColadaH5Item::isLinkTypeExternal(){
   Q_D(qColadaH5Item);
-  return static_cast<h5gt::LinkType>(d->linkType) == h5gt::LinkType::External;
+  return static_cast<h5gt::LinkType>(getLinkType()) == h5gt::LinkType::External;
 }
 
 QString qColadaH5Item::fullName2ItemData(const QString &fullName) {
@@ -339,12 +358,20 @@ QDataStream &operator<<(QDataStream &out, const qColadaH5Item &item)
   return out;
 }
 
+bool qColadaH5Item::isSame(qColadaH5Item* another){
+  return *this == *another;
+}
+
 bool qColadaH5Item::operator==(const qColadaH5Item &another) const {
   Q_D(const qColadaH5Item);
   if (isGeoContainer() && another.isGeoContainer())
-    return getGeoContainer() == another.getGeoContainer();
+    return *getGeoContainer() == *another.getGeoContainer();
   else if (isGeoObject() && another.isGeoObject())
-    return getGeoObject() == another.getGeoObject();
+    return *getGeoObject() == *another.getGeoObject();
 
   return false;
+}
+
+bool qColadaH5Item::operator!=(const qColadaH5Item &another) const {
+  return !(*this == another);
 }

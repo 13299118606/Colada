@@ -28,8 +28,6 @@ protected:
   qColadaH5Item *parentItem = nullptr;
   bool mapped = false;
   Qt::CheckState checkState = Qt::Unchecked;
-  // h5gt link type
-  int linkType = 0;
 };
 
 #endif

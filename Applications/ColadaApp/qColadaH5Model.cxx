@@ -366,7 +366,7 @@ bool qColadaH5Model::canAddH5File(const h5gt::File& file) {
 
 bool qColadaH5Model::canAddH5Object(const h5gt::Group& objG)
 {
-  return !findItem(objG);
+  return !findItem(objG, false);
 }
 
 qColadaH5Item* qColadaH5Model::findItem(const QString &fullName)
@@ -393,7 +393,7 @@ qColadaH5Item* qColadaH5Model::findItem(const h5gt::File& file)
   return nullptr;
 }
 
-qColadaH5Item* qColadaH5Model::findItem(const h5gt::Group& objG)
+qColadaH5Item* qColadaH5Model::findItem(const h5gt::Group& objG, bool fetch)
 {
   qColadaH5Item* item = nullptr;
   try {
@@ -405,25 +405,26 @@ qColadaH5Item* qColadaH5Model::findItem(const h5gt::Group& objG)
     QString objName = QString::fromStdString(objG.getPath());
     QStringList objNameList = objName.split(QLatin1Char('/'), Qt::SkipEmptyParts);
 
-    this->fetchAllChildren(this->getIndex(item));
-    for (int i = 0; i < objNameList.count(); i++){
+    if (fetch)
+      this->fetchAllChildren(this->getIndex(item));
+    for (const auto& name: objNameList){
       if (item)
-        item = item->getChildByName(objNameList[i]);
+        item = item->getChildByName(name);
       else
         return nullptr;
     }
   } catch (h5gt::Exception& err) {
     qCritical() << Q_FUNC_INFO << err.what();
+    return nullptr;
   }
   return item;
 }
 
-qColadaH5Item* qColadaH5Model::findItem(vtkMRMLNode* node)
+qColadaH5Item* qColadaH5Model::findItem(vtkMRMLNode* node, bool fetch)
 {
-  Q_D(qColadaH5Model);
   auto optG = h5GroupFromNode(node);
   if (optG.has_value())
-    return this->findItem(optG.value());
+    return this->findItem(optG.value(), fetch);
 
   return nullptr;
 }
@@ -546,7 +547,6 @@ bool qColadaH5Model::insertH5Object(const h5gt::Group& objG, int row)
     return false;
 
   qColadaH5Item *item = new qColadaH5Item(baseObj, parentItem);
-
   beginInsertRows(parentIndex, row, row);
   bool val = parentItem->insertChild(item, row);
   endInsertRows();
@@ -628,11 +628,8 @@ bool qColadaH5Model::removeItem(qColadaH5Item* item)
   if (!parentItem)
     return false;
 
-  std::cout << "Child count before remove: " << parentItem->getChildren().count() << std::endl;
   QModelIndex parentIndex = getIndex(parentItem);
-  bool val = removeRow(row, parentIndex);
-  std::cout << "Child count after remove: " << parentItem->getChildren().count() << std::endl;
-  return val;
+  return removeRow(row, parentIndex);
 }
 
 void qColadaH5Model::releaseCheckState(qColadaH5Item *topLevelItem) {
@@ -943,27 +940,90 @@ bool qColadaH5Model::canDropMimeData(
     int column,
     const QModelIndex &parent) const
 {
-  QStringList typeList = this->mimeTypes();
-  if (!data || !data->hasFormat(typeList.last()))
+  if (action == Qt::IgnoreAction)
+    return true;
+
+  qColadaH5Item* parentItem = nullptr;
+  qColadaH5Item* item = nullptr;
+  std::string newObjectName;
+  return const_cast<qColadaH5Model*>(this)->canDropMimeDataAndPrepareDataBeforeDrop(
+        data, row, column, parent,
+        parentItem, item, newObjectName);
+}
+
+bool qColadaH5Model::dropMimeData(
+    const QMimeData *data,
+    Qt::DropAction action,
+    int row,
+    int column,
+    const QModelIndex &parent)
+{
+  if (action == Qt::IgnoreAction)
+    return true;
+
+  qColadaH5Item* parentItem = nullptr;
+  qColadaH5Item* item = nullptr;
+  std::string newObjectName;
+  if (!canDropMimeDataAndPrepareDataBeforeDrop(
+      data, row, column, parent,
+      parentItem, item, newObjectName))
     return false;
 
-  qColadaH5Item* parentItem = this->itemFromIndex(parent);
-  if (!parentItem || !parentItem->isLinkTypeHard())
+  std::optional<h5gt::File> parentFileOpt;
+  if (parentItem->isGeoContainer()){
+    parentFileOpt.emplace(parentItem->getGeoContainer()->getH5File());
+  } else if (parentItem->isGeoObject()){
+    parentFileOpt.emplace(parentItem->getGeoObject()->getH5File());
+  } else {
+    return false;
+  }
+
+  if (!parentFileOpt->rename(item->getGeoObject()->getObjG().getPath(), newObjectName))
+    return false;
+
+  parentFileOpt->flush();
+  if (!parentFileOpt->hasObject(newObjectName, h5gt::ObjectType::Group))
+    return false;
+
+  if (!removeItem(item))
+    return false;
+
+  h5gt::Group group = parentFileOpt->getGroup(newObjectName);
+  return insertH5Object(group, row);
+}
+
+bool qColadaH5Model::canDropMimeDataAndPrepareDataBeforeDrop(
+    const QMimeData *data,
+    int row,
+    int column,
+    const QModelIndex &parent,
+    qColadaH5Item*& parentItem,
+    qColadaH5Item*& item,
+    std::string& newObjectName)
+{
+  QStringList typeList = this->mimeTypes();
+  if (typeList.isEmpty())
+    return false;
+
+  if (!data || !data->hasFormat(typeList.last()))
     return false;
 
   QString fileName, objectName;
   QByteArray encodedData = data->data(typeList.last());
   QDataStream stream(&encodedData, QIODevice::ReadOnly);
   stream >> fileName >> objectName;
-
-  // we can't move containers
-  if (objectName.isEmpty())
+  if (objectName == "/")
     return false;
 
   H5BaseCnt_ptr cnt(h5geo::openContainerByName(fileName.toStdString()));
   if (!cnt)
     return false;
 
+  parentItem = this->itemFromIndex(parent);
+  if (!parentItem)
+    return false;
+
+  // movable object should stay in the same container
   if (parentItem->isGeoContainer()){
     if (parentItem->getGeoContainer()->getH5File() != cnt->getH5File())
       return false;
@@ -980,93 +1040,23 @@ bool qColadaH5Model::canDropMimeData(
   if (!obj)
     return false;
 
-  std::string oldPath = obj->getObjG().getPath();
-  if (oldPath == "/")
+  item = findItem(obj->getObjG());
+  if (!item || !item->isGeoObject() || parentItem->isSame(item))
     return false;
 
-  return true;
-}
-
-bool qColadaH5Model::dropMimeData(
-    const QMimeData *data,
-    Qt::DropAction action,
-    int row,
-    int column,
-    const QModelIndex &parent)
-{
-  std::cout << "dropMimeData" << std::endl;
-  if(!canDropMimeData(data, action, row, column, parent))
-    return false;
-
-  if (action == Qt::IgnoreAction)
-    return true;
-
-  qColadaH5Item* parentItem = this->itemFromIndex(parent);
-  if (!parentItem)
-    return false;
-
-  QStringList typeList = this->mimeTypes();
-  if (typeList.isEmpty())
-    return false;
-
-  if (!data || !data->hasFormat(typeList.last()))
-    return false;
-
-  QString fileName, objectName;
-  QByteArray encodedData = data->data(typeList.last());
-  QDataStream stream(&encodedData, QIODevice::ReadOnly);
-  stream >> fileName >> objectName;
-
-  H5BaseObject_ptr obj(
-        h5geo::openObjectByName(
-          fileName.toStdString(), objectName.toStdString()));
-  if (!obj)
-    return false;
-
-  qColadaH5Item* item = findItem(obj->getObjG());
-  if (!item)
-    return false;
-
-  std::string oldPath = obj->getObjG().getPath();
-  if (oldPath == "/")
-    return false;
-
-  std::string newPath;
   std::optional<h5gt::File> parentFileOpt;
   if (parentItem->isGeoContainer()){
+    newObjectName = "/" + item->data().toStdString();
     parentFileOpt.emplace(parentItem->getGeoContainer()->getH5File());
-    newPath = "/" + item->data().toStdString();
   } else if (parentItem->isGeoObject()){
+    newObjectName = parentItem->getGeoObject()->getObjG().getPath() + "/" + item->data().toStdString();
     parentFileOpt.emplace(parentItem->getGeoObject()->getH5File());
-    newPath = parentItem->getGeoObject()->getObjG().getPath() + "/" + item->data().toStdString();
   } else {
     return false;
   }
 
-  if (!parentFileOpt.has_value())
+  if (parentFileOpt->exist(newObjectName))
     return false;
 
-  // if any object type with this name exist then it is unable use this path
-  if (parentFileOpt->exist(newPath))
-    return false;
-
-  if (!parentFileOpt->rename(oldPath, newPath))
-    return false;
-
-  parentFileOpt->flush();
-  if (!parentFileOpt->hasObject(newPath, h5gt::ObjectType::Group))
-    return false;
-
-  h5gt::Group group = parentFileOpt->getGroup(newPath);
-  std::cout << "ITEM TO BE INSERTED" << std::endl;
-  bool val = insertH5Object(group, row);
-  if (!val)
-    return false;
-
-  std::cout << "ITEM TO BE REMOVED" << std::endl;
-  if (!removeItem(item))
-    return false;
-  std::cout << "ITEM REMOVED" << std::endl;
-
-  this->sendItemDataChanged(getRootItem(), {Qt::DisplayRole});
+  return true;
 }

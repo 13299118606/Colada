@@ -96,8 +96,8 @@ public slots:
 
   qColadaH5Item* findItem(const QString &fullName);
   qColadaH5Item* findItem(const h5gt::File& file);
-  qColadaH5Item* findItem(const h5gt::Group& objG);
-  qColadaH5Item* findItem(vtkMRMLNode* node);
+  qColadaH5Item* findItem(const h5gt::Group& objG, bool fetch = true);
+  qColadaH5Item* findItem(vtkMRMLNode* node, bool fetch = true);
 
   /// if 'row < 0' prepend; if 'row > childCount()' append
   bool insertH5File(const QString &fileName, int row);
@@ -163,6 +163,16 @@ public slots:
       int row,
       int column,
       const QModelIndex &parent) override;
+
+  /// Fill all args and return 'true' if item is able to be moved
+  bool canDropMimeDataAndPrepareDataBeforeDrop(
+      const QMimeData *data,
+      int row,
+      int column,
+      const QModelIndex &parent,
+      qColadaH5Item*& parentItem,
+      qColadaH5Item*& item,
+      std::string& newObjectName);
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

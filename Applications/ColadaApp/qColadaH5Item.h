@@ -20,7 +20,7 @@ class Q_COLADA_APP_EXPORT qColadaH5Item {
 public:
   /// \brief Used in qColadaH5Model. To initialize `rootItem`
   /// pass `nullptr` to `itemData` and `parent`
-  /// \param itemData if
+  /// \param itemData
   /// \param parent
   explicit qColadaH5Item(H5Base *itemData, qColadaH5Item *parent);
   virtual ~qColadaH5Item();
@@ -86,7 +86,6 @@ public:
   bool isMapped() const;
 
   /// h5gt LinkType
-  void setLinkType(int val);
   int getLinkType();
   bool isLinkTypeHard();
   bool isLinkTypeSoft();
@@ -97,7 +96,9 @@ public:
   // only write to stream is possible. We cant read from stream and set the data to item
   void write(QDataStream &out) const;
 
+  bool isSame(qColadaH5Item* another);
   bool operator==(const qColadaH5Item &another) const;
+  bool operator!=(const qColadaH5Item &another) const;
 
 protected:
   QScopedPointer<qColadaH5ItemPrivate> d_ptr;
