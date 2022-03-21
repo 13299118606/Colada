@@ -46,6 +46,8 @@ protected:
   explicit qColadaH5TreeView(qColadaH5TreeViewPrivate *pimpl,
                              QWidget *parent);
 
+  virtual void dragEnterEvent(QDragEnterEvent *event) override;
+
 private:
   Q_DECLARE_PRIVATE(qColadaH5TreeView);
   Q_DISABLE_COPY(qColadaH5TreeView);

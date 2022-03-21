@@ -299,6 +299,21 @@ int qColadaH5Item::getLinkType(){
   return d->linkType;
 }
 
+bool qColadaH5Item::isLinkTypeHard(){
+  Q_D(qColadaH5Item);
+  return static_cast<h5gt::LinkType>(d->linkType) == h5gt::LinkType::Hard;
+}
+
+bool qColadaH5Item::isLinkTypeSoft(){
+  Q_D(qColadaH5Item);
+  return static_cast<h5gt::LinkType>(d->linkType) == h5gt::LinkType::Soft;
+}
+
+bool qColadaH5Item::isLinkTypeExternal(){
+  Q_D(qColadaH5Item);
+  return static_cast<h5gt::LinkType>(d->linkType) == h5gt::LinkType::External;
+}
+
 QString qColadaH5Item::fullName2ItemData(const QString &fullName) {
   return fullName.mid(fullName.lastIndexOf("/") + 1);
 }

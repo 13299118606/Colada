@@ -63,8 +63,12 @@ public slots:
 
   virtual bool insertRows(int position, int rows,
                           const QModelIndex &parent = QModelIndex()) override;
+  bool insertRows(int position, int rows,
+                  qColadaH5Item *parentItem);
   virtual bool removeRows(int position, int rows,
                           const QModelIndex &parent = QModelIndex()) override;
+  bool removeRows(int position, int rows,
+                  qColadaH5Item *parentItem);
 
   virtual bool hasChildren(const QModelIndex &parent) const override;
 
@@ -111,6 +115,9 @@ public slots:
   bool removeH5Object(const QString& fileName, const QString& groupName);
   bool removeH5Object(const h5gt::Group& objG);
 
+  bool insertItem(qColadaH5Item* item, int row);
+  bool removeItem(qColadaH5Item* item);
+
   void releaseCheckState(qColadaH5Item *topLevelItem);
   void updateCheckState(qColadaH5Item *topLevelItem);
   void sendItemDataChanged(
@@ -142,6 +149,20 @@ public slots:
   virtual void onH5FileToBeRemoved(const QString& fileName);
   virtual void onH5ObjectToBeAdded(const QString& fileName, const QString& groupName);
   virtual void onH5ObjectToBeRemoved(const QString& fileName, const QString& groupName);
+
+  virtual bool canDropMimeData(
+      const QMimeData *data,
+      Qt::DropAction action,
+      int row,
+      int column,
+      const QModelIndex &parent) const override;
+
+  virtual bool dropMimeData(
+      const QMimeData *data,
+      Qt::DropAction action,
+      int row,
+      int column,
+      const QModelIndex &parent) override;
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

@@ -14,6 +14,7 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QDebug>
+#include <QDragEnterEvent>
 
 // CTK includes
 #include <ctkFileDialog.h>
@@ -43,14 +44,12 @@ void qColadaH5TreeViewPrivate::init() {
 
   q->setSortingEnabled(true);
   q->setSelectionMode(QAbstractItemView::ExtendedSelection);
-  //q->setDragEnabled(true);
-  //q->setAcceptDrops(true);
-  //q->setDropIndicatorShown(true);
-  //q->setDragDropMode(QAbstractItemView::InternalMove); // items are moved within tree only
   q->setContextMenuPolicy(Qt::CustomContextMenu);
   q->header()->setContextMenuPolicy(Qt::CustomContextMenu);
-  q->setDragDropMode(QAbstractItemView::DragOnly);
+  q->setDragDropMode(QAbstractItemView::DragDropMode::DragDrop);
   q->setDragEnabled(true);
+  q->setAcceptDrops(true);
+  q->setDropIndicatorShown(true);
 
   qColadaH5ItemDelegate *itDelegate = new qColadaH5ItemDelegate(q);
   q->setItemDelegate(itDelegate);
@@ -173,7 +172,6 @@ bool qColadaH5TreeView::addContainer(const QString &fileName) {
 
   qColadaH5Model *srcModel =
       static_cast<qColadaH5Model *>(proxyModel->sourceModel());
-
   if (!srcModel){
     qCritical() << Q_FUNC_INFO << "Source model not found";
     return false;
@@ -310,4 +308,10 @@ void qColadaH5TreeView::onCollapseSelected() {
   for (const auto& index : selectedModel->selectedIndexes()){
     this->collapse(index);
   }
+}
+
+void qColadaH5TreeView::dragEnterEvent(QDragEnterEvent *event)
+{
+  if (event->source() == this)
+    event->acceptProposedAction();
 }

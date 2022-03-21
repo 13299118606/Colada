@@ -88,6 +88,9 @@ public:
   /// h5gt LinkType
   void setLinkType(int val);
   int getLinkType();
+  bool isLinkTypeHard();
+  bool isLinkTypeSoft();
+  bool isLinkTypeExternal();
 
   static QString fullName2ItemData(const QString &fullName);
 
