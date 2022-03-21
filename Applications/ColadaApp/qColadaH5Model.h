@@ -112,11 +112,10 @@ public slots:
   bool insertH5Object(const h5gt::Group& objG, int row);
   bool addH5Object(const QString& fileName, const QString& groupName);
   bool addH5Object(const h5gt::Group& objG);
-  bool removeH5Object(const QString& fileName, const QString& groupName);
-  bool removeH5Object(const h5gt::Group& objG);
+  bool removeH5Object(const QString& fileName, const QString& groupName, bool unlink = false);
+  bool removeH5Object(const h5gt::Group& objG, bool unlink = false);
 
-  bool insertItem(qColadaH5Item* item, int row);
-  bool removeItem(qColadaH5Item* item);
+  bool removeItem(qColadaH5Item* item, bool unlink = false);
 
   void releaseCheckState(qColadaH5Item *topLevelItem);
   void updateCheckState(qColadaH5Item *topLevelItem);

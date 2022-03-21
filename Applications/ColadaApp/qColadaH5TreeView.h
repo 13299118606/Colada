@@ -37,6 +37,7 @@ public slots:
   virtual void onAddContainer();
   virtual void onRemoveContainer();
   virtual void onRefreshContainer();
+  virtual void onUnlinkObject();
   virtual void onExpandSelected();
   virtual void onCollapseSelected();
 

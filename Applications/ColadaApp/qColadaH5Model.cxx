@@ -565,7 +565,7 @@ bool qColadaH5Model::addH5Object(const h5gt::Group& objG)
 }
 
 bool qColadaH5Model::removeH5Object(
-    const QString& fileName, const QString& groupName)
+    const QString& fileName, const QString& groupName, bool unlink)
 {
   if (fileName.isEmpty() || groupName.isEmpty())
     return false;
@@ -581,44 +581,21 @@ bool qColadaH5Model::removeH5Object(
       return false;
 
     h5gt::Group objG = file.getGroup(groupName.toStdString());
-    return removeH5Object(objG);
+    return removeH5Object(objG, unlink);
   } catch (h5gt::Exception& err) {
     qCritical() << Q_FUNC_INFO << err.what();
     return false;
   }
 }
 
-bool qColadaH5Model::qColadaH5Model::removeH5Object(const h5gt::Group& objG)
+bool qColadaH5Model::qColadaH5Model::removeH5Object(
+    const h5gt::Group& objG, bool unlink)
 {
   qColadaH5Item* item = this->findItem(objG);
-  if (!item)
-    return false;
-
-  qColadaH5Item* parentItem = item->getParent();
-  if (!parentItem)
-    return false;
-
-  QModelIndex parentIndex = this->getIndex(parentItem);
-  if (!parentIndex.isValid())
-    return false;
-
-  return this->removeRow(item->getRow(), parentIndex);
+  return this->removeItem(item, unlink);
 }
 
-bool qColadaH5Model::insertItem(qColadaH5Item* item, int row)
-{
-  if (!item)
-    return false;
-
-  qColadaH5Item* parentItem = item->getParent();
-  if (!parentItem)
-    return false;
-
-  QModelIndex parentIndex = getIndex(parentItem);
-  return insertRows(row, 1, parentIndex);
-}
-
-bool qColadaH5Model::removeItem(qColadaH5Item* item)
+bool qColadaH5Model::removeItem(qColadaH5Item* item, bool unlink)
 {
   if (!item)
     return false;
@@ -629,7 +606,21 @@ bool qColadaH5Model::removeItem(qColadaH5Item* item)
     return false;
 
   QModelIndex parentIndex = getIndex(parentItem);
-  return removeRow(row, parentIndex);
+  if (!removeRow(row, parentIndex))
+    return false;
+
+  if (unlink){
+    if (parentItem->isGeoContainer()){
+      h5gt::File parentFile = parentItem->getGeoContainer()->getH5File();
+      if (parentFile.exist(item->data().toStdString()))
+        parentFile.unlink(item->data().toStdString());
+    } else if (parentItem->isGeoObject()){
+      h5gt::Group parentGroup = parentItem->getGeoObject()->getObjG();
+      if (parentGroup.exist(item->data().toStdString()))
+        parentGroup.unlink(item->data().toStdString());
+    }
+  }
+  return true;
 }
 
 void qColadaH5Model::releaseCheckState(qColadaH5Item *topLevelItem) {
@@ -985,7 +976,7 @@ bool qColadaH5Model::dropMimeData(
   if (!parentFileOpt->hasObject(newObjectName, h5gt::ObjectType::Group))
     return false;
 
-  if (!removeItem(item))
+  if (!removeItem(item, false))
     return false;
 
   h5gt::Group group = parentFileOpt->getGroup(newObjectName);
