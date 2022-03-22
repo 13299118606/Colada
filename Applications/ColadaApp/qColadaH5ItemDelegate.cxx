@@ -3,6 +3,7 @@
 #include "qColadaH5ItemDelegate_p.h"
 #include "qColadaH5Item.h"
 #include "qColadaH5ProxyModel.h"
+#include "qColadaH5Model.h"
 #include "qREValidator.h"
 #include "util.h"
 
@@ -51,10 +52,13 @@ QWidget *qColadaH5ItemDelegate::createEditor(QWidget *parent,
   if (!proxyModel)
     return lineEditor;
 
+  qColadaH5Model* model = qobject_cast<qColadaH5Model*>(proxyModel->sourceModel());
+  if (!model)
+    return lineEditor;
+
   QModelIndex srcIndex = proxyModel->mapToSource(index);
-  qColadaH5Item *item =
-      static_cast<qColadaH5Item *>(srcIndex.internalPointer());
-  if (item->isRoot())
+  qColadaH5Item *item = model->itemFromIndex(srcIndex);
+  if (!item || item->isRoot())
     return lineEditor;
 
   QStringList nameQList;
@@ -66,13 +70,13 @@ QWidget *qColadaH5ItemDelegate::createEditor(QWidget *parent,
   } else if (item->isGeoObject()) {
     h5gt::Group group = item->getGeoObject()->getObjG();
     qColadaH5Item *parentItem = item->getParent();
-    if (item->isGeoContainer()) {
+    if (parentItem && parentItem->isGeoContainer()) {
       h5gt::File parentFile = parentItem->getGeoContainer()->getH5File();
       std::vector<std::string> nameList = parentFile.listObjectNames();
       nameQList.reserve(nameList.size());
       for (auto &name : nameList)
         nameQList.append(QString::fromStdString(name));
-    } else if (item->isGeoObject()) {
+    } else if (parentItem && parentItem->isGeoObject()) {
       h5gt::Group parentGroup = parentItem->getGeoObject()->getObjG();
       std::vector<std::string> nameList = parentGroup.listObjectNames();
       nameQList.reserve(nameList.size());

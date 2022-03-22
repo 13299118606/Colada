@@ -51,6 +51,8 @@ void qColadaH5TreeViewPrivate::init() {
   q->setAcceptDrops(true);
   q->setDropIndicatorShown(true);
 
+//  q->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
   qColadaH5ItemDelegate *itDelegate = new qColadaH5ItemDelegate(q);
   q->setItemDelegate(itDelegate);
 
@@ -138,6 +140,10 @@ void qColadaH5TreeView::fillTreeViewMenu(QMenu *menu, const QPoint &pos) {
           &qColadaH5TreeView::onRefreshContainer);
   menu->addSeparator();
 
+  QAction *renameAction = menu->addAction("Rename object");
+  renameAction->setData(pos);
+  connect(renameAction, &QAction::triggered, this,
+          &qColadaH5TreeView::onRenameObject);
   QAction *unlinkAction = menu->addAction("Unlink object");
   connect(unlinkAction, &QAction::triggered, this,
           &qColadaH5TreeView::onUnlinkObject);
@@ -282,6 +288,11 @@ void qColadaH5TreeView::onRefreshContainer() {
           QString::fromStdString(
             item->getGeoContainer()->getH5File().getFileName()));
   }
+}
+
+void qColadaH5TreeView::onRenameObject(){
+  Q_D(qColadaH5TreeView);
+  this->edit(currentIndex());
 }
 
 void qColadaH5TreeView::onUnlinkObject() {

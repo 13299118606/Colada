@@ -173,11 +173,17 @@ bool qColadaH5Model::setData(
   qColadaH5Item *item = itemFromIndex(index);
   if (role == Qt::EditRole) {
     bool result = item->setData(value.toString());
-    emit dataChanged(index, index, {Qt::EditRole});
+    if (result){
+      updateItemsCheckState({item});
+      emit dataChanged(index, index, {Qt::EditRole});
+    }
     return result;
   } else if (role == Qt::DisplayRole) {
     bool result = item->setData(value.toString());
-    emit dataChanged(index, index, {Qt::DisplayRole});
+    if (result){
+      updateItemsCheckState({item});
+      emit dataChanged(index, index, {Qt::DisplayRole});
+    }
     return result;
   } else if (role == Qt::CheckStateRole) {
 //    item->setCheckState(static_cast<Qt::CheckState>(value.toInt()));
@@ -254,6 +260,9 @@ bool qColadaH5Model::removeRows(int position, int rows,
 }
 
 bool qColadaH5Model::hasChildren(const QModelIndex &parent) const {
+  if (parent.flags().testFlag(Qt::ItemNeverHasChildren))
+    return false;
+
   qColadaH5Item *item = itemFromIndex(parent);
   return item ? item->hasChildren() : false;
 }
@@ -281,8 +290,17 @@ Qt::ItemFlags qColadaH5Model::flags(const QModelIndex &index) const {
   if (!index.isValid())
     return Qt::NoItemFlags;
 
-  return Qt::ItemIsEditable | Qt::ItemIsUserCheckable |
-         QAbstractItemModel::flags(index);
+  Qt::ItemFlags flags =
+      Qt::ItemIsSelectable |
+      Qt::ItemIsEnabled |
+      Qt::ItemIsDragEnabled |
+      Qt::ItemIsDropEnabled;
+
+  qColadaH5Item *item = itemFromIndex(index);
+  if (item && item->isGeoObject())
+    flags |= Qt::ItemIsEditable;
+
+  return flags;
 }
 
 QModelIndex qColadaH5Model::getIndex(qColadaH5Item *item) const {
@@ -730,25 +748,32 @@ void qColadaH5Model::setCheckStateForItemStair(
   }
 }
 
-void qColadaH5Model::initItemsCheckState(const QVector<qColadaH5Item*>& items)
+void qColadaH5Model::updateItemsCheckState(const QVector<qColadaH5Item*>& items)
 {
   Q_D(qColadaH5Model);
   std::vector<vtkMRMLNode*> nodes;
   d->app->mrmlScene()->GetNodesByClass("vtkMRMLDisplayableNode", nodes);
-  for (vtkMRMLNode* node : nodes){
-    std::optional<h5gt::Group> nodeGroupOpt = h5GroupFromNode(node);
-    if (!nodeGroupOpt.has_value())
+  for (qColadaH5Item* item : items){
+    H5BaseObject* obj = item->getGeoObject();
+    if (!obj)
       continue;
 
-    for (qColadaH5Item* item : items){
-      H5BaseObject* obj = item->getGeoObject();
-      if (!obj)
+    bool nodeFound = false;
+    for (vtkMRMLNode* node : nodes){
+      std::optional<h5gt::Group> nodeGroupOpt = h5GroupFromNode(node);
+      if (!nodeGroupOpt.has_value())
         continue;
 
       if (obj->getObjG() == nodeGroupOpt.value()){
         item->setCheckState(Qt::Checked);
+        nodeFound = true;
         break;
       }
+    }
+
+    // we need to uncheck item if there is no appropriate node found
+    if (!nodeFound && item->checkState()){
+      item->setCheckState(Qt::Unchecked);
     }
   }
 }

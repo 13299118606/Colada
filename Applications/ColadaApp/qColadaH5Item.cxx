@@ -126,14 +126,28 @@ QString qColadaH5Item::data() const {
 
 bool qColadaH5Item::setData(const QString &newItemData) {
   Q_D(qColadaH5Item);
-  if (isGeoObject()) {
-    H5BaseObject *obj = getGeoObject();
-    h5gt::File file = obj->getH5File();
-    h5gt::Group group = obj->getObjG();
-    QString currentPath = QString::fromStdString(group.getPath());
-    QString parentPath = currentPath.left(currentPath.lastIndexOf("/"));
-    file.rename(group.getPath(), parentPath.toStdString() + "/" + newItemData.toStdString());
-    file.flush();
+  qColadaH5Item* parent = getParent();
+  if (!parent)
+    return false;
+
+  QString oldItemData = this->data();
+  if (parent->isGeoContainer() && this->isGeoObject()){
+    h5gt::File parentFile = parent->getGeoContainer()->getH5File();
+    if (!parentFile.exist(oldItemData.toStdString()) ||
+        parentFile.exist(newItemData.toStdString()))
+      return false;
+
+    parentFile.rename(oldItemData.toStdString(), newItemData.toStdString());
+    parentFile.flush();
+    return true;
+  } else if (parent->isGeoObject() && this->isGeoObject()){
+    h5gt::Group parentGroup = parent->getGeoObject()->getObjG();
+    if (!parentGroup.exist(oldItemData.toStdString()) ||
+        parentGroup.exist(newItemData.toStdString()))
+      return false;
+
+    parentGroup.rename(oldItemData.toStdString(), newItemData.toStdString());
+    parentGroup.flush();
     return true;
   }
   return false;
