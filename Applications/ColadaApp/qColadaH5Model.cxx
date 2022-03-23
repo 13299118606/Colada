@@ -619,6 +619,7 @@ bool qColadaH5Model::removeItem(qColadaH5Item* item, bool unlink)
     return false;
 
   int row = item->getRow();
+  QString itemData = item->data(); // item will be destroyed after removing row
   qColadaH5Item* parentItem = item->getParent();
   if (!parentItem)
     return false;
@@ -627,15 +628,20 @@ bool qColadaH5Model::removeItem(qColadaH5Item* item, bool unlink)
   if (!removeRow(row, parentIndex))
     return false;
 
+  // item is already destroyed here
   if (unlink){
     if (parentItem->isGeoContainer()){
       h5gt::File parentFile = parentItem->getGeoContainer()->getH5File();
-      if (parentFile.exist(item->data().toStdString()))
-        parentFile.unlink(item->data().toStdString());
+      if (parentFile.exist(itemData.toStdString())){
+        parentFile.unlink(itemData.toStdString());
+        parentFile.flush();
+      }
     } else if (parentItem->isGeoObject()){
       h5gt::Group parentGroup = parentItem->getGeoObject()->getObjG();
-      if (parentGroup.exist(item->data().toStdString()))
-        parentGroup.unlink(item->data().toStdString());
+      if (parentGroup.exist(itemData.toStdString())){
+        parentGroup.unlink(itemData.toStdString());
+        parentGroup.flush();
+      }
     }
   }
   return true;
