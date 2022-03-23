@@ -10,16 +10,19 @@
 // Qt includes
 #include <QStringList>
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 qColadaH5ItemPrivate::qColadaH5ItemPrivate(qColadaH5Item &q) : q_ptr(&q) {}
 
 qColadaH5ItemPrivate::~qColadaH5ItemPrivate() {}
 
-qColadaH5Item::qColadaH5Item(H5Base *itemData, qColadaH5Item *parent)
-    : d_ptr(new qColadaH5ItemPrivate(*this)) {
+qColadaH5Item::qColadaH5Item(const QString& itemData, qColadaH5Item *parent)
+  : d_ptr(new qColadaH5ItemPrivate(*this)) {
   Q_D(qColadaH5Item);
 
   d->parentItem = parent;
-  d->itemData = H5Base_ptr(itemData);
+  d->itemData = itemData;
 }
 
 qColadaH5Item::~qColadaH5Item() {
@@ -56,34 +59,68 @@ void qColadaH5Item::appendChildren(QVector<qColadaH5Item *> itemList) {
   d->childItems.append(itemList);
 }
 
-bool qColadaH5Item::insertChild(qColadaH5Item *item, int position) {
+void qColadaH5Item::insertChild(qColadaH5Item *item, int position) {
   Q_D(qColadaH5Item);
-  if (position < 0 || position > d->childItems.size())
-    return false;
+  if (position < 0)
+    position = 0;
+
+  if (position > d->childItems.size())
+    position = d->childItems.size();
 
   d->childItems.insert(position, item);
-  return true;
 }
 
-bool qColadaH5Item::removeChild(int position) {
+void qColadaH5Item::removeChild(int position, bool destroy) {
   Q_D(qColadaH5Item);
-  if (position < 0 || position >= d->childItems.size())
-    return false;
+  if (position < 0)
+    position = 0;
 
-  delete d->childItems.takeAt(position);
+  if (position > d->childItems.size())
+    position = d->childItems.size();
 
-  return true;
-}
-
-bool qColadaH5Item::removeChildren(int position, int count) {
-  Q_D(qColadaH5Item);
-  if (position < 0 || position + count > d->childItems.size())
-    return false;
-
-  for (int row = 0; row < count; ++row)
+  if (destroy){
     delete d->childItems.takeAt(position);
+  } else {
+    d->childItems.takeAt(position);
+  }
+}
 
+bool qColadaH5Item::removeChild(qColadaH5Item *item, bool destroy) {
+  if (!item)
+    return false;
+
+  int ind = getChildRow(item);
+  if (ind < 0)
+    return false;
+
+  removeChild(ind, destroy);
   return true;
+}
+
+bool qColadaH5Item::removeChildByName(const QString& name, bool destroy) {
+  int ind = getChildRow(name);
+  if (ind < 0)
+    return false;
+
+  removeChild(ind, destroy);
+  return true;
+}
+
+void qColadaH5Item::removeChildren(int position, int count, bool destroy) {
+  Q_D(qColadaH5Item);
+  if (position < 0)
+    position = 0;
+
+  if (position + count > d->childItems.size())
+    count = d->childItems.size() - position;
+
+  for (int i = 0; i < count; ++i){
+    if (destroy){
+      delete d->childItems.takeAt(position);
+    } else {
+      d->childItems.takeAt(position);
+    }
+  }
 }
 
 bool qColadaH5Item::hasChild(const QString &name) const {
@@ -96,72 +133,131 @@ bool qColadaH5Item::hasChild(const QString &name) const {
 }
 
 bool qColadaH5Item::hasChildren() const { 
-  Q_D(const qColadaH5Item);
-  if (isGeoContainer()) {
-    H5BaseContainer *obj = getGeoContainer();
-    return obj->getH5File().getNumberObjects() > 0;
-  } else if (isGeoObject()) {
-    H5BaseObject *obj = getGeoObject();
-    return obj->getObjG().getNumberObjects() > 0;
-  }
-
   return childCount() > 0;
 }
 
 QString qColadaH5Item::data() const {
   Q_D(const qColadaH5Item);
-  if (isGeoContainer()) {
-    H5BaseContainer *obj = getGeoContainer();
-    return QString::fromStdString(obj->getH5File().getFileName())
-        .split("/")
-        .takeLast();
-  } else if (isGeoObject()) {
-    H5BaseObject *obj = getGeoObject();
-    return QString::fromStdString(obj->getObjG().getPath())
-        .split("/")
-        .takeLast();
-   }
-  return "";
+  return d->itemData;
 }
 
 bool qColadaH5Item::setData(const QString &newItemData) {
   Q_D(qColadaH5Item);
+  if (isRoot()){
+    d->itemData = newItemData;
+    return true;
+  }
+
+  if (isContainer())
+    return false;
+
   qColadaH5Item* parent = getParent();
   if (!parent)
     return false;
 
+  auto opt = parent->getObjG();
+  if (opt.has_value())
+    return false;
+
   QString oldItemData = this->data();
-  if (parent->isGeoContainer() && this->isGeoObject()){
-    h5gt::File parentFile = parent->getGeoContainer()->getH5File();
-    if (!parentFile.exist(oldItemData.toStdString()) ||
-        parentFile.exist(newItemData.toStdString()))
-      return false;
+  if (!opt->hasObject(oldItemData.toStdString(), h5gt::ObjectType::Group) ||
+      opt->exist(newItemData.toStdString()))
+    return false;
 
-    parentFile.rename(oldItemData.toStdString(), newItemData.toStdString());
-    parentFile.flush();
-    return true;
-  } else if (parent->isGeoObject() && this->isGeoObject()){
-    h5gt::Group parentGroup = parent->getGeoObject()->getObjG();
-    if (!parentGroup.exist(oldItemData.toStdString()) ||
-        parentGroup.exist(newItemData.toStdString()))
-      return false;
-
-    parentGroup.rename(oldItemData.toStdString(), newItemData.toStdString());
-    parentGroup.flush();
-    return true;
-  }
-  return false;
+  opt->rename(oldItemData.toStdString(), newItemData.toStdString());
+  opt->flush();
+  return true;
 }
 
-qint64 qColadaH5Item::findRow(qColadaH5Item *item)
+int qColadaH5Item::getChildRow(qColadaH5Item *item)
 {
   Q_D(qColadaH5Item);
-  QVector<qColadaH5Item *>::Iterator it =
-      std::find(d->childItems.begin(), d->childItems.end(), item);
-  if (it == d->childItems.end())
-    return -1;
+  return d->childItems.indexOf(item);
+}
 
-  return std::distance(d->childItems.begin(), it); // should be the same as: it - itemList.begin()
+int qColadaH5Item::getChildRow(const QString& name)
+{
+  Q_D(qColadaH5Item);
+  for (int i = 0; i < d->childItems.count(); i++){
+    if (d->childItems[i]->data() == name)
+      return i;
+  }
+  return -1;
+}
+
+QString qColadaH5Item::getPath() const{
+  Q_D(const qColadaH5Item);
+  if (isRoot())
+    return QString();
+
+  if (isContainer())
+    return QString("/");
+
+  QString objPath = d->itemData;
+  qColadaH5Item* p = getParent();
+  while (p && !p->isContainer() && !p->isRoot()) {
+    objPath.prepend(p->data() + "/");
+    p = getParent();
+  }
+
+  return objPath;
+}
+
+qColadaH5Item *qColadaH5Item::getContainerItem() const
+{
+  if (this->isContainer())
+    return const_cast<qColadaH5Item*>(this);
+
+  qColadaH5Item* p = getParent();
+  while (p) {
+    if (p->isContainer())
+      return p;
+    p = getParent();
+  }
+  return nullptr;
+}
+
+std::optional<h5gt::File> qColadaH5Item::getH5File() const
+{
+  Q_D(const qColadaH5Item);
+  if (isRoot())
+    return std::nullopt;
+
+  if (this->isContainer()){
+    if (!fs::exists(d->itemData.toStdString()) ||
+        H5Fis_hdf5(d->itemData.toStdString().c_str()) <= 0)
+      return std::nullopt;
+
+    try {
+      h5gt::File h5File(
+            d->itemData.toStdString(),
+            h5gt::File::ReadWrite);
+
+      return h5File;
+    } catch (h5gt::Exception& err) {
+      return std::nullopt;
+    }
+  }
+
+  qColadaH5Item* cntItem = this->getContainerItem();
+  if (!cntItem)
+    return std::nullopt;
+  return cntItem->getH5File();
+}
+
+std::optional<h5gt::Group> qColadaH5Item::getObjG() const
+{
+  Q_D(const qColadaH5Item);
+  auto opt = getH5File();
+  if (!opt.has_value())
+    return std::nullopt;
+
+  QString objPath = this->getPath();
+  if (!objPath.isEmpty() &&
+      opt->hasObject(objPath.toStdString(), h5gt::ObjectType::Group))
+    return opt->getGroup(objPath.toStdString());
+
+  return std::nullopt;
 }
 
 qColadaH5Item *qColadaH5Item::getChildByName(
@@ -210,33 +306,12 @@ int qColadaH5Item::getColumn() const {
 
 QList<qColadaH5Item *> qColadaH5Item::getItemListToRoot() {
   QList<qColadaH5Item *> itemListToRoot;
-  if (isRoot())
-    return itemListToRoot;
-
   qColadaH5Item *item = this;
-  while (!item->isRoot()) {
-    itemListToRoot.push_back(item);
+  while (item) {
+    itemListToRoot.prepend(item);
     item = item->getParent();
   }
-  itemListToRoot.push_back(item);
-  /* we want ROOT to be 0 element */
-  std::reverse(itemListToRoot.begin(), itemListToRoot.end());
   return itemListToRoot;
-}
-
-H5Base* qColadaH5Item::getItemData() const { 
-  Q_D(const qColadaH5Item);
-  return d->itemData.get();
-}
-
-H5BaseContainer* qColadaH5Item::getGeoContainer() const {
-  Q_D(const qColadaH5Item);
-  return dynamic_cast<H5BaseContainer *>(d->itemData.get());
-}
-
-H5BaseObject* qColadaH5Item::getGeoObject() const {
-  Q_D(const qColadaH5Item);
-  return dynamic_cast<H5BaseObject *>(d->itemData.get());
 }
 
 bool qColadaH5Item::setChildren(QVector<qColadaH5Item *> childItems) {
@@ -263,26 +338,29 @@ void qColadaH5Item::setMapped(bool val) {
 
 bool qColadaH5Item::isRoot() const {
   Q_D(const qColadaH5Item);
-  if (d->itemData == nullptr && d->parentItem == nullptr)
+  return !d->parentItem;
+}
+
+bool qColadaH5Item::isContainer() const{
+  Q_D(const qColadaH5Item);
+  if (!isRoot() &&
+      getParent() &&
+      getParent()->isRoot())
     return true;
 
   return false;
 }
 
-bool qColadaH5Item::isGeoContainer() const {
-  Q_D(const qColadaH5Item);
-  if (dynamic_cast<H5BaseContainer *>(d->itemData.get()))
-    return true;
+bool qColadaH5Item::isObject() const{
+  auto opt = getH5File();
+  if (!opt.has_value())
+    return false;
 
-  return false;
-}
+  QString objPath = getPath();
+  if (!objPath.isEmpty() || objPath == "/")
+    return false;
 
-bool qColadaH5Item::isGeoObject() const {
-  Q_D(const qColadaH5Item);
-  if (dynamic_cast<H5BaseObject *>(d->itemData.get()))
-    return true;
-
-  return false;
+  return opt->hasObject(objPath.toStdString(), h5gt::ObjectType::Group);
 }
 
 Qt::CheckState qColadaH5Item::checkState() const {
@@ -305,31 +383,19 @@ bool qColadaH5Item::isMapped() const {
 
 int qColadaH5Item::getLinkType(){
   Q_D(qColadaH5Item);
-  if (!this->isGeoObject() && !this->isGeoContainer())
+  QString objPath = getPath();
+  if (objPath.isEmpty())
     return -1;
 
-  if (this->isGeoContainer())
+  if (objPath == "/")
     return static_cast<int>(h5gt::LinkType::Hard);
 
-  if (!d->parentItem)
+  auto opt = getH5File();
+  if (!opt.has_value() ||
+      opt->hasObject(objPath.toStdString(), h5gt::ObjectType::Group))
     return -1;
 
-  std::string objName = data().toStdString();
-  if (d->parentItem->isGeoContainer()){
-    h5gt::File file = d->parentItem->getGeoContainer()->getH5File();
-    if (!file.exist(objName))
-      return -1;
-
-    return static_cast<int>(file.getLinkType(objName));
-  } else if (d->parentItem->isGeoObject()){
-    h5gt::Group group = d->parentItem->getGeoObject()->getObjG();
-    if (!group.exist(objName))
-      return -1;
-
-    return static_cast<int>(group.getLinkType(objName));
-  } else {
-    return -1;
-  }
+  return static_cast<int>(opt->getLinkType(objPath.toStdString()));
 }
 
 bool qColadaH5Item::isLinkTypeHard(){
@@ -347,23 +413,14 @@ bool qColadaH5Item::isLinkTypeExternal(){
   return static_cast<h5gt::LinkType>(getLinkType()) == h5gt::LinkType::External;
 }
 
-QString qColadaH5Item::fullName2ItemData(const QString &fullName) {
-  return fullName.mid(fullName.lastIndexOf("/") + 1);
-}
-
 void qColadaH5Item::write(QDataStream &out) const
 {
   Q_D(const qColadaH5Item);
-  if (isGeoContainer()) {
-    H5BaseContainer *obj = getGeoContainer();
-    QString fileName = QString::fromStdString(obj->getH5File().getFileName());
-    out << fileName << QString("");
-  } else if (isGeoObject()) {
-    H5BaseObject *obj = getGeoObject();
-    QString fileName = QString::fromStdString(obj->getH5File().getFileName());
-    QString objName = QString::fromStdString(obj->getFullName());
-    out << fileName << objName;
-  }
+  auto opt = getH5File();
+  if (!opt.has_value())
+    return;
+
+  out << QString::fromStdString(opt->getFileName()) << this->getPath();
 }
 
 QDataStream &operator<<(QDataStream &out, const qColadaH5Item &item)
@@ -378,12 +435,18 @@ bool qColadaH5Item::isSame(qColadaH5Item* another){
 
 bool qColadaH5Item::operator==(const qColadaH5Item &another) const {
   Q_D(const qColadaH5Item);
-  if (isGeoContainer() && another.isGeoContainer())
-    return *getGeoContainer() == *another.getGeoContainer();
-  else if (isGeoObject() && another.isGeoObject())
-    return *getGeoObject() == *another.getGeoObject();
+  if (this->isRoot() && another.isRoot())
+    return this->data() == another.data();
 
-  return false;
+  auto thisFile_opt = getH5File();
+  auto anotherFile_opt = another.getH5File();
+  if (!thisFile_opt.has_value() || !anotherFile_opt.has_value())
+    return false;
+
+  if (thisFile_opt.value() != anotherFile_opt.value())
+    return false;
+
+  return this->getPath() == another.getPath();
 }
 
 bool qColadaH5Item::operator!=(const qColadaH5Item &another) const {

@@ -69,6 +69,9 @@ public slots:
                           const QModelIndex &parent = QModelIndex()) override;
   bool removeRows(int position, int rows,
                   qColadaH5Item *parentItem);
+  bool moveItem(qColadaH5Item *parentItem,
+                qColadaH5Item *item,
+                int position, bool moveH5Link = true);
 
   virtual bool hasChildren(const QModelIndex &parent) const override;
 
@@ -78,7 +81,6 @@ public slots:
   virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
 
   QModelIndex getIndex(qColadaH5Item *item) const;
-  QList<qColadaH5Item *> getItemListToRoot(qColadaH5Item *item) const;
   QList<QModelIndex> getIndexListToRoot(qColadaH5Item *item) const;
   QList<QModelIndex>
   getIndexListToRoot(qColadaH5Item *item,
@@ -92,10 +94,13 @@ public slots:
 
   /// brief Needs to be reimplemented by subclasses
   virtual bool canAddH5File(const h5gt::File& file);
+  virtual bool canAddH5File(const QString& fileName);
   virtual bool canAddH5Object(const h5gt::Group& objG);
+  virtual bool canAddH5Object(const QString& fileName, const QString& objName);
 
-  qColadaH5Item* findItem(const QString &fullName);
+  qColadaH5Item* findItem(const QString &fileName);
   qColadaH5Item* findItem(const h5gt::File& file);
+  qColadaH5Item* findItem(const QString &fileName, const QString& objName, bool fetch = true);
   qColadaH5Item* findItem(const h5gt::Group& objG, bool fetch = true);
   qColadaH5Item* findItem(vtkMRMLNode* node, bool fetch = true);
 
@@ -108,11 +113,11 @@ public slots:
   bool removeH5File(const h5gt::File& file);
 
   /// if 'row < 0' prepend; if 'row > childCount()' append
-  bool insertH5Object(const QString& fileName, const QString& groupName, int row);
+  bool insertH5Object(const QString& fileName, const QString& objName, int row);
   bool insertH5Object(const h5gt::Group& objG, int row);
-  bool addH5Object(const QString& fileName, const QString& groupName);
+  bool addH5Object(const QString& fileName, const QString& objName);
   bool addH5Object(const h5gt::Group& objG);
-  bool removeH5Object(const QString& fileName, const QString& groupName, bool unlink = false);
+  bool removeH5Object(const QString& fileName, const QString& objName, bool unlink = false);
   bool removeH5Object(const h5gt::Group& objG, bool unlink = false);
 
   bool removeItem(qColadaH5Item* item, bool unlink = false);
@@ -147,8 +152,8 @@ public slots:
 
   virtual void onH5FileToBeAdded(const QString& fileName);
   virtual void onH5FileToBeRemoved(const QString& fileName);
-  virtual void onH5ObjectToBeAdded(const QString& fileName, const QString& groupName);
-  virtual void onH5ObjectToBeRemoved(const QString& fileName, const QString& groupName);
+  virtual void onH5ObjectToBeAdded(const QString& fileName, const QString& objName);
+  virtual void onH5ObjectToBeRemoved(const QString& fileName, const QString& objName);
 
   virtual bool canDropMimeData(
       const QMimeData *data,
@@ -165,14 +170,17 @@ public slots:
       const QModelIndex &parent) override;
 
   /// Fill all args and return 'true' if item is able to be moved
-  bool canDropMimeDataAndPrepareDataBeforeDrop(
+  bool canDropMimeDataAndPrepare(
       const QMimeData *data,
       int row,
       int column,
       const QModelIndex &parent,
       qColadaH5Item*& parentItem,
-      qColadaH5Item*& item,
-      std::string& newObjectName);
+      qColadaH5Item*& item);
+
+  /// Check if the item can be moved to the new parent `parentItem`.
+  /// If `moveH5Link` then also check if it is possible to rename hdf5 link
+  bool canBeMoved(qColadaH5Item*& parentItem, qColadaH5Item*& item, bool moveH5Link = true);
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

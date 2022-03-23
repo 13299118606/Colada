@@ -11,6 +11,10 @@
 // Colada includes
 #include "qColadaAppExport.h"
 
+// h5gt includes
+#include <h5gt/H5File.hpp>
+#include <h5gt/H5Group.hpp>
+
 class qColadaH5ItemPrivate;
 class H5Base;
 class H5BaseContainer;
@@ -19,10 +23,11 @@ class H5BaseObject;
 class Q_COLADA_APP_EXPORT qColadaH5Item {
 public:
   /// \brief Used in qColadaH5Model. To initialize `rootItem`
-  /// pass `nullptr` to `itemData` and `parent`
+  /// pass `nullptr` as `parent`.
+  /// To initialize file pass `rootItem` as `parent`.
   /// \param itemData
   /// \param parent
-  explicit qColadaH5Item(H5Base *itemData, qColadaH5Item *parent);
+  explicit qColadaH5Item(const QString& itemData, qColadaH5Item *parent);
   virtual ~qColadaH5Item();
 
   int childCount() const;
@@ -35,9 +40,16 @@ public:
   void appendChild(qColadaH5Item *item);
   void appendChildren(QVector<qColadaH5Item*> itemList);
 
-  bool insertChild(qColadaH5Item *item, int position);
-  bool removeChild(int position);
-  bool removeChildren(int position, int count);
+  /// \brief insertChild if position is out of bounds then prepend/append
+  /// \param item
+  /// \param position
+  void insertChild(qColadaH5Item *item, int position);
+  void removeChild(int position, bool destroy = false);
+  void removeChildren(int position, int count, bool destroy = false);
+
+  /// return bool in case the item is not found
+  bool removeChild(qColadaH5Item *item, bool destroy = false);
+  bool removeChildByName(const QString& name, bool destroy = false);
 
   /// \brief hasChild
   /// \param name is a visible name (itemData)
@@ -48,7 +60,15 @@ public:
   QString data() const;
   bool setData(const QString &newItemData);
 
-  qint64 findRow(qColadaH5Item *item);
+  int getChildRow(qColadaH5Item *item);
+  int getChildRow(const QString& name);
+
+  /// \brief getPath retrieve the path within container
+  /// \return
+  QString getPath() const;
+  qColadaH5Item *getContainerItem() const;
+  std::optional<h5gt::File> getH5File() const;
+  std::optional<h5gt::Group> getObjG() const;
 
   /// \brief returns nullptr if not exists
   /// \param name
@@ -61,13 +81,8 @@ public:
   int getColumn() const;
   QList<qColadaH5Item *> getItemListToRoot();
 
-  H5Base *getItemData() const;
-  H5BaseContainer *getGeoContainer() const;
-  H5BaseObject *getGeoObject() const;
-
   bool setChildren(QVector<qColadaH5Item *> childItems);
   bool setParent(qColadaH5Item *parentItem);
-  // I NEED TO IMPLEMENT THIS CORRECTLY
   void setCheckState(Qt::CheckState checkState);
   /// \brief used in models in canFetchMore() function
   /// \param val
@@ -75,8 +90,8 @@ public:
   void setMapped(bool val);
 
   bool isRoot() const;
-  bool isGeoContainer() const;
-  bool isGeoObject() const;
+  bool isContainer() const;
+  bool isObject() const;
 
   // I NEED TO IMPLEMENT THIS CORRECTLY
   Qt::CheckState checkState() const;
@@ -90,8 +105,6 @@ public:
   bool isLinkTypeHard();
   bool isLinkTypeSoft();
   bool isLinkTypeExternal();
-
-  static QString fullName2ItemData(const QString &fullName);
 
   // only write to stream is possible. We cant read from stream and set the data to item
   void write(QDataStream &out) const;

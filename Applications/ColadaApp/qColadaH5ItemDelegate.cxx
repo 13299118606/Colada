@@ -62,23 +62,19 @@ QWidget *qColadaH5ItemDelegate::createEditor(QWidget *parent,
     return lineEditor;
 
   QStringList nameQList;
-  if (item->isGeoContainer()) {
-    QFileInfo fi(QString::fromStdString(
-        item->getGeoContainer()->getH5File().getFileName()));
-    QDir h5Dir(fi.absolutePath());
-    nameQList = h5Dir.entryList();
-  } else if (item->isGeoObject()) {
-    h5gt::Group group = item->getGeoObject()->getObjG();
+  if (item->isContainer()) {
+    auto h5FileOpt = item->getH5File();
+    if (h5FileOpt.has_value()){
+      QFileInfo fi(QString::fromStdString(
+          h5FileOpt->getFileName()));
+      QDir h5Dir(fi.absolutePath());
+      nameQList = h5Dir.entryList();
+    }
+  } else if (item->isObject() && item->getParent()) {
     qColadaH5Item *parentItem = item->getParent();
-    if (parentItem && parentItem->isGeoContainer()) {
-      h5gt::File parentFile = parentItem->getGeoContainer()->getH5File();
-      std::vector<std::string> nameList = parentFile.listObjectNames();
-      nameQList.reserve(nameList.size());
-      for (auto &name : nameList)
-        nameQList.append(QString::fromStdString(name));
-    } else if (parentItem && parentItem->isGeoObject()) {
-      h5gt::Group parentGroup = parentItem->getGeoObject()->getObjG();
-      std::vector<std::string> nameList = parentGroup.listObjectNames();
+    auto h5GroupOpt = parentItem->getObjG();
+    if (h5GroupOpt.has_value()){
+      std::vector<std::string> nameList = h5GroupOpt->listObjectNames();
       nameQList.reserve(nameList.size());
       for (auto &name : nameList)
         nameQList.append(QString::fromStdString(name));

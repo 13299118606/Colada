@@ -253,12 +253,15 @@ void qColadaH5TreeView::onRemoveContainer() {
     if (!item)
       continue;
 
-    if (!item->isGeoContainer())
+    auto fileOpt = item->getH5File();
+    if (!fileOpt.has_value())
       continue;
 
-    fileNames.append(
-          QString::fromStdString(
-            item->getGeoContainer()->getH5File().getFileName()));
+    QString fileName = QString::fromStdString(fileOpt->getFileName());
+    if (fileNames.contains(fileName))
+      continue;
+
+    fileNames.append(fileName);
   }
 
   for (const auto& name : fileNames){
@@ -275,18 +278,28 @@ void qColadaH5TreeView::onRefreshContainer() {
     return;
   }
 
+  // find only unique names so there is no need to the same container multiple times
+  QStringList fileNames;
+  fileNames.reserve(selectedModel->selectedIndexes().count());
   for (const auto& index : selectedModel->selectedIndexes()){
     QModelIndex srcIndex = proxy->mapToSource(index);
     qColadaH5Item* item = srcModel->itemFromIndex(srcIndex);
     if (!item)
       continue;
 
-    if (!item->isGeoContainer())
+    auto fileOpt = item->getH5File();
+    if (!fileOpt.has_value())
       continue;
 
-    this->refreshContainer(
-          QString::fromStdString(
-            item->getGeoContainer()->getH5File().getFileName()));
+    QString fileName = QString::fromStdString(fileOpt->getFileName());
+    if (fileNames.contains(fileName))
+      continue;
+
+    fileNames.append(fileName);
+  }
+
+  for (const auto& name : fileNames){
+    this->refreshContainer(name);
   }
 }
 

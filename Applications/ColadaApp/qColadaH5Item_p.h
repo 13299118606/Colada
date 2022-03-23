@@ -11,6 +11,11 @@
 // Colada includes
 #include "qColadaH5Item.h"
 
+// h5gt includes
+#include <h5gt/H5File.hpp>
+
+#include <optional>
+
 class Q_COLADA_APP_EXPORT qColadaH5ItemPrivate {
   Q_DECLARE_PUBLIC(qColadaH5Item);
 
@@ -24,7 +29,7 @@ public:
 
 protected:
   QVector<qColadaH5Item *> childItems;
-  H5Base_ptr itemData = nullptr;
+  QString itemData;
   qColadaH5Item *parentItem = nullptr;
   bool mapped = false;
   Qt::CheckState checkState = Qt::Unchecked;
