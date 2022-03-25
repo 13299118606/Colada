@@ -58,6 +58,7 @@ public:
   bool hasChildren() const;
 
   QString data() const;
+  QString rawData() const;
   bool setData(const QString &newItemData);
 
   int getChildRow(qColadaH5Item *item);
@@ -92,6 +93,16 @@ public:
   bool isRoot() const;
   bool isContainer() const;
   bool isObject() const;
+  /// true if container or object exist within hdf5 file
+  bool exist() const;
+
+  void setObjectType(unsigned type);
+  void setChildCountInGroup(size_t n);
+  void setFlags(Qt::ItemFlags flags);
+
+  unsigned getObjectType() const;
+  size_t getChildCountInGroup() const;
+  Qt::ItemFlags getFlags() const;
 
   // I NEED TO IMPLEMENT THIS CORRECTLY
   Qt::CheckState checkState() const;
@@ -101,10 +112,11 @@ public:
   bool isMapped() const;
 
   /// h5gt LinkType
-  int getLinkType();
-  bool isLinkTypeHard();
-  bool isLinkTypeSoft();
-  bool isLinkTypeExternal();
+  void setLinkType(h5gt::LinkType linkType);
+  h5gt::LinkType getLinkType() const;
+  bool isLinkTypeHard() const;
+  bool isLinkTypeSoft() const;
+  bool isLinkTypeExternal() const;
 
   // only write to stream is possible. We cant read from stream and set the data to item
   void write(QDataStream &out) const;

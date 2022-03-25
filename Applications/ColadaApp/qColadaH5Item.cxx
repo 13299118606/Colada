@@ -40,7 +40,7 @@ int qColadaH5Item::childNumber() const {
   if (d->parentItem)
     return d->parentItem->getChildren().indexOf(
         const_cast<qColadaH5Item *>(this));
-  return 0;
+  return -1;
 }
 
 int qColadaH5Item::rowCount() const { 
@@ -138,6 +138,13 @@ bool qColadaH5Item::hasChildren() const {
 
 QString qColadaH5Item::data() const {
   Q_D(const qColadaH5Item);
+  if (isContainer() && !d->itemData.isEmpty())
+    return d->itemData.split(QLatin1Char('/'), Qt::SkipEmptyParts).last();
+  return d->itemData;
+}
+
+QString qColadaH5Item::rawData() const {
+  Q_D(const qColadaH5Item);
   return d->itemData;
 }
 
@@ -197,7 +204,7 @@ QString qColadaH5Item::getPath() const{
   qColadaH5Item* p = getParent();
   while (p && !p->isContainer() && !p->isRoot()) {
     objPath.prepend(p->data() + "/");
-    p = getParent();
+    p = p->getParent();
   }
 
   return objPath;
@@ -212,37 +219,30 @@ qColadaH5Item *qColadaH5Item::getContainerItem() const
   while (p) {
     if (p->isContainer())
       return p;
-    p = getParent();
+    p = p->getParent();
   }
   return nullptr;
 }
 
 std::optional<h5gt::File> qColadaH5Item::getH5File() const
 {
-  Q_D(const qColadaH5Item);
-  if (isRoot())
-    return std::nullopt;
-
-  if (this->isContainer()){
-    if (!fs::exists(d->itemData.toStdString()) ||
-        H5Fis_hdf5(d->itemData.toStdString().c_str()) <= 0)
-      return std::nullopt;
-
-    try {
-      h5gt::File h5File(
-            d->itemData.toStdString(),
-            h5gt::File::ReadWrite);
-
-      return h5File;
-    } catch (h5gt::Exception& err) {
-      return std::nullopt;
-    }
-  }
-
   qColadaH5Item* cntItem = this->getContainerItem();
   if (!cntItem)
     return std::nullopt;
-  return cntItem->getH5File();
+
+  if (!fs::exists(cntItem->rawData().toStdString()) ||
+      H5Fis_hdf5(cntItem->rawData().toStdString().c_str()) <= 0)
+    return std::nullopt;
+
+  try {
+    h5gt::File h5File(
+          cntItem->rawData().toStdString(),
+          h5gt::File::ReadWrite);
+
+    return h5File;
+  } catch (h5gt::Exception& err) {
+    return std::nullopt;
+  }
 }
 
 std::optional<h5gt::Group> qColadaH5Item::getObjG() const
@@ -316,6 +316,10 @@ QList<qColadaH5Item *> qColadaH5Item::getItemListToRoot() {
 
 bool qColadaH5Item::setChildren(QVector<qColadaH5Item *> childItems) {
   Q_D(qColadaH5Item);
+  for (qColadaH5Item* item : d->childItems)
+    if (item)
+      delete item;
+
   d->childItems = childItems;
   return true;
 }
@@ -342,7 +346,6 @@ bool qColadaH5Item::isRoot() const {
 }
 
 bool qColadaH5Item::isContainer() const{
-  Q_D(const qColadaH5Item);
   if (!isRoot() &&
       getParent() &&
       getParent()->isRoot())
@@ -352,15 +355,55 @@ bool qColadaH5Item::isContainer() const{
 }
 
 bool qColadaH5Item::isObject() const{
+  return !isRoot() && !isContainer();
+}
+
+bool qColadaH5Item::exist() const{
+  if (!isRoot())
+    return true;
+
   auto opt = getH5File();
   if (!opt.has_value())
     return false;
 
+  if (isContainer())
+    return true;
+
   QString objPath = getPath();
-  if (!objPath.isEmpty() || objPath == "/")
+  if (!objPath.isEmpty())
     return false;
 
   return opt->hasObject(objPath.toStdString(), h5gt::ObjectType::Group);
+}
+
+void qColadaH5Item::setObjectType(unsigned objType){
+  Q_D(qColadaH5Item);
+  d->objectType = objType;
+}
+
+void qColadaH5Item::setChildCountInGroup(size_t n){
+  Q_D(qColadaH5Item);
+  d->childCountInGroup = n;
+}
+
+void qColadaH5Item::setFlags(Qt::ItemFlags flags){
+  Q_D(qColadaH5Item);
+  d->flags = flags;
+}
+
+unsigned qColadaH5Item::getObjectType() const{
+  Q_D(const qColadaH5Item);
+  return d->objectType;
+}
+
+size_t qColadaH5Item::getChildCountInGroup() const{
+  Q_D(const qColadaH5Item);
+  return d->childCountInGroup;
+}
+
+Qt::ItemFlags qColadaH5Item::getFlags() const{
+  Q_D(const qColadaH5Item);
+  return d->flags;
 }
 
 Qt::CheckState qColadaH5Item::checkState() const {
@@ -381,36 +424,29 @@ bool qColadaH5Item::isMapped() const {
   return d->mapped;
 }
 
-int qColadaH5Item::getLinkType(){
+void qColadaH5Item::setLinkType(h5gt::LinkType linkType){
   Q_D(qColadaH5Item);
-  QString objPath = getPath();
-  if (objPath.isEmpty())
-    return -1;
-
-  if (objPath == "/")
-    return static_cast<int>(h5gt::LinkType::Hard);
-
-  auto opt = getH5File();
-  if (!opt.has_value() ||
-      opt->hasObject(objPath.toStdString(), h5gt::ObjectType::Group))
-    return -1;
-
-  return static_cast<int>(opt->getLinkType(objPath.toStdString()));
+  d->linkType = linkType;
 }
 
-bool qColadaH5Item::isLinkTypeHard(){
-  Q_D(qColadaH5Item);
-  return static_cast<h5gt::LinkType>(getLinkType()) == h5gt::LinkType::Hard;
+h5gt::LinkType qColadaH5Item::getLinkType() const{
+  Q_D(const qColadaH5Item);
+  return d->linkType;
 }
 
-bool qColadaH5Item::isLinkTypeSoft(){
-  Q_D(qColadaH5Item);
-  return static_cast<h5gt::LinkType>(getLinkType()) == h5gt::LinkType::Soft;
+bool qColadaH5Item::isLinkTypeHard() const{
+  Q_D(const qColadaH5Item);
+  return d->linkType == h5gt::LinkType::Hard;
 }
 
-bool qColadaH5Item::isLinkTypeExternal(){
-  Q_D(qColadaH5Item);
-  return static_cast<h5gt::LinkType>(getLinkType()) == h5gt::LinkType::External;
+bool qColadaH5Item::isLinkTypeSoft() const{
+  Q_D(const qColadaH5Item);
+  return d->linkType == h5gt::LinkType::Soft;
+}
+
+bool qColadaH5Item::isLinkTypeExternal() const{
+  Q_D(const qColadaH5Item);
+  return d->linkType == h5gt::LinkType::External;
 }
 
 void qColadaH5Item::write(QDataStream &out) const

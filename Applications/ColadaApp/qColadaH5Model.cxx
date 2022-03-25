@@ -39,6 +39,7 @@ qColadaH5ModelPrivate::~qColadaH5ModelPrivate() {}
 void qColadaH5ModelPrivate::init(const QString &title) {
   Q_Q(qColadaH5Model);
   rootItem = new qColadaH5Item(nullptr, nullptr);
+  q->initItemToBeInserted(rootItem);
   headerData = title;
 
   app = qSlicerApplication::application();
@@ -139,7 +140,6 @@ QModelIndex qColadaH5Model::parent(const QModelIndex &child) const {
 
 int qColadaH5Model::rowCount(const QModelIndex &parent) const {
   const qColadaH5Item *parentItem = itemFromIndex(parent);
-
   return parentItem ? parentItem->rowCount() : 0;
 }
 
@@ -302,14 +302,16 @@ bool qColadaH5Model::hasChildren(const QModelIndex &parent) const {
     return false;
 
   qColadaH5Item *item = itemFromIndex(parent);
-  return item ? item->hasChildren() : false;
+  if (!item)
+    return false;
+
+  if (item->isRoot())
+    return item->hasChildren();
+
+  return item->getChildCountInGroup() > 0;
 }
 
 bool qColadaH5Model::canFetchMore(const QModelIndex &parent) const {
-  if (!parent.isValid()) {
-    return false;
-  }
-
   qColadaH5Item *item = itemFromIndex(parent);
   return !item->isMapped();
 }
@@ -328,17 +330,8 @@ Qt::ItemFlags qColadaH5Model::flags(const QModelIndex &index) const {
   if (!index.isValid())
     return Qt::NoItemFlags;
 
-  Qt::ItemFlags flags =
-      Qt::ItemIsSelectable |
-      Qt::ItemIsEnabled |
-      Qt::ItemIsDragEnabled |
-      Qt::ItemIsDropEnabled;
-
   qColadaH5Item *item = itemFromIndex(index);
-  if (item && item->isObject())
-    flags |= Qt::ItemIsEditable;
-
-  return flags;
+  return item ? item->getFlags() : Qt::NoItemFlags;
 }
 
 QModelIndex qColadaH5Model::getIndex(qColadaH5Item *item) const {
@@ -524,16 +517,25 @@ qColadaH5Item* qColadaH5Model::findItem(vtkMRMLNode* node, bool fetch)
   return nullptr;
 }
 
-bool qColadaH5Model::insertH5File(const QString &fileName, int row)
+qColadaH5Item* qColadaH5Model::insertH5File(const QString &fileName, int row)
 {
   Q_D(qColadaH5Model);
   if (!canAddH5File(fileName))
-    return false;
+    return nullptr;
 
-  h5gt::FileAccessProps fapl;
-  if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
-      H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
-    return false;
+  size_t childCountInGroup = 0;
+  try {
+    h5gt::FileAccessProps fapl;
+    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
+        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+      return nullptr;
+
+    h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
+    childCountInGroup = file.getNumberObjects();
+  } catch (h5gt::Exception& err) {
+    qCritical() << Q_FUNC_INFO << err.what();
+    return nullptr;
+  }
 
   if (row < 0)
     row = 0;
@@ -542,25 +544,27 @@ bool qColadaH5Model::insertH5File(const QString &fileName, int row)
     row = d->rootItem->childCount();
 
   qColadaH5Item *fileItem = new qColadaH5Item(fileName, d->rootItem);
+  fileItem->setChildCountInGroup(childCountInGroup);
+  initItemToBeInserted(fileItem);
   QModelIndex rootIndex = QModelIndex(); // index for ROOT
 
   beginInsertRows(rootIndex, row, row);
   d->rootItem->insertChild(fileItem, row);
   endInsertRows();
-  return true;
+  return fileItem;
 }
 
-bool qColadaH5Model::insertH5File(const h5gt::File& file, int row)
+qColadaH5Item* qColadaH5Model::insertH5File(const h5gt::File& file, int row)
 {
   return this->insertH5File(QString::fromStdString(file.getFileName()), row);
 }
 
-bool qColadaH5Model::addH5File(const QString &fileName)
+qColadaH5Item* qColadaH5Model::addH5File(const QString &fileName)
 {
   return this->insertH5File(fileName, std::numeric_limits<int>::max());
 }
 
-bool qColadaH5Model::addH5File(const h5gt::File& file) {
+qColadaH5Item* qColadaH5Model::addH5File(const h5gt::File& file) {
   return this->insertH5File(file, std::numeric_limits<int>::max());
 }
 
@@ -578,17 +582,15 @@ bool qColadaH5Model::removeH5File(const h5gt::File& file) {
   return false;
 }
 
-bool qColadaH5Model::insertH5Object(
+qColadaH5Item* qColadaH5Model::insertH5Object(
     const QString& fileName, const QString& objName, int row)
 {
   Q_D(qColadaH5Model);
-  if (!canAddH5Object(fileName, objName))
-    return false;
-
   qColadaH5Item* parentItem = findItem(fileName);
   if (!parentItem)
-    return false;
+    return nullptr;
 
+  qColadaH5Item *item = nullptr;
   QStringList names = objName.split(QLatin1Char('/'), Qt::SkipEmptyParts);
   for (const auto& name : names){
     qColadaH5Item* child = parentItem->getChildByName(name);
@@ -596,7 +598,17 @@ bool qColadaH5Model::insertH5Object(
       parentItem = child;
     } else {
       QModelIndex parentIndex = this->getIndex(parentItem);
-      qColadaH5Item *item = new qColadaH5Item(name, parentItem);
+      auto parentG = parentItem->getObjG();
+      if (!parentG.has_value() ||
+          !parentG->hasObject(name.toStdString(), h5gt::ObjectType::Group))
+        return nullptr;
+
+      auto objG = parentG->getGroup(name.toStdString());
+      item = new qColadaH5Item(name, parentItem);
+      item->setObjectType(static_cast<unsigned>(h5geo::getGeoObjectType(objG)));
+      item->setLinkType(parentG->getLinkType(name.toStdString()));
+      item->setChildCountInGroup(objG.getNumberObjects());
+      initItemToBeInserted(item);
       if (row < 0)
         row = 0;
 
@@ -609,24 +621,44 @@ bool qColadaH5Model::insertH5Object(
       parentItem = item;
     }
   }
-  return true;
+  return item;
 }
 
-bool qColadaH5Model::insertH5Object(const h5gt::Group& objG, int row)
+qColadaH5Item* qColadaH5Model::insertH5Object(const h5gt::Group& objG, int row)
 {
   return insertH5Object(QString::fromStdString(objG.getFileName()),
                         QString::fromStdString(objG.getPath()), row);
 }
 
-bool qColadaH5Model::addH5Object(
+qColadaH5Item* qColadaH5Model::addH5Object(
     const QString& fileName, const QString& objName)
 {
   return insertH5Object(fileName, objName, std::numeric_limits<int>::max());
 }
 
-bool qColadaH5Model::addH5Object(const h5gt::Group& objG)
+qColadaH5Item* qColadaH5Model::addH5Object(const h5gt::Group& objG)
 {
   return insertH5Object(objG, std::numeric_limits<int>::max());
+}
+
+void qColadaH5Model::initItemToBeInserted(qColadaH5Item* item) const
+{
+  if (!item)
+    return;
+
+  Qt::ItemFlags flags =
+      Qt::ItemIsSelectable |
+      Qt::ItemIsEnabled;
+
+  unsigned objType = item->getObjectType();
+  if (objType > 0){
+    flags |=
+        Qt::ItemIsUserCheckable |
+        Qt::ItemIsEditable |
+        Qt::ItemIsDragEnabled |
+        Qt::ItemIsDropEnabled;
+  }
+  item->setFlags(flags);
 }
 
 bool qColadaH5Model::removeH5Object(
@@ -805,6 +837,9 @@ void qColadaH5Model::updateItemsCheckState(const QVector<qColadaH5Item*>& items)
   std::vector<vtkMRMLNode*> nodes;
   d->app->mrmlScene()->GetNodesByClass("vtkMRMLDisplayableNode", nodes);
   for (qColadaH5Item* item : items){
+    if (!item)
+      continue;
+
     auto opt = item->getObjG();
     if (!opt.has_value())
       continue;
@@ -1053,10 +1088,6 @@ bool qColadaH5Model::canDropMimeDataAndPrepare(
   if (!data || !data->hasFormat(typeList.last()))
     return false;
 
-  qColadaH5Item* oldParentItem = item->getParent();
-  if (!oldParentItem)
-    return false;
-
   parentItem = this->itemFromIndex(parent);
   if (!parentItem)
     return false;
@@ -1070,6 +1101,10 @@ bool qColadaH5Model::canDropMimeDataAndPrepare(
 
   item = findItem(fileName, objectName);
   if (!item || !item->isObject() || parentItem->isSame(item))
+    return false;
+
+  qColadaH5Item* oldParentItem = item->getParent();
+  if (!oldParentItem)
     return false;
 
   return this->canBeMoved(parentItem, item, true);

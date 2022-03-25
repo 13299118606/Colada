@@ -33,6 +33,13 @@ protected:
   qColadaH5Item *parentItem = nullptr;
   bool mapped = false;
   Qt::CheckState checkState = Qt::Unchecked;
+
+  // to improve perfomance
+  unsigned objectType = 0;
+  // let linkType be as h5gt::LinkType member var as h5gt is included anyway
+  h5gt::LinkType linkType = h5gt::LinkType::Hard;
+  size_t childCountInGroup = 0;
+  Qt::ItemFlags flags;
 };
 
 #endif

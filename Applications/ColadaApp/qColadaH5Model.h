@@ -105,20 +105,23 @@ public slots:
   qColadaH5Item* findItem(vtkMRMLNode* node, bool fetch = true);
 
   /// if 'row < 0' prepend; if 'row > childCount()' append
-  bool insertH5File(const QString &fileName, int row);
-  bool insertH5File(const h5gt::File& file, int row);
-  bool addH5File(const QString &fileName);
-  bool addH5File(const h5gt::File& file);
+  qColadaH5Item* insertH5File(const QString &fileName, int row);
+  qColadaH5Item* insertH5File(const h5gt::File& file, int row);
+  qColadaH5Item* addH5File(const QString &fileName);
+  qColadaH5Item* addH5File(const h5gt::File& file);
   bool removeH5File(const QString &fileName);
   bool removeH5File(const h5gt::File& file);
 
   /// if 'row < 0' prepend; if 'row > childCount()' append
-  bool insertH5Object(const QString& fileName, const QString& objName, int row);
-  bool insertH5Object(const h5gt::Group& objG, int row);
-  bool addH5Object(const QString& fileName, const QString& objName);
-  bool addH5Object(const h5gt::Group& objG);
+  qColadaH5Item* insertH5Object(const QString& fileName, const QString& objName, int row);
+  qColadaH5Item* insertH5Object(const h5gt::Group& objG, int row);
+  qColadaH5Item* addH5Object(const QString& fileName, const QString& objName);
+  qColadaH5Item* addH5Object(const h5gt::Group& objG);
   bool removeH5Object(const QString& fileName, const QString& objName, bool unlink = false);
   bool removeH5Object(const h5gt::Group& objG, bool unlink = false);
+
+  /// Called every time model creates new items. Aimed to set props in subclasses
+  virtual void initItemToBeInserted(qColadaH5Item* item) const;
 
   bool removeItem(qColadaH5Item* item, bool unlink = false);
 
