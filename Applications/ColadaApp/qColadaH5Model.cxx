@@ -31,6 +31,8 @@
 
 // stl
 #include <limits>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 qColadaH5ModelPrivate::qColadaH5ModelPrivate(qColadaH5Model &q) : q_ptr(&q) {}
 
@@ -404,9 +406,7 @@ bool qColadaH5Model::canAddH5File(const QString& fileName) {
     return false;
 
   try {
-    h5gt::FileAccessProps fapl;
-    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
-        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
       return false;
   } catch (h5gt::Exception& err) {
     qCritical() << Q_FUNC_INFO << err.what();
@@ -423,9 +423,7 @@ bool qColadaH5Model::canAddH5Object(const QString& fileName, const QString& objN
   return !findItem(fileName, objName, false);
 
   try {
-    h5gt::FileAccessProps fapl;
-    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
-        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
       return false;
 
     h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
@@ -444,9 +442,7 @@ qColadaH5Item* qColadaH5Model::findItem(const QString &fileName)
     return nullptr;
 
   try {
-    h5gt::FileAccessProps fapl;
-    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
-        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
       return nullptr;
 
     h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
@@ -525,9 +521,7 @@ qColadaH5Item* qColadaH5Model::insertH5File(const QString &fileName, int row)
 
   size_t childCountInGroup = 0;
   try {
-    h5gt::FileAccessProps fapl;
-    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
-        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
       return nullptr;
 
     h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
@@ -668,9 +662,7 @@ bool qColadaH5Model::removeH5Object(
     return false;
 
   try {
-    h5gt::FileAccessProps fapl;
-    if (H5Fis_hdf5(fileName.toUtf8()) <= 0 ||
-        H5Fis_accessible(fileName.toUtf8(), fapl.getId()) <= 0)
+    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
       return false;
 
     h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
@@ -944,15 +936,10 @@ std::optional<h5gt::Group> qColadaH5Model::h5GroupFromNode(vtkMRMLNode* node)
     return std::nullopt;
 
   try {
-    h5gt::FileAccessProps fapl;
-    if (H5Fis_hdf5(fileName) <= 0 ||
-        H5Fis_accessible(fileName, fapl.getId()) <= 0 )
+    if (!fs::exists(std::string(fileName)) || H5Fis_hdf5(fileName) < 1)
       return std::nullopt;
 
-    h5gt::File h5File(
-          fileName,
-          h5gt::File::ReadWrite, fapl);
-
+    h5gt::File h5File(fileName, h5gt::File::ReadWrite);
     if (h5File.hasObject(objName, h5gt::ObjectType::Group))
       return h5File.getGroup(objName);
   } catch (h5gt::Exception& err) {

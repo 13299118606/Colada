@@ -231,7 +231,7 @@ std::optional<h5gt::File> qColadaH5Item::getH5File() const
     return std::nullopt;
 
   if (!fs::exists(cntItem->rawData().toStdString()) ||
-      H5Fis_hdf5(cntItem->rawData().toStdString().c_str()) <= 0)
+      H5Fis_hdf5(cntItem->rawData().toStdString().c_str()) < 1)
     return std::nullopt;
 
   try {
