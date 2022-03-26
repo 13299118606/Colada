@@ -29,7 +29,7 @@
 #include <QStack>
 #include <QDebug>
 
-// stl
+// stl includes
 #include <limits>
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -291,9 +291,11 @@ bool qColadaH5Model::moveItem(qColadaH5Item *parentItem,
     return false;
 
   // get path beforehand as the parent will be changed at insertChild step
-  QString oldPath;
-  if (moveH5Link)
+  QString oldPath, itemData;
+  if (moveH5Link){
     oldPath = item->getPath();
+    itemData = item->data();
+  }
 
   // remove item without deleting it
   beginRemoveRows(oldParentIndex, oldPosition, oldPosition);
@@ -316,15 +318,16 @@ bool qColadaH5Model::moveItem(qColadaH5Item *parentItem,
 
   if (moveH5Link){
     auto parentGroupOpt = parentItem->getObjG();
-    if (!parentGroupOpt->rename(oldPath.toStdString(), item->data().toStdString()))
+    if (!parentGroupOpt->rename(oldPath.toStdString(), itemData.toStdString()))
       return false;
 
     parentGroupOpt->flush();
     parentItem->setChildCountInGroup(parentGroupOpt->getNumberObjects());
 
     auto oldParentGroupOpt = oldParentItem->getObjG();
-    if (oldParentGroupOpt.has_value())
+    if (oldParentGroupOpt.has_value()){
       oldParentItem->setChildCountInGroup(oldParentGroupOpt->getNumberObjects());
+    }
   }
   return true;
 }
@@ -1132,6 +1135,16 @@ bool qColadaH5Model::canDropMimeDataAndPrepare(
 
   qColadaH5Item* oldParentItem = item->getParent();
   if (!oldParentItem)
+    return false;
+
+  // prevent from dropping parent to child
+  // adding '/' at the end is important for example
+  // if parent path is '/gg' and item path is '/g'
+  // then 'g' is not a child of 'gg' but I won't be
+  // able to drop an item there without '/' at end
+  QString parentPath = parentItem->getPath() + "/";
+  QString itemPath = item->getPath() + "/";
+  if (parentPath.contains(itemPath, Qt::CaseInsensitive))
     return false;
 
   return this->canBeMoved(parentItem, item, true);
