@@ -20,7 +20,6 @@ public:
 
   bool addContainer(const QString &fileName);
   bool removeContainer(const QString &fileName);
-  bool refreshContainer(const QString &fileName);
 
 protected:
   ///
@@ -36,7 +35,7 @@ private:
 public slots:
   virtual void onAddContainer();
   virtual void onRemoveContainer();
-  virtual void onRefreshContainer();
+  virtual void onRefetchObject();
   virtual void onRenameObject();
   virtual void onUnlinkObject();
   virtual void onExpandSelected();

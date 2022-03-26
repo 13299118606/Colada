@@ -63,19 +63,29 @@ public slots:
 
   virtual bool insertRows(int position, int rows,
                           const QModelIndex &parent = QModelIndex()) override;
+
   bool insertRows(int position, int rows,
                   qColadaH5Item *parentItem);
+
   virtual bool removeRows(int position, int rows,
                           const QModelIndex &parent = QModelIndex()) override;
+
   bool removeRows(int position, int rows,
                   qColadaH5Item *parentItem);
+
   bool moveItem(qColadaH5Item *parentItem,
                 qColadaH5Item *item,
                 int position, bool moveH5Link = true);
 
+  /// Check if the item can be moved to the new parent `parentItem`.
+  /// If `moveH5Link` then also check if it is possible to rename hdf5 link
+  bool canBeMoved(qColadaH5Item*& parentItem, qColadaH5Item*& item, bool moveH5Link = true);
+
   virtual bool hasChildren(const QModelIndex &parent) const override;
 
   virtual bool canFetchMore(const QModelIndex &parent) const override;
+
+  void refetch(const QModelIndex &parent);
   void fetchAllChildren(const QModelIndex &parent);
 
   virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
@@ -92,11 +102,10 @@ public slots:
   qColadaH5Item *itemFromIndex(const QModelIndex &index) const;
   qColadaH5Item *getRootItem() const;
 
-  /// brief Needs to be reimplemented by subclasses
-  virtual bool canAddH5File(const h5gt::File& file);
-  virtual bool canAddH5File(const QString& fileName);
-  virtual bool canAddH5Object(const h5gt::Group& objG);
-  virtual bool canAddH5Object(const QString& fileName, const QString& objName);
+  /// brief Needs to be reimplemented by subclasses to prevent from adding
+  /// container of different geo type. No need to check if the item already added,
+  /// that is done internally
+  virtual bool canAddH5File(const h5gt::File& file) const;
 
   qColadaH5Item* findItem(const QString &fileName);
   qColadaH5Item* findItem(const h5gt::File& file);
@@ -141,7 +150,7 @@ public slots:
 
   /// When fetching items at the time when some nodes already added
   /// we need to init checkstate for the items.
-  /// Also if item is renamed we need to update checkstate
+  /// Also if an item is renamed we need to update checkstate.
   void updateItemsCheckState(const QVector<qColadaH5Item*>& items);
 
   QStringList mimeTypes() const override;
@@ -153,9 +162,13 @@ public slots:
   virtual void onMRMLSceneNodeAdded(vtkObject*, vtkObject* node);
   virtual void onMRMLSceneNodeRemoved(vtkObject*, vtkObject* node);
 
+  /// to connect with qColadaAppMainWindow::emitH5FileToBeAdded
   virtual void onH5FileToBeAdded(const QString& fileName);
+  /// to connect with qColadaAppMainWindow::emitH5FileToBeRemoved
   virtual void onH5FileToBeRemoved(const QString& fileName);
+  /// to connect with qColadaAppMainWindow::emitH5ObjectToBeAdded
   virtual void onH5ObjectToBeAdded(const QString& fileName, const QString& objName);
+  /// to connect with qColadaAppMainWindow::emitH5ObjectToBeRemoved
   virtual void onH5ObjectToBeRemoved(const QString& fileName, const QString& objName);
 
   virtual bool canDropMimeData(
@@ -180,10 +193,6 @@ public slots:
       const QModelIndex &parent,
       qColadaH5Item*& parentItem,
       qColadaH5Item*& item);
-
-  /// Check if the item can be moved to the new parent `parentItem`.
-  /// If `moveH5Link` then also check if it is possible to rename hdf5 link
-  bool canBeMoved(qColadaH5Item*& parentItem, qColadaH5Item*& item, bool moveH5Link = true);
 
 protected:
   QScopedPointer<qColadaH5ModelPrivate> d_ptr;

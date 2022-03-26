@@ -21,7 +21,7 @@
 #include <QFileInfo>
 #include <QLineEdit>
 #include <QStringListModel>
-#include <QMessageBox>
+#include <QDebug>
 
 qColadaH5ItemDelegatePrivate::qColadaH5ItemDelegatePrivate(
     qColadaH5ItemDelegate &q)
@@ -49,12 +49,16 @@ QWidget *qColadaH5ItemDelegate::createEditor(QWidget *parent,
 
   qColadaH5ProxyModel *proxyModel = qobject_cast<qColadaH5ProxyModel *>(
       const_cast<QAbstractItemModel *>(index.model()));
-  if (!proxyModel)
+  if (!proxyModel){
+    qCritical() << Q_FUNC_INFO << ": Unable to get proxy model";
     return lineEditor;
+  }
 
   qColadaH5Model* model = qobject_cast<qColadaH5Model*>(proxyModel->sourceModel());
-  if (!model)
+  if (!model){
+    qCritical() << Q_FUNC_INFO << ": Unable to get source model";
     return lineEditor;
+  }
 
   QModelIndex srcIndex = proxyModel->mapToSource(index);
   qColadaH5Item *item = model->itemFromIndex(srcIndex);
@@ -108,11 +112,14 @@ void qColadaH5ItemDelegate::setModelData(QWidget *editor,
   if (oldName == newName)
     return;
 
+  qColadaH5ProxyModel *proxyModel = qobject_cast<qColadaH5ProxyModel *>(model);
+  if (!proxyModel){
+    qCritical() << Q_FUNC_INFO << ": Unable to get proxy model";
+    return;
+  }
+
   if (!model->setData(index, newName)) {
-    QMessageBox msgBox;
-    msgBox.setIcon(QMessageBox::Critical);
-    msgBox.setText(tr("Invalid name!"));
-    msgBox.exec();
+    qCritical() << Q_FUNC_INFO << ": Unable to rename object";
     return;
   }
 }

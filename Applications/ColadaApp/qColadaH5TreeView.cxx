@@ -135,13 +135,12 @@ void qColadaH5TreeView::fillTreeViewMenu(QMenu *menu, const QPoint &pos) {
   QAction *removeContainerAction = menu->addAction("Remove container");
   connect(removeContainerAction, &QAction::triggered, this,
           &qColadaH5TreeView::onRemoveContainer);
-  QAction *refreshContainerAction = menu->addAction("Refresh container");
-  connect(refreshContainerAction, &QAction::triggered, this,
-          &qColadaH5TreeView::onRefreshContainer);
+  QAction *refetchObjectAction = menu->addAction("Refetch object");
+  connect(refetchObjectAction, &QAction::triggered, this,
+          &qColadaH5TreeView::onRefetchObject);
   menu->addSeparator();
 
   QAction *renameAction = menu->addAction("Rename object");
-  renameAction->setData(pos);
   connect(renameAction, &QAction::triggered, this,
           &qColadaH5TreeView::onRenameObject);
   QAction *unlinkAction = menu->addAction("Unlink object");
@@ -219,11 +218,6 @@ bool qColadaH5TreeView::removeContainer(const QString &fileName) {
   return true;
 }
 
-bool qColadaH5TreeView::refreshContainer(const QString &fileName) {
-  removeContainer(fileName);
-  return addContainer(fileName);
-}
-
 void qColadaH5TreeView::onAddContainer() {
   QStringList h5FileNameList = ctkFileDialog::getOpenFileNames(
       nullptr, QObject::tr("Open Container"), "",
@@ -236,32 +230,30 @@ void qColadaH5TreeView::onAddContainer() {
 void qColadaH5TreeView::onRemoveContainer() {
   auto* proxy = qobject_cast<qColadaH5ProxyModel*>(this->model());
   auto* srcModel = qobject_cast<qColadaH5Model*>(proxy->sourceModel());
-  auto* selectedModel = this->selectionModel();
-  if (!selectedModel){
+  auto* selectionModel = this->selectionModel();
+  if (!selectionModel){
     qCritical() << Q_FUNC_INFO << ": Selected model is missing";
     return;
   }
 
+  QModelIndexList indexes = selectionModel->selectedIndexes();
+  if (indexes.isEmpty())
+    indexes.append(currentIndex());
+
   // as we remove file by file we should get all selected names first
-  // else we will get incorrect indexes as selected model is not updated
+  // or we will get incorrect indexes as selected model is not updated
   // each time we remove the row
+  // Remeber: item may be invalid i.e. File or Group is unavailable but still
+  // it must be removed by click
   QStringList fileNames;
-  fileNames.reserve(selectedModel->selectedIndexes().count());
-  for (const auto& index : selectedModel->selectedIndexes()){
+  fileNames.reserve(indexes.count());
+  for (const auto& index : indexes){
     QModelIndex srcIndex = proxy->mapToSource(index);
     qColadaH5Item* item = srcModel->itemFromIndex(srcIndex);
     if (!item)
       continue;
 
-    auto fileOpt = item->getH5File();
-    if (!fileOpt.has_value())
-      continue;
-
-    QString fileName = QString::fromStdString(fileOpt->getFileName());
-    if (fileNames.contains(fileName))
-      continue;
-
-    fileNames.append(fileName);
+    fileNames.append(item->rawData());
   }
 
   for (const auto& name : fileNames){
@@ -269,37 +261,21 @@ void qColadaH5TreeView::onRemoveContainer() {
   }
 }
 
-void qColadaH5TreeView::onRefreshContainer() {
+void qColadaH5TreeView::onRefetchObject() {
   auto* proxy = qobject_cast<qColadaH5ProxyModel*>(this->model());
   auto* srcModel = qobject_cast<qColadaH5Model*>(proxy->sourceModel());
-  auto* selectedModel = this->selectionModel();
-  if (!selectedModel){
+  auto* selectionModel = this->selectionModel();
+  if (!selectionModel){
     qCritical() << Q_FUNC_INFO << ": Selected model is missing";
     return;
   }
 
-  // find only unique names so there is no need to the same container multiple times
-  QStringList fileNames;
-  fileNames.reserve(selectedModel->selectedIndexes().count());
-  for (const auto& index : selectedModel->selectedIndexes()){
-    QModelIndex srcIndex = proxy->mapToSource(index);
-    qColadaH5Item* item = srcModel->itemFromIndex(srcIndex);
-    if (!item)
-      continue;
+  QModelIndexList indexes = selectionModel->selectedIndexes();
+  if (indexes.isEmpty())
+    indexes.append(currentIndex());
 
-    auto fileOpt = item->getH5File();
-    if (!fileOpt.has_value())
-      continue;
-
-    QString fileName = QString::fromStdString(fileOpt->getFileName());
-    if (fileNames.contains(fileName))
-      continue;
-
-    fileNames.append(fileName);
-  }
-
-  for (const auto& name : fileNames){
-    this->refreshContainer(name);
+  for (const auto& index : indexes){
+    srcModel->refetch(proxy->mapToSource(index));
   }
 }
 
@@ -311,13 +287,17 @@ void qColadaH5TreeView::onRenameObject(){
 void qColadaH5TreeView::onUnlinkObject() {
   auto* proxy = qobject_cast<qColadaH5ProxyModel*>(this->model());
   auto* srcModel = qobject_cast<qColadaH5Model*>(proxy->sourceModel());
-  auto* selectedModel = this->selectionModel();
-  if (!selectedModel){
+  auto* selectionModel = this->selectionModel();
+  if (!selectionModel){
     qCritical() << Q_FUNC_INFO << ": Selected model is missing";
     return;
   }
 
-  for (const auto& index : selectedModel->selectedIndexes()){
+  QModelIndexList indexes = selectionModel->selectedIndexes();
+  if (indexes.isEmpty())
+    indexes.append(currentIndex());
+
+  for (const auto& index : indexes){
     QModelIndex srcIndex = proxy->mapToSource(index);
     qColadaH5Item* item = srcModel->itemFromIndex(srcIndex);
     if (!item)
@@ -328,27 +308,33 @@ void qColadaH5TreeView::onUnlinkObject() {
 }
 
 void qColadaH5TreeView::onExpandSelected() {
-  auto* selectedModel = this->selectionModel();
-  if (!selectedModel){
+  auto* selectionModel = this->selectionModel();
+  if (!selectionModel){
     qCritical() << Q_FUNC_INFO << ": Selected model is missing";
     return;
   }
 
-  for (const auto& index : selectedModel->selectedIndexes()){
-    if (!index.isValid())
-      continue;
+  QModelIndexList indexes = selectionModel->selectedIndexes();
+  if (indexes.isEmpty())
+    indexes.append(currentIndex());
+
+  for (const auto& index : indexes){
     this->expandRecursively(index, -1);
   }
 }
 
 void qColadaH5TreeView::onCollapseSelected() {
-  auto* selectedModel = this->selectionModel();
-  if (!selectedModel){
+  auto* selectionModel = this->selectionModel();
+  if (!selectionModel){
     qCritical() << Q_FUNC_INFO << ": Selected model is missing";
     return;
   }
 
-  for (const auto& index : selectedModel->selectedIndexes()){
+  QModelIndexList indexes = selectionModel->selectedIndexes();
+  if (indexes.isEmpty())
+    indexes.append(currentIndex());
+
+  for (const auto& index : indexes){
     this->collapse(index);
   }
 }

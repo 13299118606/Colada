@@ -44,12 +44,17 @@ public:
   /// \param item
   /// \param position
   void insertChild(qColadaH5Item *item, int position);
-  void removeChild(int position, bool destroy = false);
-  void removeChildren(int position, int count, bool destroy = false);
 
-  /// return bool in case the item is not found
-  bool removeChild(qColadaH5Item *item, bool destroy = false);
-  bool removeChildByName(const QString& name, bool destroy = false);
+  /// you are responsible for deleting returned item (its parent is nullptr)
+  qColadaH5Item* takeChild(int position);
+  /// you are responsible for deleting returned item (its parent is nullptr)
+  /// only non-nullptr will be returned
+  QVector<qColadaH5Item*> takeChildren(int position, int count);
+
+  /// you are responsible for deleting returned item (its parent is nullptr)
+  qColadaH5Item* takeChild(qColadaH5Item *item);
+  /// you are responsible for deleting returned item (its parent is nullptr)
+  qColadaH5Item* takeChildByName(const QString& name);
 
   /// \brief hasChild
   /// \param name is a visible name (itemData)
@@ -59,6 +64,11 @@ public:
 
   QString data() const;
   QString rawData() const;
+
+  /// \brief setData rename the file or object within the same directory/Group.
+  /// All slashes '/' will be removed
+  /// \param newItemData
+  /// \return
   bool setData(const QString &newItemData);
 
   int getChildRow(qColadaH5Item *item);

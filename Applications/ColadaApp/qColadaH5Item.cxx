@@ -8,6 +8,9 @@
 #include <h5gt/H5DataSet.hpp>
 
 // Qt includes
+#include <QFile>
+#include <QFileInfo>
+#include <QDir>
 #include <QStringList>
 
 #include <filesystem>
@@ -61,6 +64,9 @@ void qColadaH5Item::appendChildren(QVector<qColadaH5Item *> itemList) {
 
 void qColadaH5Item::insertChild(qColadaH5Item *item, int position) {
   Q_D(qColadaH5Item);
+  if (!item)
+    return;
+
   if (position < 0)
     position = 0;
 
@@ -68,9 +74,10 @@ void qColadaH5Item::insertChild(qColadaH5Item *item, int position) {
     position = d->childItems.size();
 
   d->childItems.insert(position, item);
+  item->setParent(this);
 }
 
-void qColadaH5Item::removeChild(int position, bool destroy) {
+qColadaH5Item* qColadaH5Item::takeChild(int position) {
   Q_D(qColadaH5Item);
   if (position < 0)
     position = 0;
@@ -78,35 +85,31 @@ void qColadaH5Item::removeChild(int position, bool destroy) {
   if (position > d->childItems.size())
     position = d->childItems.size();
 
-  if (destroy){
-    delete d->childItems.takeAt(position);
-  } else {
-    d->childItems.takeAt(position);
-  }
+  qColadaH5Item* item = d->childItems.takeAt(position);
+  item->setParent(nullptr);
+  return item;
 }
 
-bool qColadaH5Item::removeChild(qColadaH5Item *item, bool destroy) {
+qColadaH5Item* qColadaH5Item::takeChild(qColadaH5Item *item) {
   if (!item)
-    return false;
+    return nullptr;
 
   int ind = getChildRow(item);
   if (ind < 0)
-    return false;
+    return nullptr;
 
-  removeChild(ind, destroy);
-  return true;
+  return takeChild(ind);
 }
 
-bool qColadaH5Item::removeChildByName(const QString& name, bool destroy) {
+qColadaH5Item* qColadaH5Item::takeChildByName(const QString& name) {
   int ind = getChildRow(name);
   if (ind < 0)
-    return false;
+    return nullptr;
 
-  removeChild(ind, destroy);
-  return true;
+  return takeChild(ind);
 }
 
-void qColadaH5Item::removeChildren(int position, int count, bool destroy) {
+QVector<qColadaH5Item*> qColadaH5Item::takeChildren(int position, int count) {
   Q_D(qColadaH5Item);
   if (position < 0)
     position = 0;
@@ -114,13 +117,19 @@ void qColadaH5Item::removeChildren(int position, int count, bool destroy) {
   if (position + count > d->childItems.size())
     count = d->childItems.size() - position;
 
-  for (int i = 0; i < count; ++i){
-    if (destroy){
-      delete d->childItems.takeAt(position);
-    } else {
-      d->childItems.takeAt(position);
+  if (count < 1)
+    return QVector<qColadaH5Item*>();
+
+  QVector<qColadaH5Item*> itemList;
+  itemList.reserve(count);
+  for (int i = 0; i < count; i++){
+    qColadaH5Item* item = d->childItems.takeAt(position);
+    if (item){
+      itemList.append(item);
     }
   }
+  itemList.shrink_to_fit();
+  return itemList;
 }
 
 bool qColadaH5Item::hasChild(const QString &name) const {
@@ -155,25 +164,38 @@ bool qColadaH5Item::setData(const QString &newItemData) {
     return true;
   }
 
-  if (isContainer())
+  QString newData = newItemData.split(QLatin1Char('/'), Qt::SkipEmptyParts).last();
+  if (isContainer()){
+    // rename only within the same directory
+    QFileInfo fi(d->itemData);
+    QString newFileName = fi.path() + "/" + newData;
+    if (QFile::rename(d->itemData, newFileName)){
+      d->itemData = newFileName;
+      return true;
+    }
     return false;
+  }
 
   qColadaH5Item* parent = getParent();
   if (!parent)
     return false;
 
   auto opt = parent->getObjG();
-  if (opt.has_value())
+  if (!opt.has_value())
     return false;
 
-  QString oldItemData = this->data();
-  if (!opt->hasObject(oldItemData.toStdString(), h5gt::ObjectType::Group) ||
-      opt->exist(newItemData.toStdString()))
+  // rename only within the same Group
+  QString oldData = this->data();
+  if (!opt->hasObject(oldData.toStdString(), h5gt::ObjectType::Group) ||
+      opt->exist(newData.toStdString()))
     return false;
 
-  opt->rename(oldItemData.toStdString(), newItemData.toStdString());
-  opt->flush();
-  return true;
+  bool status = opt->rename(oldData.toStdString(), newData.toStdString());
+  if (status){
+    opt->flush();
+    d->itemData = newData;
+  }
+  return status;
 }
 
 int qColadaH5Item::getChildRow(qColadaH5Item *item)
@@ -200,10 +222,10 @@ QString qColadaH5Item::getPath() const{
   if (isContainer())
     return QString("/");
 
-  QString objPath = d->itemData;
+  QString objPath = "/" + d->itemData;
   qColadaH5Item* p = getParent();
   while (p && !p->isContainer() && !p->isRoot()) {
-    objPath.prepend(p->data() + "/");
+    objPath.prepend("/" + p->data());
     p = p->getParent();
   }
 

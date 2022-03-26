@@ -124,7 +124,7 @@ qColadaH5Item *qColadaH5Model::getRootItem() const {
 QModelIndex qColadaH5Model::index(int row, int column,
                                   const QModelIndex &parent) const {
   qColadaH5Item *parentItem = itemFromIndex(parent);
-  if ((parentItem == 0) || (row < 0) || (column < 0) ||
+  if ((parentItem == nullptr) || (row < 0) || (column < 0) ||
       (row >= parentItem->rowCount()) ||
       (column >= parentItem->columnCount())) {
     return QModelIndex();
@@ -155,6 +155,9 @@ QVariant qColadaH5Model::data(const QModelIndex &index, int role) const {
     return QVariant();
 
   qColadaH5Item *item = itemFromIndex(index);
+  if (!item)
+    return QVariant();
+
   if (role == Qt::DisplayRole || role == Qt::EditRole) {
     return item->data();
   } else if (role == Qt::CheckStateRole) {
@@ -173,18 +176,16 @@ bool qColadaH5Model::setData(
     return false;
 
   qColadaH5Item *item = itemFromIndex(index);
-  if (role == Qt::EditRole) {
+  if (!item)
+    return false;
+
+  if (role == Qt::EditRole ||
+      role == Qt::DisplayRole) {
     bool result = item->setData(value.toString());
     if (result){
+      // update checkstate is needed in case there are displable nodes on the Scene
       updateItemsCheckState({item});
-      emit dataChanged(index, index, {Qt::EditRole});
-    }
-    return result;
-  } else if (role == Qt::DisplayRole) {
-    bool result = item->setData(value.toString());
-    if (result){
-      updateItemsCheckState({item});
-      emit dataChanged(index, index, {Qt::DisplayRole});
+      emit dataChanged(index, index, {Qt::EditRole, Qt::DisplayRole, Qt::CheckStateRole});
     }
     return result;
   } else if (role == Qt::CheckStateRole) {
@@ -242,7 +243,9 @@ bool qColadaH5Model::removeRows(int position, int rows,
     return false;
 
   beginRemoveRows(parent, position, position + rows - 1);
-  parentItem->removeChildren(position, rows, true);
+  auto itemList = parentItem->takeChildren(position, rows);
+  for (auto* item : itemList)
+    delete item;
   endRemoveRows();
   return true;
 }
@@ -254,7 +257,9 @@ bool qColadaH5Model::removeRows(int position, int rows,
 
   QModelIndex parent = getIndex(parentItem);
   beginRemoveRows(parent, position, position + rows - 1);
-  parentItem->removeChildren(position, rows, true);
+  QVector<qColadaH5Item*> itemList = parentItem->takeChildren(position, rows);
+  for (qColadaH5Item* item : itemList)
+    delete item;
   endRemoveRows();
   return true;
 }
@@ -263,6 +268,9 @@ bool qColadaH5Model::moveItem(qColadaH5Item *parentItem,
                               qColadaH5Item *item,
                               int position, bool moveH5Link)
 {
+  if (!item || !parentItem)
+    return false;
+
   if (!this->canBeMoved(parentItem, item, moveH5Link))
     return false;
 
@@ -282,10 +290,25 @@ bool qColadaH5Model::moveItem(qColadaH5Item *parentItem,
   if (!oldParentIndex.isValid())
     return false;
 
+  // get path beforehand as the parent will be changed at insertChild step
+  QString oldPath;
+  if (moveH5Link)
+    oldPath = item->getPath();
+
   // remove item without deleting it
   beginRemoveRows(oldParentIndex, oldPosition, oldPosition);
-  oldParentItem->removeChild(item, false);
+  item = oldParentItem->takeChild(item);
   endRemoveRows();
+
+  if (!item)
+    return false;
+
+  if (position < 0 || position > parentItem->childCount())
+    position = parentItem->childCount();
+
+  // the app crashes (when expanding) if we move item to the unfetched parent
+  if (canFetchMore(parentIndex))
+    fetchMore(parentIndex);
 
   beginInsertRows(parentIndex, position, position);
   parentItem->insertChild(item, position);
@@ -293,7 +316,47 @@ bool qColadaH5Model::moveItem(qColadaH5Item *parentItem,
 
   if (moveH5Link){
     auto parentGroupOpt = parentItem->getObjG();
-    if (!parentGroupOpt->rename(item->getPath().toStdString(), item->data().toStdString()))
+    if (!parentGroupOpt->rename(oldPath.toStdString(), item->data().toStdString()))
+      return false;
+
+    parentGroupOpt->flush();
+    parentItem->setChildCountInGroup(parentGroupOpt->getNumberObjects());
+
+    auto oldParentGroupOpt = oldParentItem->getObjG();
+    if (oldParentGroupOpt.has_value())
+      oldParentItem->setChildCountInGroup(oldParentGroupOpt->getNumberObjects());
+  }
+  return true;
+}
+
+bool qColadaH5Model::canBeMoved(qColadaH5Item*& parentItem, qColadaH5Item*& item, bool moveH5Link )
+{
+  if (!parentItem ||
+      parentItem->isRoot() ||
+      !item ||
+      item->isRoot() ||
+      item->isContainer())
+    return false;
+
+  qColadaH5Item* oldParentItem = item->getParent();
+  if (!oldParentItem)
+    return false;
+
+  // move only within the same hdf5 container
+  auto oldH5FileOpt = oldParentItem->getH5File();
+  auto h5FileOpt = parentItem->getH5File();
+  if (!oldH5FileOpt.has_value() ||
+      !h5FileOpt.has_value() ||
+      oldH5FileOpt.value() != h5FileOpt.value())
+    return false;
+
+  if (moveH5Link){
+    auto oldParentGroupOpt = oldParentItem->getObjG();
+    auto parentGroupOpt = parentItem->getObjG();
+    if (!oldParentGroupOpt.has_value() ||
+        !oldParentGroupOpt->exist(item->data().toStdString()) ||
+        !parentGroupOpt.has_value() ||
+        parentGroupOpt->exist(item->data().toStdString()))
       return false;
   }
   return true;
@@ -309,13 +372,21 @@ bool qColadaH5Model::hasChildren(const QModelIndex &parent) const {
 
   if (item->isRoot())
     return item->hasChildren();
-
   return item->getChildCountInGroup() > 0;
 }
 
 bool qColadaH5Model::canFetchMore(const QModelIndex &parent) const {
   qColadaH5Item *item = itemFromIndex(parent);
-  return !item->isMapped();
+  return item ? !item->isMapped() : false;
+}
+
+void qColadaH5Model::refetch(const QModelIndex &parent) {
+  qColadaH5Item *parentItem = itemFromIndex(parent);
+  if (!parentItem)
+    return;
+
+  parentItem->setMapped(false);
+  fetchMore(parent);
 }
 
 void qColadaH5Model::fetchAllChildren(const QModelIndex &parent) {
@@ -397,42 +468,7 @@ void qColadaH5Model::getFullChildList(
   }
 }
 
-bool qColadaH5Model::canAddH5File(const h5gt::File& file) {
-  return !findItem(file);
-}
-
-bool qColadaH5Model::canAddH5File(const QString& fileName) {
-  if (findItem(fileName))
-    return false;
-
-  try {
-    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
-      return false;
-  } catch (h5gt::Exception& err) {
-    qCritical() << Q_FUNC_INFO << err.what();
-    return false;
-  }
-  return true;
-}
-
-bool qColadaH5Model::canAddH5Object(const h5gt::Group& objG) {
-  return !findItem(objG, false);
-}
-
-bool qColadaH5Model::canAddH5Object(const QString& fileName, const QString& objName) {
-  return !findItem(fileName, objName, false);
-
-  try {
-    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
-      return false;
-
-    h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
-    if (!file.hasObject(objName.toStdString(), h5gt::ObjectType::Group))
-      return false;
-  } catch (h5gt::Exception& err) {
-    qCritical() << Q_FUNC_INFO << err.what();
-    return false;
-  }
+bool qColadaH5Model::canAddH5File(const h5gt::File& file) const {
   return true;
 }
 
@@ -441,32 +477,22 @@ qColadaH5Item* qColadaH5Model::findItem(const QString &fileName)
   if (fileName.isEmpty())
     return nullptr;
 
-  try {
-    if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
-      return nullptr;
+  // Remeber: item may be invalid i.e. File or Group is unavailable
+  // but still it must be removed
+  QString name = fileName.split(QLatin1Char('/'), Qt::SkipEmptyParts).last();
+  for (qColadaH5Item* child : getRootItem()->getChildren()){
+    if (!child)
+      continue;
 
-    h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
-    return findItem(file);
-  } catch (h5gt::Exception& err) {
-    qCritical() << Q_FUNC_INFO << err.what();
+    if (child->data() == name)
+      return child;
   }
   return nullptr;
 }
 
 qColadaH5Item* qColadaH5Model::findItem(const h5gt::File& file)
 {
-  for (qColadaH5Item* child : getRootItem()->getChildren()){
-    if (!child->isContainer())
-      continue;
-
-    auto opt = child->getH5File();
-    if (!opt.has_value())
-      continue;
-
-    if (file == opt.value())
-      return child;
-  }
-  return nullptr;
+  return findItem(QString::fromStdString(file.getFileName()));
 }
 
 qColadaH5Item* qColadaH5Model::findItem(const QString &fileName, const QString& objName, bool fetch)
@@ -516,20 +542,29 @@ qColadaH5Item* qColadaH5Model::findItem(vtkMRMLNode* node, bool fetch)
 qColadaH5Item* qColadaH5Model::insertH5File(const QString &fileName, int row)
 {
   Q_D(qColadaH5Model);
-  if (!canAddH5File(fileName))
-    return nullptr;
-
   size_t childCountInGroup = 0;
   try {
     if (!fs::exists(fileName.toStdString()) || H5Fis_hdf5(fileName.toUtf8()) < 1)
       return nullptr;
 
     h5gt::File file(fileName.toStdString(), h5gt::File::ReadWrite);
-    childCountInGroup = file.getNumberObjects();
+    return insertH5File(file, row);
   } catch (h5gt::Exception& err) {
     qCritical() << Q_FUNC_INFO << err.what();
-    return nullptr;
   }
+  return nullptr;
+}
+
+qColadaH5Item* qColadaH5Model::insertH5File(const h5gt::File& file, int row)
+{
+  Q_D(qColadaH5Model);
+  // if inapropriate geo container type
+  if (!canAddH5File(file))
+    return nullptr;
+
+  QString fileName = QString::fromStdString(file.getFileName());
+  if (d->rootItem->hasChild(fileName.split(QLatin1Char('/'), Qt::SkipEmptyParts).last()))
+    return nullptr;
 
   if (row < 0)
     row = 0;
@@ -538,7 +573,7 @@ qColadaH5Item* qColadaH5Model::insertH5File(const QString &fileName, int row)
     row = d->rootItem->childCount();
 
   qColadaH5Item *fileItem = new qColadaH5Item(fileName, d->rootItem);
-  fileItem->setChildCountInGroup(childCountInGroup);
+  fileItem->setChildCountInGroup(file.getNumberObjects());
   initItemToBeInserted(fileItem);
   QModelIndex rootIndex = QModelIndex(); // index for ROOT
 
@@ -546,11 +581,6 @@ qColadaH5Item* qColadaH5Model::insertH5File(const QString &fileName, int row)
   d->rootItem->insertChild(fileItem, row);
   endInsertRows();
   return fileItem;
-}
-
-qColadaH5Item* qColadaH5Model::insertH5File(const h5gt::File& file, int row)
-{
-  return this->insertH5File(QString::fromStdString(file.getFileName()), row);
 }
 
 qColadaH5Item* qColadaH5Model::addH5File(const QString &fileName)
@@ -582,6 +612,9 @@ qColadaH5Item* qColadaH5Model::insertH5Object(
   Q_D(qColadaH5Model);
   qColadaH5Item* parentItem = findItem(fileName);
   if (!parentItem)
+    parentItem = insertH5File(fileName, std::numeric_limits<int>::max());
+
+  if (!parentItem)
     return nullptr;
 
   qColadaH5Item *item = nullptr;
@@ -591,11 +624,16 @@ qColadaH5Item* qColadaH5Model::insertH5Object(
     if (child){
       parentItem = child;
     } else {
-      QModelIndex parentIndex = this->getIndex(parentItem);
       auto parentG = parentItem->getObjG();
       if (!parentG.has_value() ||
           !parentG->hasObject(name.toStdString(), h5gt::ObjectType::Group))
         return nullptr;
+
+      if (parentItem->hasChild(name))
+        continue;
+
+      // update in case the data has been changed
+      parentItem->setChildCountInGroup(parentG->getNumberObjects());
 
       auto objG = parentG->getGroup(name.toStdString());
       item = new qColadaH5Item(name, parentItem);
@@ -609,6 +647,7 @@ qColadaH5Item* qColadaH5Model::insertH5Object(
       if (row > parentItem->childCount())
         row = parentItem->childCount();
 
+      QModelIndex parentIndex = this->getIndex(parentItem);
       beginInsertRows(parentIndex, row, row);
       parentItem->insertChild(item, row);
       endInsertRows();
@@ -708,6 +747,7 @@ bool qColadaH5Model::removeItem(qColadaH5Item* item, bool unlink)
     if (parentG_opt.has_value()){
       parentG_opt->unlink(itemData.toStdString());
       parentG_opt->flush();
+      parentItem->setChildCountInGroup(parentG_opt->getNumberObjects());
     }
   }
   return true;
@@ -1095,37 +1135,4 @@ bool qColadaH5Model::canDropMimeDataAndPrepare(
     return false;
 
   return this->canBeMoved(parentItem, item, true);
-}
-
-bool qColadaH5Model::canBeMoved(qColadaH5Item*& parentItem, qColadaH5Item*& item, bool moveH5Link )
-{
-  if (!parentItem ||
-      parentItem->isRoot() ||
-      !item ||
-      item->isRoot() ||
-      item->isContainer())
-    return false;
-
-  qColadaH5Item* oldParentItem = item->getParent();
-  if (!oldParentItem)
-    return false;
-
-  // move only within the same hdf5 container
-  auto oldH5FileOpt = oldParentItem->getH5File();
-  auto h5FileOpt = parentItem->getH5File();
-  if (!oldH5FileOpt.has_value() ||
-      !h5FileOpt.has_value() ||
-      oldH5FileOpt.value() != h5FileOpt.value())
-    return false;
-
-  if (moveH5Link){
-    auto oldParentGroupOpt = oldParentItem->getObjG();
-    auto parentGroupOpt = parentItem->getObjG();
-    if (!oldParentGroupOpt.has_value() ||
-        !oldParentGroupOpt->exist(item->data().toStdString()) ||
-        !parentGroupOpt.has_value() ||
-        parentGroupOpt->exist(item->data().toStdString()))
-      return false;
-  }
-  return true;
 }
