@@ -90,15 +90,13 @@ public slots:
 
   virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-  QModelIndex getIndex(qColadaH5Item *item) const;
-  QList<QModelIndex> getIndexListToRoot(qColadaH5Item *item) const;
-  QList<QModelIndex>
-  getIndexListToRoot(qColadaH5Item *item,
-                     const QList<qColadaH5Item *> &itemListToRoot);
+  QModelIndex indexFromItem(qColadaH5Item *item) const;
+  QModelIndexList getIndexListToRoot(qColadaH5Item *item) const;
+
   void getFullChildList(qColadaH5Item *item,
                         QList<qColadaH5Item *> &fullChildList);
   void getFullChildIndexList(qColadaH5Item *item,
-                             QList<QModelIndex> &fullChildIndexList);
+                             QModelIndexList &fullChildIndexList);
   qColadaH5Item *itemFromIndex(const QModelIndex &index) const;
   qColadaH5Item *getRootItem() const;
 

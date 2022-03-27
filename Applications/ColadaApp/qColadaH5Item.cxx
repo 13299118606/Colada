@@ -64,8 +64,10 @@ void qColadaH5Item::appendChildren(QVector<qColadaH5Item *> itemList) {
 
 void qColadaH5Item::insertChild(qColadaH5Item *item, int position) {
   Q_D(qColadaH5Item);
-  if (!item)
+  if (!item){
+    std::cout << "qColadaH5Item::insertChild: ITEM IS NULL" << std::endl;
     return;
+  }
 
   if (position < 0)
     position = 0;
@@ -91,12 +93,16 @@ qColadaH5Item* qColadaH5Item::takeChild(int position) {
 }
 
 qColadaH5Item* qColadaH5Item::takeChild(qColadaH5Item *item) {
-  if (!item)
+  if (!item){
+    std::cout << "qColadaH5Item::takeChild: PASSED ITEM IS NULL" << std::endl;
     return nullptr;
+  }
 
   int ind = getChildRow(item);
-  if (ind < 0)
+  if (ind < 0){
+    std::cout << "qColadaH5Item::takeChild: ITEM NOT FOUND" << std::endl;
     return nullptr;
+  }
 
   return takeChild(ind);
 }

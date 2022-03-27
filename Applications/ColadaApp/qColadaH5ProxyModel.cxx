@@ -4,6 +4,9 @@
 #include "qColadaH5Model.h"
 #include "qColadaH5ProxyModel_p.h"
 
+// Qt includes
+#include <QDebug>
+
 qColadaH5ProxyModelPrivate::qColadaH5ProxyModelPrivate(qColadaH5ProxyModel &q)
     : q_ptr(&q) {}
 
@@ -79,16 +82,17 @@ bool qColadaH5ProxyModel::filterAcceptsRow(
   Q_D(const qColadaH5ProxyModel);
 
   qColadaH5Model *sm = qobject_cast<qColadaH5Model *>(sourceModel());
-  if (!sm)
+  if (!sm){
+    qCritical() << Q_FUNC_INFO << ": Unable to get Source model";
     return false;
+  }
 
   QModelIndex index = sm->index(source_row, 0, source_parent);
-  if (!index.isValid())
-    return false;
-
   qColadaH5Item *item = sm->itemFromIndex(index);
-  if (item == nullptr)
+  if (item == nullptr){
+    qCritical() << Q_FUNC_INFO << ": Unable get item from index row: " << index.row();
     return false;
+  }
 
   return filterCheckOnly(item) && filterLinkType(item);
 }

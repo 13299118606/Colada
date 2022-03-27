@@ -124,9 +124,9 @@ qColadaH5Item *qColadaH5Model::getRootItem() const {
 QModelIndex qColadaH5Model::index(int row, int column,
                                   const QModelIndex &parent) const {
   qColadaH5Item *parentItem = itemFromIndex(parent);
-  if ((parentItem == nullptr) || (row < 0) || (column < 0) ||
-      (row >= parentItem->rowCount()) ||
-      (column >= parentItem->columnCount())) {
+  if (!parentItem || row < 0 || column < 0 ||
+      row >= parentItem->rowCount() ||
+      column >= parentItem->columnCount()) {
     return QModelIndex();
   }
   return createIndex(row, column, parentItem);
@@ -137,7 +137,7 @@ QModelIndex qColadaH5Model::parent(const QModelIndex &child) const {
     return QModelIndex();
   qColadaH5Item *parentItem =
       static_cast<qColadaH5Item *>(child.internalPointer());
-  return getIndex(parentItem);
+  return indexFromItem(parentItem);
 }
 
 int qColadaH5Model::rowCount(const QModelIndex &parent) const {
@@ -229,7 +229,7 @@ bool qColadaH5Model::insertRows(int position, int rows,
   if (!parentItem)
     return false;
 
-  QModelIndex parent = getIndex(parentItem);
+  QModelIndex parent = indexFromItem(parentItem);
   beginInsertRows(parent, position, position + rows - 1);
   endInsertRows();
 
@@ -255,7 +255,7 @@ bool qColadaH5Model::removeRows(int position, int rows,
   if (!parentItem)
     return false;
 
-  QModelIndex parent = getIndex(parentItem);
+  QModelIndex parent = indexFromItem(parentItem);
   beginRemoveRows(parent, position, position + rows - 1);
   QVector<qColadaH5Item*> itemList = parentItem->takeChildren(position, rows);
   for (qColadaH5Item* item : itemList)
@@ -278,15 +278,11 @@ bool qColadaH5Model::moveItem(qColadaH5Item *parentItem,
   if (!oldParentItem)
     return false;
 
-  QModelIndex parentIndex = getIndex(parentItem);
-  if (!parentIndex.isValid())
-    return false;
-
   int oldPosition = item->getRow();
   if (oldPosition < 0)
     return false;
 
-  QModelIndex oldParentIndex = getIndex(oldParentItem);
+  QModelIndex oldParentIndex = indexFromItem(oldParentItem);
   if (!oldParentIndex.isValid())
     return false;
 
@@ -302,15 +298,23 @@ bool qColadaH5Model::moveItem(qColadaH5Item *parentItem,
   item = oldParentItem->takeChild(item);
   endRemoveRows();
 
-  if (!item)
+  if (!item){
+    return false;
+  }
+
+  // parent item must be defined after the rows were removed as there are cases
+  // when parent index changes during rows remove and thus it will be invalid
+  QModelIndex parentIndex = indexFromItem(parentItem);
+  if (!parentIndex.isValid())
     return false;
 
   if (position < 0 || position > parentItem->childCount())
     position = parentItem->childCount();
 
   // the app crashes (when expanding) if we move item to the unfetched parent
-  if (canFetchMore(parentIndex))
+  if (canFetchMore(parentIndex)){
     fetchMore(parentIndex);
+  }
 
   beginInsertRows(parentIndex, position, position);
   parentItem->insertChild(item, position);
@@ -373,7 +377,9 @@ bool qColadaH5Model::hasChildren(const QModelIndex &parent) const {
   if (!item)
     return false;
 
-  if (item->isRoot())
+  // 'hasChildren' first of all must reflect whether the displayed item
+  // has children or not and only secondly reflect the potentially existent children
+  if (item->isRoot() || item->isMapped())
     return item->hasChildren();
   return item->getChildCountInGroup() > 0;
 }
@@ -410,49 +416,40 @@ Qt::ItemFlags qColadaH5Model::flags(const QModelIndex &index) const {
   return item ? item->getFlags() : Qt::NoItemFlags;
 }
 
-QModelIndex qColadaH5Model::getIndex(qColadaH5Item *item) const {
-  if (!item || item->isRoot())
-    return QModelIndex();
-
-  QList<qColadaH5Item *> itemListToRoot = item->getItemListToRoot();
-  QList<QModelIndex> indexListToRoot = getIndexListToRoot(item);
-  return indexListToRoot.last();
+QModelIndex qColadaH5Model::indexFromItem(qColadaH5Item *item) const {
+  if (item && item->getParent()) {
+      int row = item->getRow();
+      return createIndex(row, 0, item->getParent());
+  }
+  return QModelIndex();
 }
 
-QList<QModelIndex>
+QModelIndexList
 qColadaH5Model::getIndexListToRoot(qColadaH5Item *item) const {
   if (!item || item->isRoot())
-    return {QModelIndex()};
+    return QModelIndexList();
 
   QList<qColadaH5Item *> itemListToRoot = item->getItemListToRoot();
-  QList<QModelIndex> indexListToRoot;
-  QModelIndex itemIndex = QModelIndex(); // index for ROOT
-  indexListToRoot.push_back(itemIndex);
-  for (int i = 1; i < itemListToRoot.count(); i++) {
-    itemIndex = index(itemListToRoot[i]->getRow(), 0, itemIndex);
-    indexListToRoot.push_back(itemIndex);
-  }
-  return indexListToRoot;
-}
+  QModelIndexList indexListToRoot;
+  for (auto* it : itemListToRoot) {
+    if (!it)
+      return QModelIndexList();
 
-QList<QModelIndex> qColadaH5Model::getIndexListToRoot(
-    qColadaH5Item *item, const QList<qColadaH5Item *> &itemListToRoot)
-{
-  if (itemListToRoot.isEmpty())
-    return QList<QModelIndex>();
-
-  QList<QModelIndex> indexListToRoot;
-  QModelIndex itemIndex = QModelIndex(); // index for ROOT
-  indexListToRoot.push_back(itemIndex);
-  for (int i = 1; i < itemListToRoot.count(); i++) {
-    itemIndex = index(itemListToRoot[i]->getRow(), 0, itemIndex);
-    indexListToRoot.push_back(itemIndex);
+    int itemRow = it->getRow();
+    if (it->isRoot()){
+      indexListToRoot.push_back(QModelIndex());
+    } else if (itemRow < 0){
+      return QModelIndexList();
+    } else {
+      QModelIndex itemIndex = index(itemRow, 0, itemIndex);
+      indexListToRoot.push_back(itemIndex);
+    }
   }
   return indexListToRoot;
 }
 
 void qColadaH5Model::getFullChildIndexList(
-    qColadaH5Item *item, QList<QModelIndex> &fullChildIndexList)
+    qColadaH5Item *item, QModelIndexList &fullChildIndexList)
 {
   for (int i = 0; i < item->childCount(); i++) {
     QModelIndex childIndex = createIndex(i, 0, item->getChild(i));
@@ -512,7 +509,7 @@ qColadaH5Item* qColadaH5Model::findItem(const QString &fileName, const QString& 
     QStringList objNameList = objName.split(QLatin1Char('/'), Qt::SkipEmptyParts);
 
     if (fetch)
-      this->fetchAllChildren(this->getIndex(item));
+      this->fetchAllChildren(this->indexFromItem(item));
     for (const auto& name: objNameList){
       if (item)
         item = item->getChildByName(name);
@@ -650,7 +647,7 @@ qColadaH5Item* qColadaH5Model::insertH5Object(
       if (row > parentItem->childCount())
         row = parentItem->childCount();
 
-      QModelIndex parentIndex = this->getIndex(parentItem);
+      QModelIndex parentIndex = this->indexFromItem(parentItem);
       beginInsertRows(parentIndex, row, row);
       parentItem->insertChild(item, row);
       endInsertRows();
@@ -740,7 +737,7 @@ bool qColadaH5Model::removeItem(qColadaH5Item* item, bool unlink)
   if (!parentItem)
     return false;
 
-  QModelIndex parentIndex = getIndex(parentItem);
+  QModelIndex parentIndex = indexFromItem(parentItem);
   if (!removeRow(row, parentIndex))
     return false;
 
@@ -791,7 +788,7 @@ void qColadaH5Model::sendAllChildDataChanged(
   if (!topLevelItem)
     return;
 
-  QList<QModelIndex> fullChildIndexList;
+  QModelIndexList fullChildIndexList;
   getFullChildIndexList(topLevelItem, fullChildIndexList);
   for (const QModelIndex& index : fullChildIndexList){
     emit dataChanged(index, index, roles);
@@ -805,7 +802,7 @@ void qColadaH5Model::sendAllItemsToRootDataChanged(
   if (!lowLevelItem)
     return;
 
-  QList<QModelIndex> indexListToRoot = getIndexListToRoot(lowLevelItem);
+  QModelIndexList indexListToRoot = getIndexListToRoot(lowLevelItem);
   for (int i = 0; i < indexListToRoot.count(); i++) {
     emit dataChanged(indexListToRoot[i], indexListToRoot[i], roles);
   }
@@ -819,7 +816,9 @@ void qColadaH5Model::setCheckStateForItemStair(
     return;
 
   QList<qColadaH5Item *> itemListToRoot = item->getItemListToRoot();
-  QList<QModelIndex> indexListToRoot = getIndexListToRoot(item, itemListToRoot);
+  QModelIndexList indexListToRoot = getIndexListToRoot(item);
+  if (itemListToRoot.count() != indexListToRoot.count())
+    return;
 
   fetchAllChildren(indexListToRoot.last());
 
@@ -855,7 +854,7 @@ void qColadaH5Model::setCheckStateForItemStair(
 
   QList<qColadaH5Item *> fullChildList;
   getFullChildList(item, fullChildList);
-  QList<QModelIndex> fullChildIndexList;
+  QModelIndexList fullChildIndexList;
   getFullChildIndexList(item, fullChildIndexList);
   for (int i = 0; i < fullChildList.count(); i++) {
     if (fullChildList[i]->checkState() != checkState) {
@@ -1004,7 +1003,7 @@ void qColadaH5Model::onMRMLSceneNodeAdded(
     return;
 
   item->setCheckState(Qt::Checked);
-  QModelIndex index = getIndex(item);
+  QModelIndex index = indexFromItem(item);
   emit dataChanged(index, index, {Qt::CheckStateRole});
 }
 
@@ -1037,7 +1036,7 @@ void qColadaH5Model::onMRMLSceneNodeRemoved(
   }
 
   itemRem->setCheckState(Qt::Unchecked);
-  QModelIndex index = getIndex(itemRem);
+  QModelIndex index = indexFromItem(itemRem);
   emit dataChanged(index, index, {Qt::CheckStateRole});
 }
 
