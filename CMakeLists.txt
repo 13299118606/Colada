@@ -181,8 +181,16 @@ set(Slicer_VTK_SMP_IMPLEMENTATION_TYPE TBB CACHE STRING "Which multi-threaded pa
 
 # Enable Slicer built-in modules
 set(Slicer_CLIMODULES_ENABLED
+  AddScalarVolumes
+  GaussianBlurImageFilter
+  MaskScalarVolume
+  MedianImageFilter
+  MergeModels
+  MultiplyScalarVolumes
   ResampleDTIVolume             # Needed by ResampleScalarVectorDWIVolume
   ResampleScalarVectorDWIVolume # Depends on DiffusionApplications, needed by CropVolume
+  ProbeVolumeWithModel
+  SubtractScalarVolumes
   )
 set(Slicer_QTLOADABLEMODULES_ENABLED
   Annotations       
