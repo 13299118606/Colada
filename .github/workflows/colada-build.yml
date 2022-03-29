@@ -24,7 +24,7 @@ jobs:
       uses: jurplel/install-qt-action@v2
       with:
         version: '5.15.2'
-        modules: 'qtwebengine qtwebenginewidgets qtscripts'
+        modules: 'qtwebengine qtwebenginewidgets qtscript'
 
     - name: Qt content cmake
       run: ls ${{github.workspace}}/../Qt/5.15.2/gcc_64/lib/cmake
