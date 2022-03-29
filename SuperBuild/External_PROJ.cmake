@@ -65,9 +65,6 @@ if(NOT DEFINED PROJ_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DPython_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
     DEPENDS
       ${${proj}_DEPENDENCIES}
-    # GDAL compiles python bindings only in Release mode (at least on Windows)
-    BUILD_COMMAND 
-      cmake -S ${EP_SOURCE_DIR} -B ${EP_BINARY_DIR} --config Release
     )
 
   ExternalProject_GenerateProjectDescription_Step(${proj})
