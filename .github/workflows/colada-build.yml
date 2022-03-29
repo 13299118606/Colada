@@ -24,19 +24,22 @@ jobs:
       uses: jurplel/install-qt-action@v2
 
     - name: Qt content cmake
-      run: ls ${{github.workspace}}/../Qt/5.15.2/gcc_64/lib/cmake/Qt5
+      run: ls ${{github.workspace}}/../Qt/5.15.2/gcc_64/lib/cmake
 
     - name: Qt content cmake/Qt5
       run: ls ${{github.workspace}}/../Qt/5.15.2/gcc_64/lib/cmake/Qt5
+      
+    - name: Qt5_DIR env var
+      run: echo $Qt5_DIR
 
-#     - name: Configure CMake
-#       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-#       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-#       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DQt5_DIR=${{github.workspace}}/../Qt/5.15.2/gcc_64/lib/cmake/Qt5
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DQt5_DIR=$Qt5_DIR
 
-#     - name: Build
-#       # Build your program with the given configuration
-#       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
 
 #     - name: Test
 #       working-directory: ${{github.workspace}}/build
