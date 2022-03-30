@@ -69,7 +69,7 @@ if(NOT DEFINED GDAL_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       ${${proj}_DEPENDENCIES}
     # GDAL compiles python bindings only in Release mode (at least on Windows)
     BUILD_COMMAND 
-      cmake -S ${EP_SOURCE_DIR} -B ${EP_BINARY_DIR} --config Release
+      cmake --build ${EP_BINARY_DIR} --config Release
     )
   
   # copy site-packages from GDAL subdir to Slicer's python
