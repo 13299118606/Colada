@@ -191,6 +191,7 @@ set(Slicer_CLIMODULES_ENABLED
   ResampleScalarVectorDWIVolume # Depends on DiffusionApplications, needed by CropVolume
   ProbeVolumeWithModel
   SubtractScalarVolumes
+  OrientScalarVolume
   )
 set(Slicer_QTLOADABLEMODULES_ENABLED
   Annotations       

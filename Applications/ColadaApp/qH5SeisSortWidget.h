@@ -24,8 +24,8 @@ public slots:
   /// Called each time seis is changed
   void updateWidgets();
   void updateRangeWidget(ctkRangeWidget* rangeWidget);
-  void onAddSortBtnClicked(bool val);
-  void onRemoveSortBtnClicked(bool val);
+  void onAddSortBtnClicked();
+  void onRemoveSortBtnClicked();
   void addKeysModelToComboBox(QComboBox* combo);
   void onSortComboCurrentTextChanged(const QString &text);
 

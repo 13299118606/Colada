@@ -155,7 +155,7 @@ void qH5SeisSortWidget::updateRangeWidget(ctkRangeWidget* rangeWidget){
   rangeWidget->setValues(keyMin, keyMax);
 }
 
-void qH5SeisSortWidget::onAddSortBtnClicked(bool val){
+void qH5SeisSortWidget::onAddSortBtnClicked(){
   Q_D(qH5SeisSortWidget);
   QWidget* w = this->createWidgetPair();
   qCompletableComboBox* combo =
@@ -170,7 +170,7 @@ void qH5SeisSortWidget::onAddSortBtnClicked(bool val){
           this, &qH5SeisSortWidget::onSortComboCurrentTextChanged);
 }
 
-void qH5SeisSortWidget::onRemoveSortBtnClicked(bool val){
+void qH5SeisSortWidget::onRemoveSortBtnClicked(){
   Q_D(qH5SeisSortWidget);
   if (d->mainVLayout->count() == 2)
     return;
@@ -250,10 +250,10 @@ void qH5SeisSortWidget::setNumberOfSortKeys(int n)
     return;
   } else if (N < n){
     for (int i = 0; i < n-N; i++)
-      this->onAddSortBtnClicked(true);
+      this->onAddSortBtnClicked();
   } else if (N > n){
     for (int i = 0; i < N-n; i++)
-      this->onRemoveSortBtnClicked(true);
+      this->onRemoveSortBtnClicked();
   }
 }
 
