@@ -28,7 +28,7 @@ qColadaReaderPrivate::~qColadaReaderPrivate() {}
 void qColadaReaderPrivate::init() {
   Q_Q(qColadaReader);
   // must be deleted after it is closed (prevent memory leak)
-  q->setAttribute(Qt::WA_DeleteOnClose);
+//  q->setAttribute(Qt::WA_DeleteOnClose);
   q->setWindowFlags(
       q->windowFlags() &
       ~Qt::WindowContextHelpButtonHint & // removes question '?' sign
